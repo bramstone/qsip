@@ -17,5 +17,5 @@ setClass('qsip',
 #' @importClassesFrom phyloseq phyloseq
 #' @exportClass phylosip
 setClass('phylosip',
-         slots=c(qsip='qsip'),
-         contains='phyloseq')
+         contains='phyloseq',
+         slots=c(qsip='qsip'))
