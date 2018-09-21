@@ -17,17 +17,17 @@ Keeping the default value of \code{0} will apply no frequency threshold at the f
 Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})}
 }
 \value{
-\code{create_filters} produces a numeric matrix of replicate frequencies and within-replicate-fraction frequencies to be
+\code{create_filters} produces a data frane of replicate frequencies and within-replicate-fraction frequencies to be
   investigated in downstream analyses.
 }
 \description{
-Creates a matrix of per-replicate and per-fraction minimum incidence frequencies to retain microbial taxa in the dataset
+Creates a data frame of per-replicate and per-fraction minimum incidence frequencies to retain microbial taxa in the dataset
 }
 \details{
 \code{create_filters} should be used to specify the desired frequencies of microbial taxa \emph{prior} to calculation of
   atom excess fraction / atom percent excess. Filters must also be specified so that diagnostic functions can be run as well.
   Because \code{create_filters} uses \code{\link[base]{expand.grid}}, all possible combinations of the first two arguments will
-  be used to construct the resulting matrix. If certain combinations are not desirable, the \code{rm_combn} argument can be
+  be used to construct the resulting data frame If certain combinations are not desirable, the \code{rm_combn} argument can be
   supplied to remove them.
 }
 \examples{

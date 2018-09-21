@@ -4,8 +4,31 @@
 \alias{calc_wad}
 \title{Calculation of weighted average densities}
 \usage{
-calc_wad(data)
+calc_wad(data, ...)
+}
+\arguments{
+\item{data}{Data as a \code{phyloseq} object}
+
+\item{...}{Arguments to specify \code{NA} handling in the weighted average density calculation.
+By default, \code{na.rm=FALSE}.}
+}
+\value{
+\code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
+  the \code{qsip} slot of the object. of weighted average density values for each taxon at each sample. The row and column
+  specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}}, meaning if taxa are listed on the table rows,
+  they will in the resulting S4 Matrix class.
 }
 \description{
-Calculation of weighted average densities
+Calculates weighted average densities for each microbial taxa in each sample replicate
+}
+\details{
+Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
+  that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
+  of \code{NA} for every taxa in a sample with missing density data.
+}
+\examples{
+ # Load in example data
+
+ # Calculate weighted average densities
+
 }

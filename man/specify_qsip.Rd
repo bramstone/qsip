@@ -6,7 +6,7 @@
 \usage{
 specify_qsip(data, density = "character", abund = "character",
   rep_id = "character", rep_group = "character", iso = "character",
-  timepoint = "character", filter = "matrix", ...)
+  timepoint = "character", filter = "data.frame", ...)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
@@ -29,7 +29,7 @@ Required for calculation of molecular weights and atom excess fraction}
 timepoints. The data that this value references should be a factor with time 0 values as the first level.
 Required for calculation of population birth and death rates}
 
-\item{filter}{Optional matrix of filtering options to apply to taxa based on sample and fraction-level frequency}
+\item{filter}{Optional data frame of filtering options to apply to taxa based on sample and fraction-level frequency}
 
 \item{...}{Arguments to change variables of existing \code{phylosip} object}
 }
