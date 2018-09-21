@@ -1,6 +1,6 @@
 #' Specify multiple taxa filting options for qSIP calculations
 #'
-#' Creates a data frame of per-replicate and per-fraction minimum incidence frequencies to retain microbial taxa in the dataset
+#' Creates a matrix of per-replicate and per-fraction minimum incidence frequencies to retain microbial taxa in the dataset
 #'
 #' @param replicate Numeric vector specifying the minimum frequency of occurrence of microbial taxa across replicates.
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the replicate level
@@ -12,10 +12,10 @@
 #' @details \code{create_filters} should be used to specify the desired frequencies of microbial taxa \emph{prior} to calculation of
 #'   atom excess fraction / atom percent excess. Filters must also be specified so that diagnostic functions can be run as well.
 #'   Because \code{create_filters} uses \code{\link[base]{expand.grid}}, all possible combinations of the first two arguments will
-#'   be used to construct the resulting data frame. If certain combinations are not desirable, the \code{rm_combn} argument can be
+#'   be used to construct the resulting matrix. If certain combinations are not desirable, the \code{rm_combn} argument can be
 #'   supplied to remove them.
 #'
-#' @return \code{create_filters} produces a data frame of replicate frequencies and within-replicate-fraction frequencies to be
+#' @return \code{create_filters} produces a numeric matrix of replicate frequencies and within-replicate-fraction frequencies to be
 #'   investigated in downstream analyses.
 #'
 #' @examples
@@ -44,5 +44,6 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
     }
   }
   rownames(filters) <- NULL
+  filters <- as.matrix(filters)
   return(filters)
 }
