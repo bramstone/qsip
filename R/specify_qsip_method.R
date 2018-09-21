@@ -16,7 +16,7 @@
 #' @param timepoint Single length character matching to variable in \code{data} used to distinguish between samples after certain incubation
 #'   timepoints. The data that this value references should be a factor with time 0 values as the first level.
 #'   Required for calculation of population birth and death rates
-#' @param filter Optional matrix of filtering options to apply to taxa based on sample and fraction-level frequency
+#' @param filter Optional data frame of filtering options to apply to taxa based on sample and fraction-level frequency
 #' @param ... Arguments to change variables of existing \code{phylosip} object
 #'
 #' @details Some details
@@ -39,7 +39,7 @@ setGeneric('specify_qsip',
            function(data,
                     density='character', abund='character', rep_id='character',
                     rep_group='character', iso='character', timepoint='character',
-                    filter='matrix', ...) {
+                    filter='data.frame', ...) {
              standardGeneric('specify_qsip')
 })
 

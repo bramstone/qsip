@@ -8,7 +8,7 @@ setClass('qsip',
          slots=c(density='character', abund='character',
                  rep_id='character', rep_group='character',
                  iso='character', timepoint='character',
-                 filter='matrixOrNULL'),
+                 filter='data.frameOrNULL'),
          contains='list')
 
 
