@@ -27,6 +27,7 @@
 #'
 #' # remove certain combinations
 #' specify_filters(2:3, 10:13, c('3:13', '2:10'))
+#'
 #' @export
 
 specify_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
