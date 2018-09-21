@@ -1,4 +1,5 @@
-# Calculation of weighted average densities
+#' Calculation of weighted average densities
+#' @export
 
 calc_wad <- function(data) {
   if(is(data)=='phylosip') stop('Must provide phylosip object')
@@ -31,7 +32,7 @@ calc_wad <- function(data) {
   return(data)
 }
 
-### Given vectors of x values and y values, calculate the weighted-average of the x-values (e.g., the weighted average density (WAD))
+# Given vectors of x values and y values, calculate the weighted-average of the x-values (e.g., the weighted average density (WAD))
 #
 #     output = WAD.func(y, x)
 #
