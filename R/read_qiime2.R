@@ -179,6 +179,6 @@ read_qiime2_metadata <- function(file, barcodes=FALSE, stringsAsFactors=TRUE, ru
 
 # function that changes designation of unclassified sequences to 'Unclassified x' or 'Unidentified x' depending on user input
 # can either use the lowest classifcation available, or some set level (perhaps both, like maybe ID to family, but use next best if family is unavailable)
-#rename_unclassifieds <- function(x, use_lowest, use_same) {
+# arguments: x, use_lowest, use_same) {
 #
 #}
