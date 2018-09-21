@@ -18,14 +18,3 @@ setMethod('initialize', 'qsip',
             .Object
           })
 # Maybe filter='data.frameOrNULL')
-
-# The S4 method for initializing a phylosip object
-# NOTE: doesn't seem to be needed, as you can change classes with setAs() not new()
-#
-# @import methods
-# @importClassesFrom phyloseq phyloseq
-# setMethod('initialize,', 'phylosip',
-#          function(.Object='phyloseq', ...) {
-#            .Object <- callNextMethod()
- #           .Object
-  #        })
