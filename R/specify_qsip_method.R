@@ -39,7 +39,7 @@ setGeneric('specify_qsip',
            function(data,
                     density='character', abund='character', rep_id='character',
                     rep_group='character', iso='character', timepoint='character',
-                    filter='data.frame', ...) {
+                    filter='matrix', ...) {
              standardGeneric('specify_qsip')
 })
 
