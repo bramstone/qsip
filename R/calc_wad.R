@@ -1,4 +1,25 @@
 #' Calculation of weighted average densities
+#'
+#' Calculates weighted average densities for each microbial taxa in each sample replicate
+#'
+#' @param data Data as a \code{phyloseq} object
+#' @param ... Arguments to specify \code{NA} handling in the weighted average density calculation.
+#'   By default, \code{na.rm=FALSE}.
+#'
+#' @details Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
+#'   that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
+#'   of \code{NA} for every taxa in a sample with missing density data.
+#'
+#' @return \code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
+#'   the \code{qsip} slot of the object. of weighted average density values for each taxon at each sample. The row and column
+#'   specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}}, meaning if taxa are listed on the table rows,
+#'   they will in the resulting S4 Matrix class.
+#'
+#' @examples
+#'  # Load in example data
+#'
+#'  # Calculate weighted average densities
+#'
 #' @export
 
 calc_wad <- function(data, ...) {
@@ -6,24 +27,18 @@ calc_wad <- function(data, ...) {
   if(length(data@qsip@rep_id)==0) stop('Must specify replicate IDs')
   rep_id <- data@sam_data[[data@qsip@rep_id]] # replicate IDs
   dv <- data@sam_data[[data@qsip@density]] # density values
-  # transform feature sequencing abundances to 16S copy numbers
-  # x = each row of otu_table
-  # y = vector of 16S copy number values
-  data <- phyloseq::transform_sample_counts(data,
-                                            function(x, y) (x / sum(x)) * y,
-                                            y=data@sam_data[[data@qsip@abund]])
-  ft <- as(data@otu_table, 'matrix')
+  # transform sequencing abundances to 16S copy numbers
+  ft <- copy_no(data)
   # split feature table by replicate ID
-  if(data@otu_table@taxa_are_rows==TRUE) ft <- t(ft)
   dv <- split(dv, rep_id)
   ft <- split(ft, rep_id)
-  ft <- lapply(ft, matrix,
+  ft <- base::lapply(ft, matrix,
                byrow=FALSE,
                ncol=phyloseq::ntaxa(data))
   # next calculate WAD using lapply and combine
-  ft <- Map(function(y, x) apply(y, 2, wad, x, ...), ft, dv)
+  ft <- base::Map(function(y, x) apply(y, 2, wad, x, ...), ft, dv)
   # combine format based on whether taxa were rows or not
-  if(data@otu_table@taxa_are_rows==TRUE) {
+  if(phyloseq::taxa_are_rows(data)) {
     ft <- do.call(cbind, ft)
   } else ft <- do.call(rbind.ft)
   # add feature names back in (replicate names automatically utilized from split)
@@ -56,4 +71,16 @@ calc_wad <- function(data, ...) {
 wad <- function(y, x, ...){
   wad <- sum(x * (y / sum(y, na.rm=T)), ...)
   return(wad)
+}
+
+# Calculation of 16S copies per taxon from relative abundances and 16S copy numbers
+# Note, will return a feature table with taxa as columns
+copy_no <- function(data) {
+  ft <- as(data@otu_table, 'matrix')
+  # make relative abundances with taxa as columns and samples as rows
+  if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
+  ft <- ft / base::colSums(ft, na.rm=T)
+  # multiply by total 16S copy number per sample
+  ft <- ft * data@sam_data[[data@qsip@abund]]
+  return(ft)
 }
