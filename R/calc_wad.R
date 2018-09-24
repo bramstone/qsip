@@ -50,10 +50,17 @@ calc_wad <- function(data) {
     colnames(ft) <- phyloseq::taxa_names(data)
   }
   # convert to S4 Matrix which is more memory efficient
-  # ft <- Matrix::Matrix(ft)
+   ft <- Matrix::Matrix(ft)
   # add wad values to data slot of qSIP portion of object
-  if(!is.null(data@qsip@.Data$wad)) warning('Overwriting existing weighted average density values')
-  data@qsip@.Data$wad <- ft
+  if(any(attributes(data@qsip)$names %in% 'wad')) {   # if wad alreay exists, replace
+    warning('Overwriting existing weighted average density values')
+    replace_num <- which(attributes(data@qsip)$names %in% 'wad')
+    data@qsip@.Data[[replace_num]] <- ft
+  }
+  else { # else append it to the list and update the list names
+    data@qsip@.Data[[length( data@qsip@.Data) + 1]] <- ft
+    attributes(data@qsip)$names <- c(attributes(data@qsip)$names, 'wad')
+  }
   return(data)
 }
 

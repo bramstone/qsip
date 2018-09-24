@@ -4,13 +4,10 @@
 \alias{calc_wad}
 \title{Calculation of weighted average densities}
 \usage{
-calc_wad(data, ...)
+calc_wad(data)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
-
-\item{...}{Arguments to specify \code{NA} handling in the weighted average density calculation.
-By default, \code{na.rm=FALSE}.}
 }
 \value{
 \code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
