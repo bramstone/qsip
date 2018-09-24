@@ -53,7 +53,7 @@ calc_wad <- function(data) {
    ft <- Matrix::Matrix(ft)
   # add wad values to data slot of qSIP portion of object
   if(any(attributes(data@qsip)$names %in% 'wad')) {   # if wad alreay exists, replace
-    warning('Overwriting existing weighted average density values')
+    warning('Overwriting existing weighted average density values', call.=FALSE)
     replace_num <- which(attributes(data@qsip)$names %in% 'wad')
     data@qsip@.Data[[replace_num]] <- ft
   }
