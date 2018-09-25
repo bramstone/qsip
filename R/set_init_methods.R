@@ -11,6 +11,7 @@ setMethod('initialize', 'qsip',
                    rep_id=character(0),
                    rep_group=character(0),
                    iso=character(0),
+                   iso_trt=character(0),
                    timepoint=character(0),
                    filter=NULL) {
             .Object <- callNextMethod()
