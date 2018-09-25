@@ -15,7 +15,7 @@ copy_no <- function(data) {
 # Function to generate small reference data frame of unique isotope and isotope x grouping combinations
 # to use with grouped calculations where the light and heavy treatments must be identified
 iso_grouping <- function(data, iso, grouping) {
-  output <- data.frame(iso=data@sam_dat[[iso]],
+  output <- data.frame(iso=data@sam_data[[iso]],
                        grouping=data@sam_data[[grouping]])
   output$interaction <- interaction(output$iso, output$grouping)
   output <- unique(output[,1:3])
