@@ -1,3 +1,4 @@
+#' @include set_class.R
 #' @exportMethod
 setAs('phyloseq', 'phylosip', function(from, to) {
   to <- new(to,
