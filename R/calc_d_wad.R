@@ -28,7 +28,7 @@ calc_d_wad <- function(data) {
   if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso)==0) stop('Must specify treatment and controls with iso')
   # extract WAD values and convert to S3 matrix
-  ft <- data@qsip@.Data[['wad']]
+  ft <- data@qsip[['wad']]
   ft <- as(ft, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
   # manipulate data matrix and calculate
