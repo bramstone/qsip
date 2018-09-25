@@ -12,9 +12,19 @@ copy_no <- function(data) {
   return(ft)
 }
 
+# Function to generate small reference data frame of unique isotope and isotope x grouping combinations
+# to use with grouped calculations where the light and heavy treatments must be identified
+iso_grouping <- function(data, iso, grouping) {
+  output <- data.frame(iso=data$sam_dat[[iso]],
+                       grouping=data$sam_data[[grouping]])
+  output$interaction <- interaction(output$iso, output$grouping)
+  output <- unique(output[,1:3])
+  return(output)
+}
+
 # Function used to split qSIP data into list of sub-matrices
-split_data <- function(data, new_data, grouping) {
-  grouping <- data@sam_data[[grouping]]
+split_data <- function(data, new_data, grouping, grouping_w_phylosip=T) {
+  if(grouping_w_phylosip) grouping <- data@sam_data[[grouping]]
   new_data <- split(new_data, grouping)
   new_data <- base::lapply(new_data, matrix,
                      byrow=FALSE,
