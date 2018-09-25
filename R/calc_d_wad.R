@@ -26,14 +26,14 @@ calc_d_wad <- function(data) {
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data)
   if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
-  if(length(data@qsip@iso)==0) stop('Must specify treatment and controls with iso')
+  if(length(data@qsip@iso_trt)==0) stop('Must specify treatment and controls with iso_trt')
   # extract WAD values and convert to S3 matrix
   ft <- data@qsip[['wad']]
   ft <- as(ft, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
   # manipulate data matrix and calculate
   # split by replicate groups, but keep track of light and heavy fractions
-  iso_group <- iso_grouping(data, data@qsip@iso, data@qsip@rep_group)
+  iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_group)
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # calculate average WAD per taxa for each replicate group
   ft <- base::apply(ft, 2, mean, na.rm=T)

@@ -13,6 +13,8 @@
 #' @param iso Single length character vector describing which isotope was used, choices of \code{18O} or \code{13C} describing either
 #'   \eqn{^18^O}-labeled water or \eqn{^13^C}-labeled carbon inputs, respectively.
 #'   Required for calculation of molecular weights and atom excess fraction
+#' @iso_trt Single length character matching to variable in \code{data} used to distinguish between samples with and without isotope added.
+#'   The data this value references should be a facotr with "light" treatments as the first level.
 #' @param timepoint Single length character matching to variable in \code{data} used to distinguish between samples after certain incubation
 #'   timepoints. The data that this value references should be a factor with time 0 values as the first level.
 #'   Required for calculation of population birth and death rates
@@ -38,15 +40,15 @@ setGeneric('specify_qsip',
            valueClass=c('phyloseq', 'phylosip'),
            function(data,
                     density='character', abund='character', rep_id='character',
-                    rep_group='character', iso='character', timepoint='character',
-                    filter='data.frame', ...) {
+                    rep_group='character', iso='character', iso_trt='character',
+                    timepoint='character', filter='data.frame', ...) {
              standardGeneric('specify_qsip')
 })
 
 setMethod('specify_qsip',
           signature(data='phyloseq'),
           function(data, density=character(), abund=character(), rep_id=character(), rep_group=character(),
-                   iso=c('18O', '13C'), timepoint=character(), filter=NULL) {
+                   iso=c('18O', '13C'), iso_trt=character(), timepoint=character(), filter=NULL) {
             if(missing(data)) stop('Must supply data as phyloseq object', call.=F)
 #            if(is.null(formula)) { # User input good (w/o formula)?
             if(missing(density) || missing(abund)) stop('Must supply both sample densities and abundances', call.=F)
@@ -100,6 +102,7 @@ setMethod('specify_qsip',
             if(!missing(rep_group)) data@qsip@rep_group <- rep_group
             if(!missing(timepoint)) data@qsip@timepoint <- timepoint
             if(!missing(iso)) data@qsip@iso <- iso
+            if(!missing(iso_trt)) data@qsip@iso_trt <- iso_trt
             if(!missing(filter)) data@qsip@filter <- filter
             return(data)
           })
