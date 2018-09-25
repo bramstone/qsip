@@ -32,11 +32,29 @@ calc_d_wad <- function(data) {
   ft <- as(ft, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
   # manipulate data matrix and calculate
-  ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
-  # combine isotope control/treatment factor with replicate IDs so we know what is light and heavy
-  # ...
-  ft <- base::Map(function(__) apply(__, 2, __, __), ft, iso_compare)
+  # split by replicate groups, but keep track of light and heavy fractions
+  iso_group <- iso_grouping(data, data@qsip@iso, data@qsip@rep_group)
+  ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
+  # calculate average WAD per taxa for each replicate group
+  ft <- apply(ft, 2, mean, na.rm=T)
+  # create a new list to add results of mean WAD difference into
+  d_ft <- as.list(rep(0,nlevels(iso_grouping$grouping)))
+  d_ft <- lapply(d_ft, matrix,
+                 rep(0, phyloseq::ntaxa(data)),
+                 nrow=1,
+                 ncol=phyloseq::ntaxa(data))
+  names(d_ft) <- levels(iso_group$grouping)
+  # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
+  for(i in 1:length(d_ft)) {
+    which_light <- which(as.numeric(iso_group$grouping)==i &
+                           as.numeric(iso_group$iso)==1)
+    which_heavy <- which(as.numeric(iso_group$grouping)==i &
+                           as.numeric(iso_group$iso)==2)
+    light <- ft[[which_light]]
+    heavy <- ft[[which_heavy]]
+    d_ft[[i]] <- heavy - light
+  }
   # organize and add new data as S4 matrix
-  data <- collate_results(data, ft, 'wad')
+  data <- collate_results(data, ft, 'd_wad')
   return(data)
 }
