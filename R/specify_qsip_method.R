@@ -96,7 +96,6 @@ setMethod('specify_qsip',
           function(data, ...) {
             if(!missing(density)) data@qsip@density <- density
             if(!missing(abund)) data@qsip@abund <-  abund
-            if(!missing(sampleID)) data@qsip@sampleID <- sampleID
             if(!missing(rep_id)) data@qsip@rep_id <- rep_id
             if(!missing(rep_group)) data@qsip@rep_group <- rep_group
             if(!missing(timepoint)) data@qsip@timepoint <- timepoint
