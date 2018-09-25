@@ -23,7 +23,7 @@
 
 calc_d_wad <- function(data) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
-  # if WAD values don't exist, calculate those first, will also handle rep_id validity
+  # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data)
   if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso)==0) stop('Must specify treatment and controls with iso')
@@ -36,10 +36,10 @@ calc_d_wad <- function(data) {
   iso_group <- iso_grouping(data, data@qsip@iso, data@qsip@rep_group)
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # calculate average WAD per taxa for each replicate group
-  ft <- apply(ft, 2, mean, na.rm=T)
+  ft <- base::apply(ft, 2, mean, na.rm=T)
   # create a new list to add results of mean WAD difference into
   d_ft <- as.list(rep(0,nlevels(iso_grouping$grouping)))
-  d_ft <- lapply(d_ft, matrix,
+  d_ft <- base::lapply(d_ft, matrix,
                  rep(0, phyloseq::ntaxa(data)),
                  nrow=1,
                  ncol=phyloseq::ntaxa(data))

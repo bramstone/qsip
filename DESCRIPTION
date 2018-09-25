@@ -25,12 +25,12 @@ Imports:
 RoxygenNote: 6.1.0
 Collate: 
     'set_class.R'
+    'a_extract_methods.R'
     'as_method.R'
     'calc_d_wad.R'
     'calc_utility_functions.R'
     'calc_wad.R'
     'create_filters.R'
-    'extract_methods.R'
     'read_qiime2.R'
     'set_init_methods.R'
     'specify_qsip_method.R'
