@@ -33,28 +33,37 @@ calc_d_wad <- function(data) {
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
   # manipulate data matrix and calculate
   # split by replicate groups, but keep track of light and heavy fractions
-  iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_group)
+  iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+  # Drop any rows (probably NA) that don't appear in ft rownames
+  keep_rows <- iso_group$replicate %in% rownames(ft)
+  if(sum(!keep_rows) > 0) {
+    warning('Dropping group(s) ',
+            as.character(iso_group$replicate[!keep_rows]),
+            ' from calculation', call.=FALSE)
+  }
+  iso_group <- iso_group[keep_rows,]
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # calculate average WAD per taxa for each replicate group
-  ft <- base::apply(ft, 2, mean, na.rm=T)
+  ft <- base::lapply(ft, function(x) base::apply(x, 2, mean, na.rm=T))
   # create a new list to add results of mean WAD difference into
-  d_ft <- as.list(rep(0,nlevels(iso_grouping$grouping)))
+  d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
   d_ft <- base::lapply(d_ft, matrix,
                  rep(0, phyloseq::ntaxa(data)),
                  nrow=1,
                  ncol=phyloseq::ntaxa(data))
   names(d_ft) <- levels(iso_group$grouping)
   # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
+  iso_group2 <- unique(iso_group[,!names(iso_group) %in% 'replicate']) # only get unique elements to match levels in ft
   for(i in 1:length(d_ft)) {
-    which_light <- which(as.numeric(iso_group$grouping)==i &
-                           as.numeric(iso_group$iso)==1)
-    which_heavy <- which(as.numeric(iso_group$grouping)==i &
-                           as.numeric(iso_group$iso)==2)
+    which_light <- which(as.numeric(iso_group2$grouping)==i &
+                           as.numeric(iso_group2$iso)==1)
+    which_heavy <- which(as.numeric(iso_group2$grouping)==i &
+                           as.numeric(iso_group2$iso)==2)
     light <- ft[[which_light]]
     heavy <- ft[[which_heavy]]
     d_ft[[i]] <- heavy - light
   }
   # organize and add new data as S4 matrix
-  data <- collate_results(data, ft, 'd_wad')
+  data <- collate_results(data, d_ft, 'd_wad')
   return(data)
 }

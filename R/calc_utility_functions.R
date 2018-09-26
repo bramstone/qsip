@@ -14,11 +14,13 @@ copy_no <- function(data) {
 
 # Function to generate small reference data frame of unique isotope and isotope x grouping combinations
 # to use with grouped calculations where the light and heavy treatments must be identified
-iso_grouping <- function(data, iso, grouping) {
+iso_grouping <- function(data, iso, rep_id, grouping) {
   output <- data.frame(iso=data@sam_data[[iso]],
+                       replicate=data@sam_data[[rep_id]],
                        grouping=data@sam_data[[grouping]])
   output$interaction <- interaction(output$iso, output$grouping)
-  output <- unique(output[,1:3])
+  output <- output[!duplicated(output$replicate),]
+  rownames(output) <- NULL
   return(output)
 }
 
@@ -53,8 +55,8 @@ collate_results <- function(data, new_data, metric) {
     data@qsip@.Data[[replace_num]] <- new_data
   }
   else { # else append it to the list and update the list names
-    data@qsip@.Data[[length( data@qsip@.Data) + 1]] <- new_data
-    attributes(data@qsip)$names <- c(attributes(data@qsip)$names, metric)
+    data@qsip@.Data[[length(data@qsip@.Data) + 1]] <- new_data
+    attributes(data@qsip)$names[length(data@qsip@.Data)] <- metric
   }
   return(data)
 }
