@@ -1,14 +1,14 @@
 #' Calculation of molecular weights
 #'
-#' Calculates differences in molecular weights of microbial taxa due to isotope incorporation
+#' Calculates molecular weights of microbial taxa due to isotope incorporation
 #'
 #' @param data Data as a \code{phyloseq} object
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
 #'
-#' @return \code{calc_mw} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{data@@qsip@@.Data} slot
-#'   of differences in molecular weights for each taxon at each group of replicates. The row and column
+#' @return \code{calc_mw} adds three S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@@qsip@@.Data} slot
+#'   of molecular weights for each taxon at each group of replicates in the labeled and unlabeled groups. The row and column
 #'   specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}}, meaning if taxa are listed on the table rows,
 #'   they will in the resulting S4 Matrix class.
 #'
@@ -17,7 +17,7 @@
 #' @examples
 #'  # Load in example data
 #'
-#'  # Calculate weighted average density differences
+#'  # Calculate molecular weights
 #'
 #' @export
 
@@ -32,9 +32,15 @@ calc_mw <- function(data) {
   wl <- data@qsip[['wad_light']]
   wl <- as(wl, 'matrix)')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft); wl <- t(wl)
-  # manipulate data matrix and calculate
-
-  # organize and add new data as S4 matrix
-  data <- collate_results(data, d_ft, 'd_wad')
+  # calculate GC content of each taxa (averaged across all groups of samples)
+  # ALTERNATIVE: DON'T AVERAGE, KEEP WAD_LIGHT VALUES SEPARATE
+  gc <- (1 / 0.083506) * (colMeans(wl) - 1.646057)
+  # calculate mol. weight of taxa without isotope
+  mw_l <- 0.496 * gc + 307.691
+  # calculate mol. weight of taxa in labeled treatments
+  mw_lab <- (ft/wl + 1) * mw_l
+  # organize and add new data as S4 matrices
+  data <- collate_results(data, mw_lab, 'mw_label')
+  data <- collate_results(data, mw_l, 'mw_light')
   return(data)
 }
