@@ -69,7 +69,7 @@ calc_d_wad <- function(data) {
   data <- collate_results(data, d_ft, 'd_wad')
   # return weighted average densities of light calcs only
   iso_group2 <- iso_group2[match(names(ft), iso_group2$interaction),] # match row order to ft
-  wl <- ft[[which(as.numeric(iso_group2$iso)==1)]]
+  wl <- ft[which(as.numeric(iso_group2$iso)==1)]
   data <- collate_results(data, wl, 'wad_light')
   return(data)
 }
