@@ -52,7 +52,7 @@ collate_results <- function(data, new_data, metric, ...) {
     }
     # convert to S4 Matrix which is more memory efficient
     new_data <- Matrix::Matrix(new_data, ...)
-  }
+  } else if(class(new_data)=='numeric' && is.null(names(new_data))) names(new_data) <- phyloseq::taxa_names(data)
   # add wad values to data slot of qSIP portion of object
   if(any(attributes(data@qsip)$names %in% metric)) { # if wad alreay exists, replace
     warning('Overwriting existing ', metric, ' values', call.=FALSE)
