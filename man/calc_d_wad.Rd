@@ -10,10 +10,10 @@ calc_d_wad(data)
 \item{data}{Data as a \code{phyloseq} object}
 }
 \value{
-\code{calc_d_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
-  the \code{qsip} slot of the object of differences in weighted average density values for each taxon at each group of replicates. The row and column
-  specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}}, meaning if taxa are listed on the table rows,
-  they will in the resulting S4 Matrix class.
+\code{calc_d_wad} adds two S4 Matrix objects to the \code{data@qsip@.Data} slot, one for differences
+  in weighted average density, and the other for weighted average density values of light treatments only (to be used in
+  future calculations). The row and column specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}},
+  meaning if taxa are listed on the table rows, they will in the resulting S4 Matrix objects
 }
 \description{
 Calculates differences in weighted average densities across replicates due to isotope incorporation
