@@ -37,7 +37,7 @@ split_data <- function(data, new_data, grouping, grouping_w_phylosip=T) {
 # Function used to handle adding new data to phylosip object .Data slot
 collate_results <- function(data, new_data, metric) {
   # combine format based on whether taxa were rows or not
-  if(class(new_data)=='list') {
+  if(class(new_data)) {
     if(phyloseq::taxa_are_rows(data)) {
       new_data <- do.call(cbind, new_data)
     } else new_data <- do.call(rbind, new_data)
@@ -45,7 +45,7 @@ collate_results <- function(data, new_data, metric) {
   # add feature names back in (replicate names automatically utilized from split)
   if(is.null(rownames(new_data))) {
     rownames(new_data) <- phyloseq::taxa_names(data)
-  } else {
+  } else if(is.null(colnames(new_data))) {
     colnames(new_data) <- phyloseq::taxa_names(data)
   }
   # convert to S4 Matrix which is more memory efficient
