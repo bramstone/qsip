@@ -3,6 +3,8 @@
 #' Calculates differences in weighted average densities across replicates due to isotope incorporation
 #'
 #' @param data Data as a \code{phyloseq} object
+#' @param return_wad_light Logical value indicating whether or not to also return mean weighted average densities of light
+#'   (no isotope) treatments, which are necessary for the calculation of molecular weights with and without isotopes.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities have not been calculated
 #'   beforehand, \code{calc_d_wad} will compute those first.
@@ -21,7 +23,7 @@
 #'
 #' @export
 
-calc_d_wad <- function(data) {
+calc_d_wad <- function(data, return_wad_light=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data)
@@ -65,5 +67,11 @@ calc_d_wad <- function(data) {
   }
   # organize and add new data as S4 matrix
   data <- collate_results(data, d_ft, 'd_wad')
+  # return weighted average densities of light calcs only
+  if(return_wad_light) {
+    data <- collate_results(data,
+                            ft[[as.numeric(iso_group2$iso)==1]],
+                            'wad_light')
+  }
   return(data)
 }
