@@ -46,7 +46,8 @@ calc_d_wad <- function(data, return_wad_light=TRUE) {
   iso_group <- iso_group[keep_rows,]
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # calculate average WAD per taxa for each replicate group
-  ft <- base::lapply(ft, function(x) base::apply(x, 2, mean, na.rm=T))
+  # ft <- base::lapply(ft, function(x) base::apply(x, 2, mean, na.rm=T))
+  ft <- base::lapply(ft, colmeans, na.rm=T)
   # create a new list to add results of mean WAD difference into
   d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
   d_ft <- base::lapply(d_ft, matrix,
@@ -69,9 +70,8 @@ calc_d_wad <- function(data, return_wad_light=TRUE) {
   data <- collate_results(data, d_ft, 'd_wad')
   # return weighted average densities of light calcs only
   if(return_wad_light) {
-    data <- collate_results(data,
-                            ft[[as.numeric(iso_group2$iso)==1]],
-                            'wad_light')
+    wl <- ft[[as.numeric(iso_group2$iso)==1]]
+    data <- collate_results(data, wl, 'wad_light')
   }
   return(data)
 }
