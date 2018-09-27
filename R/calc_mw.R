@@ -30,7 +30,7 @@ calc_mw <- function(data) {
   ft <- data@qsip[['d_wad']]
   ft <- as(ft, 'matrix')
   wl <- data@qsip[['wad_light']]
-  wl <- as(wl, 'matrix)')
+  wl <- as(wl, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft); wl <- t(wl)
   # calculate GC content of each taxa (averaged across all groups of samples)
   # ALTERNATIVE: DON'T AVERAGE, KEEP WAD_LIGHT VALUES SEPARATE
@@ -38,7 +38,10 @@ calc_mw <- function(data) {
   # calculate mol. weight of taxa without isotope
   mw_l <- 0.496 * gc + 307.691
   # calculate mol. weight of taxa in labeled treatments
-  mw_lab <- (ft/wl + 1) * mw_l
+  # make sure to remove NaN's (0/0) and Inf's (number/0)
+  mw_lab <- ft/wl
+  mw_lab[is.nan(mw_lab) | is.infinite(mw_lab)] <- 0
+  mw_lab <- (mw_lab + 1) * mw_l
   # organize and add new data as S4 matrices
   data <- collate_results(data, mw_lab, 'mw_label')
   data <- collate_results(data, mw_l, 'mw_light')
