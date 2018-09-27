@@ -44,7 +44,7 @@ calc_d_wad <- function(data) {
   iso_group <- iso_group[keep_rows,]
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # calculate average WAD per taxa for each replicate group
-  ft <- base::lapply(ft, colmeans, na.rm=T)
+  ft <- base::lapply(ft, colMeans, na.rm=T)
   # create a new list to add results of mean WAD difference into
   d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
   d_ft <- base::lapply(d_ft, matrix,
