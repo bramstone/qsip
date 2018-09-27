@@ -56,6 +56,7 @@ calc_d_wad <- function(data) {
   # ALTERNATIVE, CALCULATE AVERAGE WAD_LIGHT VALUES EXPERIMENT-WIDE
   iso_group2 <- unique(iso_group[,!names(iso_group) %in% 'replicate']) # only get unique elements to match levels in ft
   for(i in 1:length(d_ft)) {
+    # use numbers to reference non-labeled additions since they're element agnostic
     which_light <- which(as.numeric(iso_group2$grouping)==i &
                            as.numeric(iso_group2$iso)==1)
     which_heavy <- which(as.numeric(iso_group2$grouping)==i &
@@ -67,7 +68,8 @@ calc_d_wad <- function(data) {
   # organize and add new data as S4 matrix
   data <- collate_results(data, d_ft, 'd_wad')
   # return weighted average densities of light calcs only
-  wl <- ft[[which(as.numeric(iso_group$iso)==1)]]
+  iso_group2 <- iso_group2[match(names(ft), iso_group2$interaction),] # match row order to ft
+  wl <- ft[[which(as.numeric(iso_group2$iso)==1)]]
   data <- collate_results(data, wl, 'wad_light')
   return(data)
 }
