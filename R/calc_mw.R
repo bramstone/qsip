@@ -43,7 +43,7 @@ calc_mw <- function(data) {
   mw_lab[is.nan(mw_lab) | is.infinite(mw_lab)] <- 0
   mw_lab <- (mw_lab + 1) * mw_l
   # organize and add new data as S4 matrices
-  data <- collate_results(data, mw_lab, 'mw_label', sparse=FALSE)
-  data <- collate_results(data, mw_l, 'mw_light', sparse=FALSE)
+  data <- collate_results(data, mw_lab, 'mw_label', sparse=TRUE)
+  data <- collate_results(data, mw_l, 'mw_light')
   return(data)
 }

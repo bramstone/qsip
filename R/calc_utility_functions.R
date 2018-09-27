@@ -44,13 +44,15 @@ collate_results <- function(data, new_data, metric, ...) {
     } else new_data <- do.call(rbind, new_data)
   }
   # add feature names back in (replicate names automatically utilized from split)
-  if(is.null(rownames(new_data))) {
-    rownames(new_data) <- phyloseq::taxa_names(data)
-  } else if(is.null(colnames(new_data))) {
-    colnames(new_data) <- phyloseq::taxa_names(data)
+  if(class(new_data)=='matrix') {
+    if(is.null(rownames(new_data))) {
+      rownames(new_data) <- phyloseq::taxa_names(data)
+    } else if(is.null(colnames(new_data))) {
+      colnames(new_data) <- phyloseq::taxa_names(data)
+    }
+    # convert to S4 Matrix which is more memory efficient
+    new_data <- Matrix::Matrix(new_data, ...)
   }
-  # convert to S4 Matrix which is more memory efficient
-  new_data <- Matrix::Matrix(new_data, ...)
   # add wad values to data slot of qSIP portion of object
   if(any(attributes(data@qsip)$names %in% metric)) { # if wad alreay exists, replace
     warning('Overwriting existing ', metric, ' values', call.=FALSE)
