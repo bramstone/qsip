@@ -35,7 +35,8 @@ split_data <- function(data, new_data, grouping, grouping_w_phylosip=T) {
 }
 
 # Function used to handle adding new data to phylosip object .Data slot
-collate_results <- function(data, new_data, metric) {
+# parameter ... Indicates options to pass to Matrix, for specifying whether it should be sparse or not
+collate_results <- function(data, new_data, metric, ...) {
   # combine format based on whether taxa were rows or not
   if(class(new_data)=='list') {
     if(phyloseq::taxa_are_rows(data)) {
@@ -49,7 +50,7 @@ collate_results <- function(data, new_data, metric) {
     colnames(new_data) <- phyloseq::taxa_names(data)
   }
   # convert to S4 Matrix which is more memory efficient
-  new_data <- Matrix::Matrix(new_data)
+  new_data <- Matrix::Matrix(new_data, ...)
   # add wad values to data slot of qSIP portion of object
   if(any(attributes(data@qsip)$names %in% metric)) { # if wad alreay exists, replace
     warning('Overwriting existing ', metric, ' values', call.=FALSE)
