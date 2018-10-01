@@ -87,6 +87,7 @@ setMethod('specify_qsip',
             if(!missing(rep_group)) data@qsip@rep_group <- rep_group
             if(!missing(timepoint)) data@qsip@timepoint <- timepoint
             if(!missing(iso)) data@qsip@iso <- iso
+            if(!missing(iso_trt)) data@qsip@iso <- iso_trt
             if(!missing(filter)) data@qsip@filter <- filter
             return(data)
           })
