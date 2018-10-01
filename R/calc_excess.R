@@ -27,7 +27,7 @@
 
 calc_excess <- function(data, percent=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
-  # if delta-WAD values don't exist, calculate those first
+  # if MW values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
   if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data)
   # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
