@@ -30,26 +30,25 @@ calc_excess <- function(data, percent=FALSE) {
   # if delta-WAD values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
   if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data)
-  # extract MW-labeled / MW-light and convert to S3 matrices
+  # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
   mw_lab <- data@qsip[['mw_label']]
   mw_lab <- as(mw_lab, 'matrix')
   mw_l <- data@qsip[['mw_light']]
-  mw_l <- as(mw_l, 'matrix)')
-  if(phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab); mw_l <- t(mw_l)
+  if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
   # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-  if(iso=='18O') {
+  if(data@qsip@iso=='18O') {
     adjust <- 12.07747 + mw_l
     nat_abund <- 0.002000429
   }
-  else if(iso=='13C') {
+  else if(data@qsip@iso=='13C') {
     adjust <- (-0.4987282 * gc) + 9.974564
     nat_abund <- 0.01111233
   }
   mw_max <- adjust + mw_l
   # calculate atom excess
-  excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1- nat_abund)
-  # organize and add new data as S4 matrices
+  excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
+  # organize and add new data as S4 matrix
   if(percent) excess <- excess * 100
-  data <- collate_results(data, excess, 'atom_excess')
+  data <- collate_results(data, excess, 'atom_excess', sparse=TRUE)
   return(data)
 }
