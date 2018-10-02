@@ -1,0 +1,25 @@
+Package: qsip
+Type: Package
+Title: Extracts and make calculations on qSIP data in phyloseq objects
+Version: 0.1.0
+Authors@R: c(
+  person('Bram', 'Stone', email='stone.bram@gmail.com', role=c('cre','aut')),
+  person('Ben', 'Koch', role='aut'),
+  person('Natasha', 'van Gestel', role='ctb'),
+  person('Bruce', 'Hungate', role='aut'))
+Maintainer: Bram Stone <stone.bram@gmail.com>
+Description: This package contains code that allows for the 
+    quantification of istope incorporation for each individual 
+    microbial taxon in a microbial community. Data on isotope 
+    incorporation are paired with taxon-specific relative abundances
+    (targeted 16S sequencing) and absolute abundances (qPCR) and 
+    can be used to determine taxon-specific growth and death rates 
+    for population-level modeling.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 3.5.0)
+Imports:
+    methods,
+    phyloseq (>= 1.24.2)
+RoxygenNote: 6.1.0
