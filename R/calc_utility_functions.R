@@ -41,10 +41,18 @@ collate_results <- function(data, new_data, metric, ...) {
   if(class(new_data)=='list') {
     if(phyloseq::taxa_are_rows(data)) {
       new_data <- do.call(cbind, new_data)
-    } else new_data <- do.call(rbind, new_data)
-  }
-  # add feature names back in (replicate names automatically utilized from split)
-  if(class(new_data)=='matrix') {
+      if(is.null(rownames(new_data))) {
+        rownames(new_data) <- phyloseq::taxa_names(data)
+      }
+    } else {
+      new_data <- do.call(rbind, new_data)
+      if(is.null(colnames(new_data))) {
+        colnames(new_data) <- phyloseq::taxa_names(data)
+      }
+    }
+    # add feature names back in (replicate names automatically utilized from split)
+  } else if(class(new_data)=='matrix') {
+    if(phyloseq::taxa_are_rows(data)) new_data <- t(new_data)
     if(is.null(rownames(new_data))) {
       rownames(new_data) <- phyloseq::taxa_names(data)
     } else if(is.null(colnames(new_data))) {
