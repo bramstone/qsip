@@ -25,6 +25,18 @@ iso_grouping <- function(data, iso, rep_id, grouping) {
   return(output)
 }
 
+# Function to generate small reference data frame of unique replicate and timepoint combinations
+# to use with pop calculations where the time 0 and time t must be identified
+time_grouping <- function(data, timepoint, rep_id, grouping) {
+  output <- data.frame(time=data@sam_data[[timepoint]],
+                       replicate=data@sam_data[[rep_id]],
+                       grouping=data@sam_data[[grouping]])
+  output$interaction <- interaction(output$time, output$grouping)
+  output <- output[!duplicated(output$replicate),]
+  rownames(output) <- NULL
+  return(output)
+}
+
 # Function used to split qSIP data into list of sub-matrices
 split_data <- function(data, new_data, grouping, grouping_w_phylosip=T) {
   if(grouping_w_phylosip) grouping <- data@sam_data[[grouping]]
