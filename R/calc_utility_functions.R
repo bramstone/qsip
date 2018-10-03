@@ -49,6 +49,7 @@ collate_results <- function(data, new_data, metric, ...) {
       if(is.null(colnames(new_data))) {
         colnames(new_data) <- phyloseq::taxa_names(data)
       }
+      new_data <- Matrix::Matrix(new_data, ...)
     }
     # add feature names back in (replicate names automatically utilized from split)
   } else if(class(new_data)=='matrix') {
