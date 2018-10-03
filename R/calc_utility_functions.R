@@ -9,6 +9,7 @@ copy_no <- function(data) {
   ft <- ft / base::colSums(ft, na.rm=TRUE)
   # multiply by total 16S copy number per sample
   ft <- ft * data@sam_data[[data@qsip@abund]]
+  ft[is.nan(ft)] <- 0
   return(ft)
 }
 
