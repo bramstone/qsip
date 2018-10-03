@@ -34,11 +34,11 @@ calc_d_wad <- function(data) {
   # manipulate data matrix and calculate
   # split by replicate groups, but keep track of light and heavy fractions
   iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-  # Drop any rows (probably NA) that don't appear in ft rownames
-  keep_rows <- iso_group$replicate %in% rownames(ft)
+  # Drop any rows (probably NA) that don't appear in ft rownames, also drop any rows with NA for isotope
+  keep_rows <- (iso_group$replicate %in% rownames(ft) & !is.na(iso_group$iso))
   if(sum(!keep_rows) > 0) {
     warning('Dropping group(s) ',
-            as.character(iso_group$replicate[!keep_rows]),
+            paste(as.character(iso_group$replicate[!keep_rows]), collapse=', '),
             ' from calculation', call.=FALSE)
   }
   iso_group <- iso_group[keep_rows,]
