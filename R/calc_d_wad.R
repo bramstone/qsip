@@ -41,16 +41,18 @@ calc_d_wad <- function(data) {
             paste(as.character(iso_group$replicate[!keep_rows]), collapse=', '),
             ' from calculation', call.=FALSE)
   }
-  iso_group <- iso_group[keep_rows,]
+  iso_group <- iso_group[iso_group$replicate %in% rownames(ft),]
+  ft <- ft[!is.na(iso_group$iso),]
+  iso_group <- iso_group[!is.na(iso_group$iso),]
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # calculate average WAD per taxa for each replicate group
   ft <- base::lapply(ft, colMeans, na.rm=T)
   # create a new list to add results of mean WAD difference into
   d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
   d_ft <- base::lapply(d_ft, matrix,
-                 rep(0, phyloseq::ntaxa(data)),
-                 nrow=1,
-                 ncol=phyloseq::ntaxa(data))
+                       rep(0, phyloseq::ntaxa(data)),
+                       nrow=1,
+                       ncol=phyloseq::ntaxa(data))
   names(d_ft) <- levels(iso_group$grouping)
   # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
   # ALTERNATIVE, CALCULATE AVERAGE WAD_LIGHT VALUES EXPERIMENT-WIDE
