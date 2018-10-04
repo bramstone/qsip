@@ -49,6 +49,6 @@ calc_excess <- function(data, percent=FALSE) {
   excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
   # organize and add new data as S4 matrix
   if(percent) excess <- excess * 100
-  data <- collate_results(data, excess, 'atom_excess', sparse=TRUE)
+  data <- collate_results(data, t(excess), 'atom_excess', sparse=TRUE)
   return(data)
 }
