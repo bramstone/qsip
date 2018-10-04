@@ -45,8 +45,13 @@ calc_d_wad <- function(data) {
   ft <- ft[!is.na(iso_group$iso),]
   iso_group <- iso_group[!is.na(iso_group$iso),]
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
+  # WAD values of 0 indicate no taxa presence in that replicate, convert to NA
+  # so that mean WAD values are not pulled down
+  ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
   # calculate average WAD per taxa for each replicate group
   ft <- base::lapply(ft, colMeans, na.rm=T)
+  # remove any NaNs resulting from when a taxon is missing in all replicates
+  ft <- base::lapply(ft, function(x) {x[is.nan(x)] <- NA; x})
   # create a new list to add results of mean WAD difference into
   d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
   d_ft <- base::lapply(d_ft, matrix,
@@ -55,10 +60,10 @@ calc_d_wad <- function(data) {
                        ncol=phyloseq::ntaxa(data))
   names(d_ft) <- levels(iso_group$grouping)
   # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
-  # ALTERNATIVE, CALCULATE AVERAGE WAD_LIGHT VALUES EXPERIMENT-WIDE
   iso_group2 <- unique(iso_group[,!names(iso_group) %in% 'replicate']) # only get unique elements to match levels in ft
   for(i in 1:length(d_ft)) {
     # use numbers to reference non-labeled additions since they're element agnostic
+    # any NA values result here when a taxa is completely missing from a heavy or light treatment in a replicate group
     which_light <- which(as.numeric(iso_group2$grouping)==i &
                            as.numeric(iso_group2$iso)==1)
     which_heavy <- which(as.numeric(iso_group2$grouping)==i &
