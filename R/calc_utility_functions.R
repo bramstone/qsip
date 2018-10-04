@@ -28,7 +28,7 @@ iso_grouping <- function(data, iso, rep_id, grouping) {
 # Function to generate small reference data frame of unique replicate and timepoint combinations
 # to use with pop calculations where the time 0 and time t must be identified
 time_grouping <- function(data, timepoint, rep_id, grouping) {
-  output <- data.frame(time=data@sam_data[[timepoint]],
+  output <- data.frame(time=as.numeric(as.character(data@sam_data[[timepoint]])),
                        replicate=data@sam_data[[rep_id]],
                        grouping=data@sam_data[[grouping]])
   output$interaction <- interaction(output$time, output$grouping)
