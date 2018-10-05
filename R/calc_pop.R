@@ -53,45 +53,50 @@ calc_pop <- function(data) {
   ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
   ft <- lapply(ft, colSums, na.rm=T)
   ft <- do.call(cbind, ft)
+  ft[ft==0] <- NA
   # get 16S copy numbers for different timepoints
   time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
   ft <- ft[,match(time_group2$interaction, colnames(ft))] # re-order columns to match time_group2$interaction
-  timepoint_names <- paste0('n_t_',unique(time_group2$time))
+  n_t_names <- paste0('n_t_',levels(time_group2$time))
   if(!any(time_group2$time==0)) {
-    warning('No timepoints designated as time 0; using time ', min(time_group2$time), ' as time before isotope addition', call.=FALSE)
+    warning('No timepoints designated as time 0; using time ',
+            levels(time_group2$time)[1],
+            ' as time before isotope addition', call.=FALSE)
   }
-  for(i in 1:length(unique(time_group2$time))) {
-    assign(timepoint_names[i], ft[,time_group2$time==(i-1)])
+  # NOTE: This function uses t in for-loop iterations to designate cycle through different timepoints
+  for(t in 1:nlevels(time_group2$time)) {
+    assign(n_t_names[t],
+           ft[,time_group2$time==levels(time_group2$time)[t]])
   }
   # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
-  mw_lab <- data@qsip[['mw_label']] # THIS CONTAINS NEGATIVE MW VALUES AND MW VALUES HIGHER THAN THE HEAVY MAX. WHY?
+  mw_lab <- data@qsip[['mw_label']]
   mw_lab <- as(mw_lab, 'matrix')
   mw_l <- data@qsip[['mw_light']]
+  if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
   if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
   # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
   mw_max <- (12.07747 * 0.6) + mw_l
   # calculate proportion in light fraction (N_light) at any time after 0
-  n_l_names <- paste0('n_l_', unique(time_group2$time))
-  for(i in 2:length(unique(time_group2$time))) {
-    n <- ((mw_max - mw_lab)/(mw_max - mw_l)) * get(timepoint_names[i])
-    colnames(n) <- colnames(get(timepoint_names[i]))
-    assign(n_l_names[i], n)
+  n_l_names <- paste0('n_l_', levels(time_group2$time))
+  for(t in 2:nlevels(time_group2$time)) {
+    n <- ((mw_max - mw_lab)/(mw_max - mw_l)) * get(n_t_names[t])
+    colnames(n) <- colnames(get(n_t_names[t]))
+    # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
+    n[n < 0] <- NA
+    assign(n_l_names[t], n)
   }; rm(n)
   # calculate birth and death rate for each timepoint after 0
-  b_names <- paste0('b_', unique(time_group2$time))
-  d_names <- paste0('d_', unique(time_group2$time))
-  for(i in 2:length(unique(time_group2$time))) {
-    b <- get(timepoint_names[i]) / get(n_l_names[i])
-    d <- get(n_l_names[i]) / get(timepoint_names[1])
-    # remove NaNs from 0/0 calcs and Inf from #/0 calcs
-    b[is.nan(b) | is.infinite(b)] <- NA
-    d[is.nan(d) | is.infinite(d)] <- NA
-    b <- log(b) / unique(time_group2$time)[i]
-    d <- log(d) / unique(time_group2$time)[i]
-    colnames(b) <- colnames(d) <- colnames(get(timepoint_names[i]))
-    # colnames(d) <- colnames(get(timepoint_names[i]))
-    assign(b_names[i], b)
-    assign(d_names[i], d)
+  b_names <- paste0('b_', levels(time_group2$time))
+  d_names <- paste0('d_', levels(time_group2$time))
+  for(t in 2:nlevels(time_group2$time)) {
+    b <- get(n_t_names[t]) / get(n_l_names[t])
+    d <- get(n_l_names[t]) / get(n_t_names[1])
+    incubate_time <- as.numeric(levels(time_group2$time)[t])
+    b <- log(b) / incubate_time
+    d <- log(d) / incubate_time
+    colnames(b) <- colnames(d) <- colnames(get(n_t_names[t]))
+    assign(b_names[t], b)
+    assign(d_names[t], d)
   }; rm(b,d)
   # if more than two timepoints (0, and t), combine resulting matrices
   if(length(timepoint_names) > 2) {
