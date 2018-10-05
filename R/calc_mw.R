@@ -34,14 +34,11 @@ calc_mw <- function(data) {
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft); wl <- t(wl)
   # calculate GC content of each taxa (averaged across all groups of samples)
   # ALTERNATIVE: DON'T AVERAGE, KEEP WAD_LIGHT VALUES SEPARATE
-  gc <- (1 / 0.083506) * (colMeans(wl) - 1.646057)
+  gc <- (1 / 0.083506) * (colMeans(wl, na.rm=T) - 1.646057)
   # calculate mol. weight of taxa without isotope
   mw_l <- 0.496 * gc + 307.691
   # calculate mol. weight of taxa in labeled treatments
-  # make sure to remove NaN's (0/0) and Inf's (number/0)
-  mw_lab <- ft/wl
-  mw_lab[is.nan(mw_lab) | is.infinite(mw_lab)] <- 0
-  mw_lab <- (mw_lab + 1) * mw_l
+  mw_lab <- ((ft/wl) + 1) * mw_l
   # organize and add new data as S4 matrices
   data <- collate_results(data, mw_lab, 'mw_label', sparse=TRUE)
   data <- collate_results(data, mw_l, 'mw_light')
