@@ -34,6 +34,7 @@ calc_excess <- function(data, percent=FALSE) {
   mw_lab <- data@qsip[['mw_label']]
   mw_lab <- as(mw_lab, 'matrix')
   mw_l <- data@qsip[['mw_light']]
+  if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
   if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
   # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
   if(data@qsip@iso=='18O') {
