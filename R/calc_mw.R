@@ -38,7 +38,7 @@ calc_mw <- function(data, separate_wad_light=TRUE) {
   # calculate GC content of each taxa (averaged across all groups of samples or not)
   if(!separate_wad_light) {
     wl <- colMeans(wl, na.rm=T)
-    gc[is.nan(gc)] <- NA
+    wl[is.nan(wl)] <- NA
   }
   gc <- (1 / 0.083506) * (wl - 1.646057)
   # calculate mol. weight of taxa without isotope
@@ -47,6 +47,6 @@ calc_mw <- function(data, separate_wad_light=TRUE) {
   mw_lab <- ((ft/wl) + 1) * mw_l
   # organize and add new data as S4 matrices
   data <- collate_results(data, mw_lab, 'mw_label', sparse=TRUE)
-  data <- collate_results(data, mw_l, 'mw_light')
+  data <- collate_results(data, mw_l, 'mw_light', sparse=TRUE)
   return(data)
 }
