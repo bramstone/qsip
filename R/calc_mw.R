@@ -35,6 +35,7 @@ calc_mw <- function(data) {
   # calculate GC content of each taxa (averaged across all groups of samples)
   # ALTERNATIVE: DON'T AVERAGE, KEEP WAD_LIGHT VALUES SEPARATE
   gc <- (1 / 0.083506) * (colMeans(wl, na.rm=T) - 1.646057)
+  gc[is.nan(gc)] <- NA # colMeans produces NaN values when averaging all NAs
   # calculate mol. weight of taxa without isotope
   mw_l <- 0.496 * gc + 307.691
   # calculate mol. weight of taxa in labeled treatments
