@@ -99,7 +99,7 @@ calc_pop <- function(data) {
     assign(d_names[t], d)
   }; rm(b,d)
   # if more than two timepoints (0, and t), combine resulting matrices
-  if(length(timepoint_names) > 2) {
+  if(length(n_t_names) > 2) {
     b <- do.call(cbind, mget(b_names))
     d <- do.call(cbind, mget(d_names))
   } else {
