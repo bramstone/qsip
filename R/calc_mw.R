@@ -3,6 +3,9 @@
 #' Calculates molecular weights of microbial taxa due to isotope incorporation
 #'
 #' @param data Data as a \code{phyloseq} object
+#' @param separate_wad_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
+#'   If \code{FALSE}, WAD scores across all replicate groups will be averaged, creating a single WAD score per taxon representing it's weighted
+#'   average density in the absence of isotope addition.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
@@ -21,7 +24,7 @@
 #'
 #' @export
 
-calc_mw <- function(data) {
+calc_mw <- function(data, separate_wad_light=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if delta-WAD values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
@@ -32,10 +35,12 @@ calc_mw <- function(data) {
   wl <- data@qsip[['wad_light']]
   wl <- as(wl, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft); wl <- t(wl)
-  # calculate GC content of each taxa (averaged across all groups of samples)
-  # ALTERNATIVE: DON'T AVERAGE, KEEP WAD_LIGHT VALUES SEPARATE
-  gc <- (1 / 0.083506) * (colMeans(wl, na.rm=T) - 1.646057)
-  gc[is.nan(gc)] <- NA # colMeans produces NaN values when averaging all NAs
+  # calculate GC content of each taxa (averaged across all groups of samples or not)
+  if(!separate_wad_light) {
+    wl <- colMeans(wl, na.rm=T)
+    gc[is.nan(gc)] <- NA
+  }
+  gc <- (1 / 0.083506) * (wl - 1.646057)
   # calculate mol. weight of taxa without isotope
   mw_l <- 0.496 * gc + 307.691
   # calculate mol. weight of taxa in labeled treatments
