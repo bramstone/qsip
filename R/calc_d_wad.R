@@ -44,6 +44,7 @@ calc_d_wad <- function(data) {
   iso_group <- iso_group[iso_group$replicate %in% rownames(ft),]
   ft <- ft[!is.na(iso_group$iso),]
   iso_group <- iso_group[!is.na(iso_group$iso),]
+  iso_group <- iso_group[match(rownames(ft), iso_group$replicate),] # match row orders to ft
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # WAD values of 0 indicate no taxa presence in that replicate, convert to NA
   # so that mean WAD values are not pulled down
