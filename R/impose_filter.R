@@ -23,6 +23,12 @@
 
 impose_filter <- function(data, replicate=0, fraction=0, code=character()) {
   # if !is.null(code) parse and use code
+  if(!is.null(code)) {
+    if(length(code) > 1) warning('More than one filter code provided; will only use ', code[1], call.=F)
+    code <- strsplit(code, ':')[[1]]
+    replicate <- code[1]
+    fraction <- code[2]
+  }
   # extract feature table and convert to matrix with taxa as columns
   ft <- as(data@otu_table, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
