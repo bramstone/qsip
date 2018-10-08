@@ -4,10 +4,14 @@
 \alias{calc_mw}
 \title{Calculation of molecular weights}
 \usage{
-calc_mw(data)
+calc_mw(data, separate_wad_light = TRUE)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
+
+\item{separate_wad_light}{Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
+If \code{FALSE}, WAD scores across all replicate groups will be averaged, creating a single WAD score per taxon representing it's weighted
+average density in the absence of isotope addition.}
 }
 \value{
 \code{calc_mw} adds three S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot

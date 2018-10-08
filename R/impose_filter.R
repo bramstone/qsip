@@ -48,9 +48,8 @@ impose_filter <- function(replicate=0, fraction=0, code=character(), data) {
   ft <- lapply(ft, colSums, na.rm=T)
   ft <- lapply(ft, function(x) ifelse(x >= replicate, 1, 0))
   ft <- do.call(rbind, ft)
-  # add in taxa names and remove 0 occurrences
+  # add in taxa names and calculate presence or absence after filters
   colnames(ft) <- phyloseq::taxa_names(data)
   output <- colSums(ft)
   output <- ifelse(output > 0, 1, 0)
-  return(output)
 }

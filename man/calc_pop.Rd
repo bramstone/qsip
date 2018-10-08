@@ -13,6 +13,9 @@ calc_pop(data)
 \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot
   of population birth rates for each taxon at each group of replicates. The row and column specifications will mirror those of the \code{phylosip}'s
   \code{\link{otu_table}}, meaning if taxa are listed on the table rows, they will in the resulting S4 Matrix class.
+
+  Timepoint should be in units of days, so that birth will be new 16S copies d-1 and death will be loss of light 16S copies d-1.
+  Use of different time increments will yield growth rates (e.g. per hour), but must be appropriate for the frequency of sampling.
 }
 \description{
 Calculates population growth and death rates
