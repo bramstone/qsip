@@ -8,6 +8,7 @@
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the fraction level
 #' @param code Optional character vector specifying a particular combination of replicate and fraction frequency to test.
 #'   Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})
+#' @param data \code{Phylosip}-class object to pull feature taxa table from.
 #'
 #' @details Some text here
 #'
