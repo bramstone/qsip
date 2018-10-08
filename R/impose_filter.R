@@ -39,8 +39,8 @@ impose_filter <- function(replicate=0, fraction=0, code=character(), data) {
   # split by replicate group
   iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
   # Drop any rows (probably NA) that don't appear in ft rownames, also drop any rows with no taxa
-  ft <- ft[!is.na(iso_group$iso),]
   iso_group <- iso_group[!is.na(iso_group$iso),]
+  ft <- ft[!is.na(iso_group$iso),]
   keep_rows <- (iso_group$replicate %in% rownames(ft) & rowSums(ft) > 0)
   iso_group <- iso_group[keep_rows,]
   iso_group <- iso_group[match(rownames(ft), iso_group$replicate),] # match row order to ft
