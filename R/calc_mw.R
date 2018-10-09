@@ -24,11 +24,11 @@
 #'
 #' @export
 
-calc_mw <- function(data, separate_wad_light=TRUE) {
+calc_mw <- function(data, separate_wad_light=TRUE, filter=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if delta-WAD values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-  if(is.null(data@qsip[['d_wad']])) data <- calc_d_wad(data)
+  if(is.null(data@qsip[['d_wad']])) data <- calc_d_wad(data, filter=filter)
   # extract d_WAD / WAD-light values and convert to S3 matrices
   ft <- data@qsip[['d_wad']]
   ft <- as(ft, 'matrix')
