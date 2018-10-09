@@ -2,7 +2,9 @@
 #'
 #' Calculates weighted average densities for each microbial taxa in each sample replicate
 #'
-#' @param data Data as a \code{phyloseq} object
+#' @param data Data as a \code{phylosip} object
+#' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+#'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #'
 #' @details Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
 #'   that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
@@ -13,6 +15,8 @@
 #'   specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}}, meaning if taxa are listed on the table rows,
 #'   they will in the resulting S4 Matrix class.
 #'
+#' @seealso \code{\link{filter_qsip}}
+#'
 #' @examples
 #'  # Load in example data
 #'
@@ -20,12 +24,15 @@
 #'
 #' @export
 
-calc_wad <- function(data) {
+calc_wad <- function(data, filter=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   if(length(data@qsip@rep_id)==0) stop('Must specify replicate IDs with rep_id')
   # transform sequencing abundances to 16S copy numbers
   # returns matrix with taxa as columns, samples as rows
   ft <- copy_no(data)
+  if(filter && length(data@qsip@filter)!=0) {
+    ft <- ft[,colnames(ft) %in% data@qsip@filter]
+  }
   # manipulate data matrix and calculate
   ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
   dv <- split(data@sam_data[[data@qsip@density]],
