@@ -159,7 +159,7 @@ explore_filters <- function(data, filters=data@qsip@filter_levels) {
   #  with columns for the proportion (or number) of remaining taxa and another for remaining samples
 }
 
-#' Filter taxa
+#' Filter taxa from phylosip
 #'
 #' Filters taxa from qSIP portion of phyloseq object
 #'
@@ -172,9 +172,14 @@ explore_filters <- function(data, filters=data@qsip@filter_levels) {
 #'   Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})
 #' @param filter_phyloseq Logical value indicating whether or not to filter taxa from \code{data@@otu_table} and \code{data@@tax_table}.
 #'
-#' @details \code{impose_filter} is primarily utilized within other functions.
+#' @details \code{filter_qsip} Has twofold actions. First, it produces a character vector of taxa names that have passed the specified
+#'   filtering threshold and which are stored in \code{data@@qsip@@filter}. Additionally, any qsip-related data that have been previously
+#'   generated and stored in \code{data@@qsip@@.Data} will be filtered to only retain those taxa.
 #'
-#' @return Returns a
+#'   It is not recommended to filter taxa from the \code{phyloseq}-inhereted portions of the data (\emph{e.g.}, from \code{data@@otu_table},
+#'   and \code{data@@tax_table}), simply because it will be difficult to call this information again if needed.
+#'
+#' @return Returns a character vector in \code{data@@qsip@@filter} of taxa names that have passed the specified filtering threshold.
 #'
 #' @seealso \code{\link{create_filters}}, \code{\link{explore_filters}}
 #'
