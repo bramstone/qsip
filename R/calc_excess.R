@@ -75,6 +75,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
     ft <- as(data@qsip[['wad']], 'matrix')
     if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
+    n_taxa <- ncol(ft)
     iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
     # keep only valid rows
     keep_rows <- (iso_group$replicate %in% rownames(ft) & !is.na(iso_group$iso))
@@ -146,9 +147,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     ci_u <- summaries[,3]
     rm(boot_collect, summaries)
     # reconstruct matrices with taxa as columns and output
-    ci_l <- matrix(ci_l, ncol=phyloseq::ntaxa(data), byrow=TRUE)
-    med <- matrix(med, ncol=phyloseq::ntaxa(data), byrow=TRUE)
-    ci_u <- matrix(ci_u, ncol=phyloseq::ntaxa(data), byrow=TRUE)
+    ci_l <- matrix(ci_l, ncol=n_taxa, byrow=TRUE)
+    med <- matrix(med, ncol=n_taxa, byrow=TRUE)
+    ci_u <- matrix(ci_u, ncol=n_taxa, byrow=TRUE)
     rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- rownames(excess)
     ci_l_name <- paste0('ae_',ci*100,'_ci_l')
     ci_u_name <- paste0('ae_',ci*100,'_ci_u')
