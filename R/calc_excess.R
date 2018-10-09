@@ -64,7 +64,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
     # organize and add new data as S4 matrix
     if(percent) excess <- excess * 100
-    data <- collate_results(data, t(excess), 'atom_excess', sparse=TRUE)
+    data <- collate_results(data, t(excess), 'atom_excess', filter=filter, sparse=TRUE)
     return(data)
     #
     # -------------------------------------------------------------
@@ -153,9 +153,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- rownames(excess)
     ci_l_name <- paste0('ae_',ci*100,'_ci_l')
     ci_u_name <- paste0('ae_',ci*100,'_ci_u')
-    data <- collate_results(data, ci_l, ci_l_name, sparse=TRUE)
-    data <- collate_results(data, med, 'atom_excess', sparse=TRUE)
-    data <- collate_results(data, ci_l, ci_u_name, sparse=TRUE)
+    data <- collate_results(data, ci_l, ci_l_name, filter=filter, sparse=TRUE)
+    data <- collate_results(data, med, 'atom_excess', filter=filter, sparse=TRUE)
+    data <- collate_results(data, ci_l, ci_u_name, filter=filter, sparse=TRUE)
     return(data)
     #
     # -------------------------------------------------------------

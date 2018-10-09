@@ -48,7 +48,7 @@ calc_mw <- function(data, separate_wad_light=TRUE, filter=FALSE) {
   # calculate mol. weight of taxa in labeled treatments
   mw_lab <- ((ft/wl) + 1) * mw_l
   # organize and add new data as S4 matrices
-  data <- collate_results(data, mw_lab, 'mw_label', sparse=TRUE)
-  data <- collate_results(data, mw_l, 'mw_light', sparse=TRUE)
+  data <- collate_results(data, mw_lab, 'mw_label', filter=filter, sparse=TRUE)
+  data <- collate_results(data, mw_l, 'mw_light', filter=filter, sparse=TRUE)
   return(data)
 }
