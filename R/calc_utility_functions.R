@@ -50,18 +50,23 @@ split_data <- function(data, new_data, grouping, grouping_w_phylosip=T) {
 
 # Function used to handle adding new data to phylosip object .Data slot
 # parameter ... Indicates options to pass to Matrix, for specifying whether it should be sparse or not
-collate_results <- function(data, new_data, metric, ...) {
+collate_results <- function(data, new_data, metric, filter=FALSE, ...) {
+  if(filter) {
+    tax_names <- data@qsip@filter
+    } else {
+      tax_names <- phyloseq::taxa_names(data)
+    }
   # combine format based on whether taxa were rows or not
   if(class(new_data)=='list') {
     if(phyloseq::taxa_are_rows(data)) {
       new_data <- do.call(cbind, new_data)
       if(is.null(rownames(new_data))) {
-        rownames(new_data) <- phyloseq::taxa_names(data)
+        rownames(new_data) <- tax_names
       }
     } else {
       new_data <- do.call(rbind, new_data)
       if(is.null(colnames(new_data))) {
-        colnames(new_data) <- phyloseq::taxa_names(data)
+        colnames(new_data) <- tax_names
       }
     }
     new_data <- Matrix::Matrix(new_data, ...)
@@ -69,13 +74,13 @@ collate_results <- function(data, new_data, metric, ...) {
   } else if(class(new_data)=='matrix') {
     if(phyloseq::taxa_are_rows(data)) new_data <- t(new_data)
     if(is.null(rownames(new_data))) {
-      rownames(new_data) <- phyloseq::taxa_names(data)
+      rownames(new_data) <- tax_names
     } else if(is.null(colnames(new_data))) {
-      colnames(new_data) <- phyloseq::taxa_names(data)
+      colnames(new_data) <- tax_names
     }
     # convert to S4 Matrix which is more memory efficient
     new_data <- Matrix::Matrix(new_data, ...)
-  } else if(class(new_data)=='numeric' && is.null(names(new_data))) names(new_data) <- phyloseq::taxa_names(data)
+  } else if(class(new_data)=='numeric' && is.null(names(new_data))) names(new_data) <- tax_names
   # add wad values to data slot of qSIP portion of object
   if(any(attributes(data@qsip)$names %in% metric)) { # if wad alreay exists, replace
     warning('Overwriting existing ', metric, ' values', call.=FALSE)
