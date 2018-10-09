@@ -40,10 +40,11 @@ time_grouping <- function(data, timepoint, rep_id, grouping) {
 # Function used to split qSIP data into list of sub-matrices
 split_data <- function(data, new_data, grouping, grouping_w_phylosip=T) {
   if(grouping_w_phylosip) grouping <- data@sam_data[[grouping]]
+  n_taxa <- ncol(new_data)
   new_data <- split(new_data, grouping)
   new_data <- base::lapply(new_data, matrix,
                      byrow=FALSE,
-                     ncol=phyloseq::ntaxa(data))
+                     ncol=n_taxa)
   return(new_data)
 }
 
