@@ -30,14 +30,17 @@ calc_wad <- function(data, filter=FALSE) {
   # transform sequencing abundances to 16S copy numbers
   # returns matrix with taxa as columns, samples as rows
   ft <- copy_no(data)
-  if(filter && length(data@qsip@filter)!=0) {
-    ft <- ft[,colnames(ft) %in% data@qsip@filter]
-  }
   # manipulate data matrix and calculate
   ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
   dv <- split(data@sam_data[[data@qsip@density]],
               data@sam_data[[data@qsip@rep_id]]) # split densities by replicate IDs
   ft <- base::Map(function(y, x) apply(y, 2, wad, x, na.rm=TRUE), ft, dv)
+  # apply filtering first if desired
+  if(filter && length(data@qsip@filter)!=0) {
+    ft <- do.call(rbind, ft)
+    colnames(ft) <- phyloseq::taxa_names(data)
+    ft <- ft[,colnames(ft) %in% data@qsip@filter]
+  }
   # organize and add new data as S4 matrix
   data <- collate_results(data, ft, 'wad')
   return(data)
