@@ -33,6 +33,7 @@ calc_d_wad <- function(data, filter=FALSE) {
   ft <- data@qsip[['wad']]
   ft <- as(ft, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
+  n_taxa <- ncol(ft)
   # manipulate data matrix and calculate
   # split by replicate groups, but keep track of light and heavy fractions
   iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
@@ -58,9 +59,9 @@ calc_d_wad <- function(data, filter=FALSE) {
   # create a new list to add results of mean WAD difference into
   d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
   d_ft <- base::lapply(d_ft, matrix,
-                       rep(0, phyloseq::ntaxa(data)),
+                       rep(0, n_taxa),
                        nrow=1,
-                       ncol=phyloseq::ntaxa(data))
+                       ncol=n_taxa)
   names(d_ft) <- levels(iso_group$grouping)
   # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
   iso_group2 <- unique(iso_group[,!names(iso_group) %in% 'replicate']) # only get unique elements to match levels in ft
