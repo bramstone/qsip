@@ -126,7 +126,7 @@ impose_filter <- function(data, replicate=0, fraction=0, code=character()) {
 #'
 #' @export
 
-explore_filters <- function(data, filters=data@qsip@filter) {
+explore_filters <- function(data, filters=data@qsip@filter_levels) {
   # if no filters provided, will use all
   if(is.null(filters)) {
     # number of fractions in data?
