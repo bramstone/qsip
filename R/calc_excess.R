@@ -34,7 +34,6 @@
 
 calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
-  if(missing(ci_method)) ci_method <- ''
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   #
   # -------------------------------------------------------------
@@ -50,6 +49,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     mw_l <- data@qsip[['mw_light']]
     if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
     if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
+    tax_names <- rownames(mw_lab)
     # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
     if(data@qsip@iso=='18O') {
       adjust <- 12.07747 + mw_l
@@ -64,7 +64,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
     # organize and add new data as S4 matrix
     if(percent) excess <- excess * 100
-    data <- collate_results(data, t(excess), 'atom_excess', filter=filter, sparse=TRUE)
+    data <- collate_results(data, t(excess), 'atom_excess', tax_names=tax_names, sparse=TRUE)
     return(data)
     #
     # -------------------------------------------------------------
@@ -153,9 +153,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- rownames(excess)
     ci_l_name <- paste0('ae_',ci*100,'_ci_l')
     ci_u_name <- paste0('ae_',ci*100,'_ci_u')
-    data <- collate_results(data, ci_l, ci_l_name, filter=filter, sparse=TRUE)
-    data <- collate_results(data, med, 'atom_excess', filter=filter, sparse=TRUE)
-    data <- collate_results(data, ci_l, ci_u_name, filter=filter, sparse=TRUE)
+    data <- collate_results(data, ci_l, ci_l_name, tax_names=tax_names, sparse=TRUE)
+    data <- collate_results(data, med, 'atom_excess', tax_names=tax_names, sparse=TRUE)
+    data <- collate_results(data, ci_l, ci_u_name, tax_names=tax_names, sparse=TRUE)
     return(data)
     #
     # -------------------------------------------------------------

@@ -37,6 +37,7 @@ calc_mw <- function(data, separate_wad_light=TRUE, filter=FALSE) {
   wl <- data@qsip[['wad_light']]
   wl <- as(wl, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft); wl <- t(wl)
+  tax_names <- colnames(ft)
   # calculate GC content of each taxa (averaged across all groups of samples or not)
   if(!separate_wad_light) {
     wl <- colMeans(wl, na.rm=T)
@@ -48,7 +49,7 @@ calc_mw <- function(data, separate_wad_light=TRUE, filter=FALSE) {
   # calculate mol. weight of taxa in labeled treatments
   mw_lab <- ((ft/wl) + 1) * mw_l
   # organize and add new data as S4 matrices
-  data <- collate_results(data, mw_lab, 'mw_label', filter=filter, sparse=TRUE)
-  data <- collate_results(data, mw_l, 'mw_light', filter=filter, sparse=TRUE)
+  data <- collate_results(data, mw_lab, 'mw_label', tax_names=tax_names, sparse=TRUE)
+  data <- collate_results(data, mw_l, 'mw_light', tax_names=tax_names, sparse=TRUE)
   return(data)
 }
