@@ -13,7 +13,8 @@ setMethod('initialize', 'qsip',
                    iso=character(0),
                    iso_trt=character(0),
                    timepoint=character(0),
-                   filter=NULL) {
+                   filter_levels=NULL,
+                   filter=character(0)) {
             .Object <- callNextMethod()
             # code here for any QC if-stop statements
             .Object

@@ -41,14 +41,14 @@ setGeneric('specify_qsip',
            function(data,
                     density='character', abund='character', rep_id='character',
                     rep_group='character', iso='character', iso_trt='character',
-                    timepoint='character', filter='data.frame', ...) {
+                    timepoint='character', filter_levels='data.frame', filter='character', ...) {
              standardGeneric('specify_qsip')
            })
 
 setMethod('specify_qsip',
           signature(data='phyloseq'),
           function(data, density=character(), abund=character(), rep_id=character(), rep_group=character(),
-                   iso=c('18O', '13C'), iso_trt=character(), timepoint=character(), filter=NULL) {
+                   iso=c('18O', '13C'), iso_trt=character(), timepoint=character(), filter_levels=NULL, filter=character()) {
             if(missing(data)) stop('Must supply data as phyloseq object', call.=F)
             #            if(is.null(formula)) { # User input good (w/o formula)?
             if(missing(density) || missing(abund)) stop('Must supply both sample densities and abundances', call.=F)
@@ -89,6 +89,7 @@ setMethod('specify_qsip',
             if(!missing(iso)) data@qsip@iso <- iso
             if(!missing(iso_trt)) data@qsip@iso_trt <- iso_trt
             if(!missing(filter)) data@qsip@filter <- filter
+            if(!missing(filter_levels)) data@qsip@filter_levels <- filter_levels
             return(data)
           })
 
@@ -105,5 +106,6 @@ setMethod('specify_qsip',
             if(!missing(iso)) data@qsip@iso <- iso
             if(!missing(iso_trt)) data@qsip@iso_trt <- iso_trt
             if(!missing(filter)) data@qsip@filter <- filter
+            if(!missing(filter_levels)) data@qsip@filter_levels <- filter_levels
             return(data)
           })
