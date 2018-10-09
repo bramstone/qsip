@@ -47,9 +47,9 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
   return(filters)
 }
 
-#' Filters taxa from data set
+#' Creates filtering criteria
 #'
-#' Filters taxa from a feature table matrix based on replicate and fraction frequencies
+#' Returns binary vector specifying whether taxa from a phylosip object satisfy minimum frequency specifications
 #'
 #' @param data \code{Phylosip}-class object to pull feature taxa table from.
 #' @param replicate Numeric vector specifying the minimum frequency of occurrence of microbial taxa across replicates.
@@ -159,4 +159,51 @@ explore_filters <- function(data, filters=data@qsip@filter) {
   # NEED TO UPDATE SET_CLASS AND SET_INIT_METHODS SCRIPTS
   # maybe one of the slots could be an extension of the input filtering data frame
   #  with columns for the proportion (or number) of remaining taxa and another for remaining samples
+}
+
+#' Filter taxa
+#'
+#' Filters taxa from qSIP portion of phyloseq object
+#'
+#' @param data \code{Phylosip}-class object to pull feature taxa table from.
+#' @param replicate Numeric vector specifying the minimum frequency of occurrence of microbial taxa across replicates.
+#'   Keeping the default value of \code{0} will apply no frequency threshold at the replicate level
+#' @param fraction Numeric vector specifying the minimum frequency of occurrence of microbial taxa across fractions within a sample.
+#'   Keeping the default value of \code{0} will apply no frequency threshold at the fraction level
+#' @param code Optional character vector specifying a particular combination of replicate and fraction frequency to test.
+#'   Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})
+#'
+#' @details \code{impose_filter} is primarily utilized within other functions.
+#'
+#' @return Returns a
+#'
+#' @seealso \code{\link{create_filters}}, \code{\link{impose_filter}}, \code{\link{explore_filters}}
+#'
+#' @examples
+#' # Filter a phyloseq object
+#'
+#' @export
+
+filter_qsip <- function(data, replicate=0, fraction=0, code=character()) {
+  if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
+  if(length(data@qsip)==0) {warning('No qSIP data to filter', call.=FALSE); return(data)}
+  tax_filter <- impose_filter(data, replicate=replicate, fraction=fraction, code=code)
+  tax_filter <- names(tax_filter[tax_filter > 0])
+  types <- sapply(data@qsip@.Data, function(x) class(x)[1])
+  # remove taxa from each qSIP-related output object in the data@qsip@.Data list
+  for(i in 1:length(dat@qsip)) {
+    x <- data@qsip@.Data[[1]]
+    if(types=='dgCMatrix') {
+      if(phyloseq::taxa_are_rows(data)) {
+        x <- x[rownames(x) %in% tax_filter,]
+      }
+      else {
+        x <- x[,colnames(x) %in% tax_filter]
+      }
+    } else if(types=='numeric') {
+      x <- x[names(x) %in% tax_filter]
+    }
+    data@qsip@.Data[[1]] <- x
+  }
+  return(data)
 }
