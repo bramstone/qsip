@@ -67,8 +67,6 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
 #'
 #' @examples
 #' # Filter a tax table
-#'
-#' @export
 
 impose_filter <- function(data, replicate=0, fraction=0, code=character()) {
   # if !is.null(code) parse and use code
@@ -121,7 +119,7 @@ impose_filter <- function(data, replicate=0, fraction=0, code=character()) {
 #'
 #' @return Some text here
 #'
-#' @seealso \code{\link{create_filters}}, \code{\link{impoose_filter}}
+#' @seealso \code{\link{create_filters}}
 #'
 #' @examples
 #' # Filter a tax table
@@ -177,7 +175,7 @@ explore_filters <- function(data, filters=data@qsip@filter) {
 #'
 #' @return Returns a
 #'
-#' @seealso \code{\link{create_filters}}, \code{\link{impose_filter}}, \code{\link{explore_filters}}
+#' @seealso \code{\link{create_filters}}, \code{\link{explore_filters}}
 #'
 #' @examples
 #' # Filter a phyloseq object
@@ -186,7 +184,6 @@ explore_filters <- function(data, filters=data@qsip@filter) {
 
 filter_qsip <- function(data, replicate=0, fraction=0, code=character()) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
-  if(length(data@qsip)==0) {warning('No qSIP data to filter', call.=FALSE); return(data)}
   tax_filter <- impose_filter(data, replicate=replicate, fraction=fraction, code=code)
   tax_filter <- names(tax_filter[tax_filter > 0])
   types <- sapply(data@qsip@.Data, function(x) class(x)[1])

@@ -4,12 +4,21 @@
 \alias{calc_excess}
 \title{Calculation of atom excess}
 \usage{
-calc_excess(data, percent = FALSE)
+calc_excess(data, percent = FALSE, ci_method = "", ci = 0.95,
+  iters = 999)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
 
 \item{percent}{Logical value indicating whether or not to calculate atom percent excess (\code{percent=TRUE}) or atom excess fraction (the default)}
+
+\item{ci_method}{Character value indicating how to calculate confidence intervals of stable isotope atom excess.
+Options are \code{bootstrap} or \code{bayesian} (see \code{details} below for discussion on their differences).
+The default is blank indicating that no confidence intervals will be calculated.}
+
+\item{ci}{Numeric value from 0 to 1 indicating the width of the confidence interval for bootsrapped atom excess values.}
+
+\item{iters}{Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.}
 }
 \value{
 \code{calc_excess} adds an S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot
