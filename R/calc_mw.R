@@ -6,6 +6,8 @@
 #' @param separate_wad_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, WAD scores across all replicate groups will be averaged, creating a single WAD score per taxon representing it's weighted
 #'   average density in the absence of isotope addition.
+#' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+#'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
