@@ -3,6 +3,8 @@
 #' Calculates differences in weighted average densities across replicates due to isotope incorporation
 #'
 #' @param data Data as a \code{phyloseq} object
+#' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+#'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities have not been calculated
 #'   beforehand, \code{calc_d_wad} will compute those first.
@@ -21,10 +23,10 @@
 #'
 #' @export
 
-calc_d_wad <- function(data) {
+calc_d_wad <- function(data, filter=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
-  if(is.null(data@qsip[['wad']])) data <- calc_wad(data)
+  if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
   if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso_trt)==0) stop('Must specify treatment and controls with iso_trt')
   # extract WAD values and convert to S3 matrix
