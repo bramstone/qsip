@@ -70,7 +70,7 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
 
 impose_filter <- function(data, replicate=0, fraction=0, code=character()) {
   # if !is.null(code) parse and use code
-  if(!is.null(code)) {
+  if(missing(code)) {
     if(length(code) > 1) warning('More than one filter code provided; will only use ', code[1], call.=F)
     code <- strsplit(code, ':')[[1]]
     replicate <- code[1]
@@ -192,24 +192,27 @@ filter_qsip <- function(data, replicate=0, fraction=0, code=character(), filter_
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   tax_filter <- impose_filter(data, replicate=replicate, fraction=fraction, code=code)
   tax_filter <- names(tax_filter[tax_filter > 0])
-  types <- sapply(data@qsip@.Data, function(x) class(x)[1])
-  # remove taxa from each qSIP-related output object in the data@qsip@.Data list
-  for(i in 1:length(dat@qsip)) {
-    x <- data@qsip@.Data[[1]]
-    if(types=='dgCMatrix') {
-      if(phyloseq::taxa_are_rows(data)) {
-        x <- x[rownames(x) %in% tax_filter,]
+  if(length(data@qsip) > 0) {
+    types <- sapply(data@qsip@.Data, function(x) class(x)[1])
+    # remove taxa from each qSIP-related output object in the data@qsip@.Data list
+    for(i in 1:length(dat@qsip)) {
+      x <- data@qsip@.Data[[1]]
+      if(types=='dgCMatrix') {
+        if(phyloseq::taxa_are_rows(data)) {
+          x <- x[rownames(x) %in% tax_filter,]
+        }
+        else {
+          x <- x[,colnames(x) %in% tax_filter]
+        }
+      } else if(types=='numeric') {
+        x <- x[names(x) %in% tax_filter]
       }
-      else {
-        x <- x[,colnames(x) %in% tax_filter]
-      }
-    } else if(types=='numeric') {
-      x <- x[names(x) %in% tax_filter]
+      data@qsip@.Data[[1]] <- x
     }
-    data@qsip@.Data[[1]] <- x
   }
   if(filter_phyloseq) {
     data <- phyloseq::filter_taxa(data, function(x) phyloseq::taxa_names(x@otu_table) %in% tax_filter, TRUE)
   }
+  data@qsip@filter <- tax_filter
   return(data)
 }
