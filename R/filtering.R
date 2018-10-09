@@ -170,6 +170,7 @@ explore_filters <- function(data, filters=data@qsip@filter) {
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the fraction level
 #' @param code Optional character vector specifying a particular combination of replicate and fraction frequency to test.
 #'   Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})
+#' @param filter_phyloseq Logical value indicating whether or not to filter taxa from \code{data@@otu_table} and \code{data@@tax_table}.
 #'
 #' @details \code{impose_filter} is primarily utilized within other functions.
 #'
@@ -182,7 +183,7 @@ explore_filters <- function(data, filters=data@qsip@filter) {
 #'
 #' @export
 
-filter_qsip <- function(data, replicate=0, fraction=0, code=character()) {
+filter_qsip <- function(data, replicate=0, fraction=0, code=character(), filter_phyloseq=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   tax_filter <- impose_filter(data, replicate=replicate, fraction=fraction, code=code)
   tax_filter <- names(tax_filter[tax_filter > 0])
@@ -201,6 +202,9 @@ filter_qsip <- function(data, replicate=0, fraction=0, code=character()) {
       x <- x[names(x) %in% tax_filter]
     }
     data@qsip@.Data[[1]] <- x
+  }
+  if(filter_phyloseq) {
+    data <- phyloseq::filter_taxa(data, function(x) phyloseq::taxa_names(x@otu_table) %in% tax_filter, TRUE)
   }
   return(data)
 }
