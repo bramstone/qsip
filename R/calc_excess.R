@@ -52,7 +52,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     tax_names <- rownames(mw_lab)
     # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
     if(data@qsip@iso=='18O') {
-      adjust <- 12.07747 + mw_l
+      adjust <- 12.07747
       nat_abund <- 0.002000429
     } else if(data@qsip@iso=='13C') {
       wl <- data@qsip[['wad_light']]
