@@ -128,7 +128,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
       # calculate atom excess for this subsampling iteration
       if(data@qsip@iso=='18O') {
-        adjust <- 12.07747 + mw_l
+        adjust <- 12.07747
         nat_abund <- 0.002000429
       } else if(data@qsip@iso=='13C') {
         wl <- data@qsip[['wad_light']]
@@ -168,9 +168,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     data <- collate_results(data, med, tax_names=tax_names, 'atom_excess', sparse=TRUE)
     data <- collate_results(data, ci_l, tax_names=tax_names, ci_u_name, sparse=TRUE)
     # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
-    data <- calc_wad(data, filter=filter)
-    data <- calc_d_wad(data)
-    data <- calc_mw(data)
+    data <- suppressWarnings(calc_wad(data, filter=filter))
+    data <- suppressWarnings(calc_d_wad(data))
+    data <- suppressWarnings(calc_mw(data))
     return(data)
     #
     # -------------------------------------------------------------
