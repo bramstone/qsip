@@ -78,10 +78,10 @@ calc_d_wad <- function(data, filter=FALSE) {
     d_ft[[i]] <- heavy - light
   }
   # organize and add new data as S4 matrix
-  data <- collate_results(data, d_ft, 'd_wad', tax_names=tax_names, sparse=TRUE)
+  data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
   # return weighted average densities of light calcs only
   iso_group2 <- iso_group2[match(names(ft), iso_group2$interaction),] # match row order to ft
   wl <- ft[which(as.numeric(iso_group2$iso)==1)]
-  data <- collate_results(data, wl, 'wad_light', tax_names=tax_names, sparse=TRUE)
+  data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
   return(data)
 }

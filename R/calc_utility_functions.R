@@ -51,7 +51,13 @@ split_data <- function(data, new_data, grouping, grouping_w_phylosip=T) {
 # Function used to handle adding new data to phylosip object .Data slot (data@qsip@.Data)
 # parameter ... Indicates options to pass to Matrix, for specifying whether it should be sparse or not
 collate_results <- function(data, new_data, tax_names=NULL, metric, ...) {
-  if(is.null(tax_names)) tax_names <- phyloseq::taxa_names(data)
+  if(is.null(tax_names)) {
+    if(ncol(new_data)==length(phyloseq::taxa_names(data))) {
+      tax_names <- phyloseq::taxa_names(data)
+    } else if(length(data@qsip@filter) > 0) {
+      tax_names <- data@qsip@filter
+    }
+  }
   # combine format based on whether taxa were rows or not
   if(class(new_data)=='list') {
     if(phyloseq::taxa_are_rows(data)) {

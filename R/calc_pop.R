@@ -33,6 +33,8 @@ calc_pop <- function(data) {
   # transform sequencing abundances to 16S copy numbers
   # returns feature table (as matrix) with taxa as columns, samples as rows
   ft <- copy_no(data)
+  n_taxa <- ncol(ft)
+  tax_names <- colnames(ft)
   # calculate total 16S copy abundance for each sample
   ft <- split_data(data, ft, data@qsip@rep_id)
   ft <- lapply(ft, colSums, na.rm=T)
@@ -107,8 +109,8 @@ calc_pop <- function(data) {
     d <- get(d_names[2])
   }
   # organize and add new data as S4 matrices
-  data <- collate_results(data, t(b), 'pop_birth', sparse=T)
-  data <- collate_results(data, t(d), 'pop_death', sparse=T)
-  data <- collate_results(data, t(b - d), 'pop_flux', sparse=T)
+  data <- collate_results(data, t(b), tax_names=tax_names, 'pop_birth', sparse=T)
+  data <- collate_results(data, t(d), tax_names=tax_names, 'pop_death', sparse=T)
+  data <- collate_results(data, t(b - d), tax_names=tax_names, 'pop_flux', sparse=T)
   return(data)
 }

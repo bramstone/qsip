@@ -30,6 +30,7 @@ calc_wad <- function(data, filter=FALSE) {
   # transform sequencing abundances to 16S copy numbers
   # returns matrix with taxa as columns, samples as rows
   ft <- copy_no(data)
+  tax_names <- colnames(ft)
   # manipulate data matrix and calculate
   ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
   dv <- split(data@sam_data[[data@qsip@density]],
@@ -42,7 +43,7 @@ calc_wad <- function(data, filter=FALSE) {
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
   }
   # organize and add new data as S4 matrix
-  data <- collate_results(data, ft, 'wad')
+  data <- collate_results(data, ft, tax_names=tax_names, 'wad')
   return(data)
 }
 
