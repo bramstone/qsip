@@ -42,7 +42,7 @@ calc_wad <- function(data, filter=FALSE) {
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
   } else if(filter && length(data@qsip@filter)==0) {
-    warning('No filtering data contained in ', deparse(substitut(data)), '; returning unfiltered values', call.=FALSE)
+    warning('No filtering data contained in ', deparse(substitute(data)), '; returning unfiltered values', call.=FALSE)
   }
   # organize and add new data as S4 matrix
   data <- collate_results(data, ft, tax_names=tax_names, 'wad')
