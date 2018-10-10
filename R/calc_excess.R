@@ -54,8 +54,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     if(data@qsip@iso=='18O') {
       adjust <- 12.07747 + mw_l
       nat_abund <- 0.002000429
-    }
-    else if(data@qsip@iso=='13C') {
+    } else if(data@qsip@iso=='13C') {
+      wl <- data@qsip[['wad_light']]
+      wl <- as(wl, 'matrix')
+      gc <- (wl - 1.646057) / 0.083506
       adjust <- (-0.4987282 * gc) + 9.974564
       nat_abund <- 0.01111233
     }
@@ -80,16 +82,17 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
     # keep only valid rows
     keep_rows <- (iso_group$replicate %in% rownames(ft) & !is.na(iso_group$iso))
-    if(sum(!keep_rows) > 0) {
-      warning('Dropping group(s): ',
+    if(sum(!keep_rows) > 0 && is.null(data@qsip[['d_wad']])) {
+      message('Dropping group(s): ',
               paste(as.character(iso_group$replicate[!keep_rows]), collapse=', '),
-              ' - from calculation', call.=FALSE)
+              ' - from calculation')
     }
     iso_group <- iso_group[iso_group$replicate %in% rownames(ft),]
     ft <- ft[!is.na(iso_group$iso),]
     iso_group <- iso_group[!is.na(iso_group$iso),]
     iso_group <- iso_group[match(rownames(ft), iso_group$replicate),] # match row orders to ft
     # split by replicate groups
+    sam_names <- rownames(ft)
     ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=FALSE)
     # how many samples in each group to subsample with?
     subsample_n <- base::lapply(ft, nrow)
@@ -102,10 +105,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     # collect output in matrix (each column is an atom excess matrix from that iterations subsampling)
     # Note: this matrix will be very large if you don't filter taxa out first
     boot_collect <- matrix(0,
-                           nrow=ncol(ft) * nrow(ft),
+                           nrow=n_taxa * nlevels(iso_group$grouping),
                            ncol=iters)
-    boot_rnames <- expand.grid(rownames(excess_i),
-                               colnames(excess_i),
+    boot_rnames <- expand.grid(tax_names,
+                               levels(iso_group$grouping),
                                stringsAsFactors=FALSE)
     rownames(boot_collect) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
     rm(boot_rnames)
@@ -114,8 +117,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- mapply(function(x, y) x[y,], ft, subsample_i)
       ft_i <- do.call(rbind, ft_i)
-      data <- collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE)
-      data <- calc_mw(data)
+      rownames(ft_i) <- sam_names
+      data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
+      data <- suppressWarnings(calc_d_wad(data))
+      data <- suppressWarnings(calc_mw(data))
       mw_lab <- data@qsip[['mw_label']]
       mw_lab <- as(mw_lab, 'matrix')
       mw_l <- data@qsip[['mw_light']]
@@ -125,8 +130,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       if(data@qsip@iso=='18O') {
         adjust <- 12.07747 + mw_l
         nat_abund <- 0.002000429
-      }
-      else if(data@qsip@iso=='13C') {
+      } else if(data@qsip@iso=='13C') {
+        wl <- data@qsip[['wad_light']]
+        wl <- as(wl, 'matrix')
+        gc <- (wl - 1.646057) / 0.083506
         adjust <- (-0.4987282 * gc) + 9.974564
         nat_abund <- 0.01111233
       }
@@ -135,14 +142,16 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
       # organize and add data as single column in bootstrap output matrix
       if(percent) excess <- excess * 100
-      colnames(excess) <- colnames(ft)
+      rownames(excess) <- tax_names
       boot_collect[,i] <- c(excess)
     }
+    # clean workspace
     rm(ft_i, subsample, subsample_n)
     # summarize across iterations (lower CI, median, upper CI)
     summaries <- t(apply(boot_collect, 1,
                          quantile,
-                         c((1 - ci)/2, .5, (1 - ci)/2 + ci)))
+                         c((1 - ci)/2, .5, (1 - ci)/2 + ci),
+                         na.rm=TRUE))
     ci_l <- summaries[,1]
     med <- summaries[,2]
     ci_u <- summaries[,3]
@@ -151,9 +160,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     ci_l <- matrix(ci_l, ncol=n_taxa, byrow=TRUE)
     med <- matrix(med, ncol=n_taxa, byrow=TRUE)
     ci_u <- matrix(ci_u, ncol=n_taxa, byrow=TRUE)
-    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- rownames(excess)
-    ci_l_name <- paste0('ae_',ci*100,'_ci_l')
-    ci_u_name <- paste0('ae_',ci*100,'_ci_u')
+    colnames(ci_l) <- colnames(med) <- colnames(ci_u) <- rownames(excess)
+    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(iso_group$grouping)
+    ci_l_name <- paste0('atom_excess_ci_l')
+    ci_u_name <- paste0('atom_excess_ci_u')
     data <- collate_results(data, ci_l, tax_names=tax_names, ci_l_name, sparse=TRUE)
     data <- collate_results(data, med, tax_names=tax_names, 'atom_excess', sparse=TRUE)
     data <- collate_results(data, ci_l, tax_names=tax_names, ci_u_name, sparse=TRUE)
