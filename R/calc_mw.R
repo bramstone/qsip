@@ -45,7 +45,7 @@ calc_mw <- function(data, separate_wad_light=TRUE, filter=FALSE) {
   }
   gc <- (1 / 0.083506) * (wl - 1.646057)
   # calculate mol. weight of taxa without isotope
-  mw_l <- 0.496 * gc + 307.691
+  mw_l <- (0.496 * gc) + 307.691
   # calculate mol. weight of taxa in labeled treatments
   mw_lab <- ((ft/wl) + 1) * mw_l
   # organize and add new data as S4 matrices
