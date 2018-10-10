@@ -37,10 +37,12 @@ calc_wad <- function(data, filter=FALSE) {
               data@sam_data[[data@qsip@rep_id]]) # split densities by replicate IDs
   ft <- base::Map(function(y, x) apply(y, 2, wad, x, na.rm=TRUE), ft, dv)
   # apply filtering first if desired
-  if(filter && length(data@qsip@filter)!=0) {
+  if(filter && length(data@qsip@filter) > 0) {
     ft <- do.call(rbind, ft)
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
+  } else if(filter && length(data@qsip@filter)==0) {
+    warning('No filtering data contained in phylosip object ', deparse(substitut(data)), call.=FALSE)
   }
   # organize and add new data as S4 matrix
   data <- collate_results(data, ft, tax_names=tax_names, 'wad')
