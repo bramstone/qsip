@@ -167,6 +167,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     data <- collate_results(data, ci_l, tax_names=tax_names, ci_l_name, sparse=TRUE)
     data <- collate_results(data, med, tax_names=tax_names, 'atom_excess', sparse=TRUE)
     data <- collate_results(data, ci_l, tax_names=tax_names, ci_u_name, sparse=TRUE)
+    # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
+    data <- calc_wad(data, filter=filter)
+    data <- calc_d_wad(data)
+    data <- calc_mw(data)
     return(data)
     #
     # -------------------------------------------------------------
