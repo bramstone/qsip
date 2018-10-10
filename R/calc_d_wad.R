@@ -41,9 +41,9 @@ calc_d_wad <- function(data, filter=FALSE) {
   # Drop any rows (probably NA) that don't appear in ft rownames, also drop any rows with NA for isotope
   keep_rows <- (iso_group$replicate %in% rownames(ft) & !is.na(iso_group$iso))
   if(sum(!keep_rows) > 0) {
-    warning('Dropping group(s): ',
+    message('Dropping group(s): ',
             paste(as.character(iso_group$replicate[!keep_rows]), collapse=', '),
-            ' - from calculation', call.=FALSE)
+            ' - from calculation')
   }
   iso_group <- iso_group[iso_group$replicate %in% rownames(ft),]
   ft <- ft[!is.na(iso_group$iso),]
