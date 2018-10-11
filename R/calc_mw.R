@@ -36,7 +36,7 @@ calc_mw <- function(data, separate_wad_light=TRUE, filter=FALSE) {
   ft <- as(ft, 'matrix')
   wl <- data@qsip[['wad_light']]
   wl <- as(wl, 'matrix')
-  if(phyloseq::taxa_are_rows(data)) ft <- t(ft); wl <- t(wl)
+  if(phyloseq::taxa_are_rows(data)) {ft <- t(ft); wl <- t(wl)}
   tax_names <- colnames(ft)
   # calculate GC content of each taxa (averaged across all groups of samples or not)
   if(!separate_wad_light) {
