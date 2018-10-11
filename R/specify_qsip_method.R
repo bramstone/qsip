@@ -66,7 +66,7 @@ setMethod('specify_qsip',
             matching_args <- sapply(matching_args, match, data@sam_data@names)
             if(anyNA(matching_args)) {
               culprits <- names(matching_args)[which(is.na(matching_args))] # who doesn't match
-              stop('Arguments ', paste0(culprits, collapse=', '), 'do not mach those in ', deparse(substitute(data)), call.=F)
+              stop('Arguments ', paste0(culprits, collapse=', '), ' do not mach those in @sam_data object', call.=F)
             }
             #            } else {  # User input good (w formula)?
             #              formula_terms <- eval_formula(formula)
