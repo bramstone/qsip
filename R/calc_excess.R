@@ -87,9 +87,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     # keep only valid rows
     keep_rows <- (iso_group$replicate %in% rownames(ft) & !is.na(iso_group$iso))
     if(sum(!keep_rows) > 0 && is.null(data@qsip[['d_wad']])) {
-      message('Dropping group(s): ',
+      warning('Dropping group(s): ',
               paste(as.character(iso_group$replicate[!keep_rows]), collapse=', '),
-              ' - from calculation')
+              ' - from calculation', call.=FALSE)
     }
     iso_group <- iso_group[iso_group$replicate %in% rownames(ft),]
     ft <- ft[!is.na(iso_group$iso),]
@@ -105,10 +105,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     subsample <- base::mapply(matrix,
                               subsample,
                               nrow=subsample_n,
-                              byrow=F, SIMPLIFY=F)
+                              byrow=F, SIMPLIFY=FALSE)
     # collect output in matrix (each column is an atom excess matrix from that iterations subsampling)
     # Note: this matrix will be very large if you don't filter taxa out first
-    if(all.equal(iso_group2$iso, iso_group2$grouping)) {
+    if(all.equal(iso_group$iso, iso_group$grouping)) {
       boot_collect <- matrix(0, nrow=n_taxa, ncol=iters)
       rownames(boot_collect) <- tax_names
       } else {
@@ -119,12 +119,12 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
                                  levels(iso_group$grouping),
                                  stringsAsFactors=FALSE)
       rownames(boot_collect) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
+      rm(boot_rnames)
     }
-    rm(boot_rnames)
     for(i in 1:iters) {
       # subsample WAD values, calc diff_WAD and molecular weights
       subsample_i <- lapply(subsample, function(x) x[,i])
-      ft_i <- mapply(function(x, y) x[y,], ft, subsample_i)
+      ft_i <- mapply(function(x, y) x[y,], ft, subsample_i, SIMPLIFY=FALSE)
       ft_i <- do.call(rbind, ft_i)
       rownames(ft_i) <- sam_names
       data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
@@ -154,11 +154,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
       # organize and add data as single column in bootstrap output matrix
       if(percent) excess <- excess * 100
-      rownames(excess) <- tax_names
       boot_collect[,i] <- c(excess)
     }
     # clean workspace
-    rm(ft_i, subsample, subsample_n)
+    rm(ft_i, subsample, subsample_n, subsample_i)
     # summarize across iterations (lower CI, median, upper CI)
     summaries <- t(apply(boot_collect, 1,
                          quantile,
@@ -172,8 +171,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     ci_l <- matrix(ci_l, ncol=n_taxa, byrow=TRUE)
     med <- matrix(med, ncol=n_taxa, byrow=TRUE)
     ci_u <- matrix(ci_u, ncol=n_taxa, byrow=TRUE)
-    colnames(ci_l) <- colnames(med) <- colnames(ci_u) <- rownames(excess)
-    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(iso_group$grouping)
+    colnames(ci_l) <- colnames(med) <- colnames(ci_u) <- tax_names
+    if(all.equal(iso_group$iso, iso_group$grouping)) {
+      rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- unique(iso_group$grouping[as.numeric(iso_group$grouping)==2])
+    } else rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(iso_group$grouping)
     ci_l_name <- paste0('atom_excess_ci_l')
     ci_u_name <- paste0('atom_excess_ci_u')
     data <- collate_results(data, ci_l, tax_names=tax_names, ci_l_name, sparse=TRUE)
