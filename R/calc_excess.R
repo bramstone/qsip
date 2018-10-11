@@ -83,6 +83,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     n_taxa <- ncol(ft)
     tax_names <- colnames(ft)
     iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    ft <- ft[match(iso_group$replicate, rownames(ft)),] # match row orders to replicate IDs
     # keep only valid rows
     keep_rows <- (iso_group$replicate %in% rownames(ft) & !is.na(iso_group$iso))
     if(sum(!keep_rows) > 0 && is.null(data@qsip[['d_wad']])) {
@@ -93,9 +94,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     iso_group <- iso_group[iso_group$replicate %in% rownames(ft),]
     ft <- ft[!is.na(iso_group$iso),]
     iso_group <- iso_group[!is.na(iso_group$iso),]
-    iso_group <- iso_group[match(rownames(ft), iso_group$replicate),] # match row orders to ft
     # split by replicate groups
     sam_names <- rownames(ft)
+    iso_group$interaction <- factor(iso_group$interaction) # limit to existing combinations only
     ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=FALSE)
     # how many samples in each group to subsample with?
     subsample_n <- base::lapply(ft, nrow)
@@ -104,16 +105,21 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     subsample <- base::mapply(matrix,
                               subsample,
                               nrow=subsample_n,
-                              byrow=FALSE)
+                              byrow=F, SIMPLIFY=F)
     # collect output in matrix (each column is an atom excess matrix from that iterations subsampling)
     # Note: this matrix will be very large if you don't filter taxa out first
-    boot_collect <- matrix(0,
-                           nrow=n_taxa * nlevels(iso_group$grouping),
-                           ncol=iters)
-    boot_rnames <- expand.grid(tax_names,
-                               levels(iso_group$grouping),
-                               stringsAsFactors=FALSE)
-    rownames(boot_collect) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
+    if(all.equal(iso_group2$iso, iso_group2$grouping)) {
+      boot_collect <- matrix(0, nrow=n_taxa, ncol=iters)
+      rownames(boot_collect) <- tax_names
+      } else {
+      boot_collect <- matrix(0,
+                             nrow=n_taxa * nlevels(iso_group$grouping),
+                             ncol=iters)
+      boot_rnames <- expand.grid(tax_names,
+                                 levels(iso_group$grouping),
+                                 stringsAsFactors=FALSE)
+      rownames(boot_collect) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
+    }
     rm(boot_rnames)
     for(i in 1:iters) {
       # subsample WAD values, calc diff_WAD and molecular weights
