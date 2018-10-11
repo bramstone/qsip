@@ -63,7 +63,7 @@ calc_d_wad <- function(data, filter=FALSE) {
   if(all.equal(iso_group2$iso, iso_group2$grouping)) {
     d_ft <- ft[[2]] - ft[[1]]
     d_ft <- matrix(d_ft, nrow=1)
-    rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso==2)]
+    rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso)==2]
   } else { # use a for-loop to subtract heavy from light fraction in each group
   # create a new list to add results of mean WAD difference into
   d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
