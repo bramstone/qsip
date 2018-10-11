@@ -45,7 +45,7 @@ calc_wad <- function(data, filter=FALSE) {
     warning('No filtering data contained in ', deparse(substitute(data)), '; returning unfiltered values', call.=FALSE)
   }
   # organize and add new data as S4 matrix
-  data <- collate_results(data, ft, tax_names=tax_names, 'wad')
+  data <- collate_results(data, ft, tax_names=tax_names, 'wad', sparse=TRUE)
   return(data)
 }
 
