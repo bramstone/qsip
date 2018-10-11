@@ -48,7 +48,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     mw_lab <- as(mw_lab, 'matrix')
     mw_l <- data@qsip[['mw_light']]
     if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
-    if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
+    if(!phyloseq::taxa_are_rows(data)) {
+      mw_lab <- t(mw_lab)
+      if(is.matrix(mw_l)) mw_l <- t(mw_l)
+    }
     tax_names <- rownames(mw_lab)
     # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
     if(data@qsip@iso=='18O') {
@@ -125,7 +128,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       mw_lab <- as(mw_lab, 'matrix')
       mw_l <- data@qsip[['mw_light']]
       if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
-      if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
+      if(!phyloseq::taxa_are_rows(data)) {
+        mw_lab <- t(mw_lab)
+        if(is.matrix(mw_l)) mw_l <- t(mw_l)
+      }
       # calculate atom excess for this subsampling iteration
       if(data@qsip@iso=='18O') {
         adjust <- 12.07747
