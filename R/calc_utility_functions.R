@@ -6,7 +6,7 @@ copy_no <- function(data) {
   ft <- as(data@otu_table, 'matrix')
   # make relative abundances with taxa as columns and samples as rows
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
-  ft <- ft * base::rowSums(ft, na.rm=TRUE)
+  ft <- ft / base::rowSums(ft, na.rm=TRUE)
   # multiply by total 16S copy number per sample
   ft <- ft * data@sam_data[[data@qsip@abund]]
   ft[is.nan(ft)] <- 0
