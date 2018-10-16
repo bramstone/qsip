@@ -172,7 +172,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     med <- matrix(med, ncol=n_taxa, byrow=TRUE)
     ci_u <- matrix(ci_u, ncol=n_taxa, byrow=TRUE)
     colnames(ci_l) <- colnames(med) <- colnames(ci_u) <- tax_names
-    if(all.equal(iso_group$iso, iso_group$grouping)) {
+    if(isTRUE(all.equal(iso_group$iso, iso_group$grouping))) {
       rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- unique(iso_group$grouping[as.numeric(iso_group$grouping)==2])
     } else rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(iso_group$grouping)
     ci_l_name <- paste0('atom_excess_ci_l')
