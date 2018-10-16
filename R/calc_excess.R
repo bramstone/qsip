@@ -108,7 +108,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
                               byrow=F, SIMPLIFY=FALSE)
     # collect output in matrix (each column is an atom excess matrix from that iterations subsampling)
     # Note: this matrix will be very large if you don't filter taxa out first
-    if(all.equal(iso_group$iso, iso_group$grouping)) {
+    if(isTRUE(all.equal(iso_group$iso, iso_group$grouping))) {
       boot_collect <- matrix(0, nrow=n_taxa, ncol=iters)
       rownames(boot_collect) <- tax_names
       } else {
