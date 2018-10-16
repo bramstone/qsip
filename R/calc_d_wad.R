@@ -60,7 +60,7 @@ calc_d_wad <- function(data, filter=FALSE) {
   ft <- base::lapply(ft, function(x) {x[is.nan(x)] <- NA; x})
   # If there is no replicate grouping (i.e., all replicates in a treatment are grouped)...
   iso_group2 <- unique(iso_group[,!names(iso_group) %in% 'replicate']) # only get unique elements to match levels in ft
-  if(all.equal(iso_group2$iso, iso_group2$grouping)) {
+  if(isTRUE(all.equal(iso_group2$iso, iso_group2$grouping))) {
     d_ft <- ft[[2]] - ft[[1]]
     d_ft <- matrix(d_ft, nrow=1)
     rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso)==2]
