@@ -159,27 +159,12 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     # clean workspace
     rm(ft_i, subsample, subsample_n, subsample_i)
     # summarize across iterations (lower CI, median, upper CI)
-    summaries <- t(apply(boot_collect, 1,
-                         quantile,
-                         c((1 - ci)/2, .5, (1 - ci)/2 + ci),
-                         na.rm=TRUE))
-    ci_l <- summaries[,1]
-    med <- summaries[,2]
-    ci_u <- summaries[,3]
-    rm(boot_collect, summaries)
-    # reconstruct matrices with taxa as columns and output
-    ci_l <- matrix(ci_l, ncol=n_taxa, byrow=TRUE)
-    med <- matrix(med, ncol=n_taxa, byrow=TRUE)
-    ci_u <- matrix(ci_u, ncol=n_taxa, byrow=TRUE)
-    colnames(ci_l) <- colnames(med) <- colnames(ci_u) <- tax_names
-    if(isTRUE(all.equal(iso_group$iso, iso_group$grouping))) {
-      rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- unique(iso_group$grouping[as.numeric(iso_group$grouping)==2])
-    } else rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(iso_group$grouping)
+    ci_data <- summarize_ci(boot_collect, ci=ci, tax_names=tax_names, grouping=iso_group)
     ci_l_name <- paste0('atom_excess_ci_l')
     ci_u_name <- paste0('atom_excess_ci_u')
-    data <- collate_results(data, ci_l, tax_names=tax_names, ci_l_name, sparse=TRUE)
-    data <- collate_results(data, med, tax_names=tax_names, 'atom_excess', sparse=TRUE)
-    data <- collate_results(data, ci_u, tax_names=tax_names, ci_u_name, sparse=TRUE)
+    data <- collate_results(data, ci_data$ci_l, tax_names=tax_names, ci_l_name, sparse=TRUE)
+    data <- collate_results(data, ci_data$med, tax_names=tax_names, 'atom_excess', sparse=TRUE)
+    data <- collate_results(data, ci_data$ci_u, tax_names=tax_names, ci_u_name, sparse=TRUE)
     # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
     data <- suppressWarnings(calc_wad(data, filter=filter))
     data <- suppressWarnings(calc_d_wad(data))
