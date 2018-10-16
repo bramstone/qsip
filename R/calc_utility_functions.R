@@ -98,7 +98,7 @@ collate_results <- function(data, new_data, tax_names=NULL, metric, ...) {
 
 # function that generates confidence intervals for a metric (lower CI, median, upper CI)
 # also handles row and column names. Returns a list
-summrize_ci <- function(bootstraps, ci, list_names=c('ci_l', 'med', 'ci_u'), tax_names, grouping) {
+summrize_ci <- function(bootstraps, ci, grouping, list_names=c('ci_l', 'med', 'ci_u')) {
   summaries <- t(apply(bootstraps, 1,
                        quantile,
                        c((1 - ci)/2, .5, (1 - ci)/2 + ci),
@@ -106,7 +106,6 @@ summrize_ci <- function(bootstraps, ci, list_names=c('ci_l', 'med', 'ci_u'), tax
   ci_l <- summaries[,1]
   med <- summaries[,2]
   ci_u <- summaries[,3]
-  colnames(ci_l) <- colnames(med) <- colnames(ci_u) <- tax_names
   if(isTRUE(all.equal(grouping[,1], grouping$grouping))) {
     rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- unique(grouping$grouping[as.numeric(grouping$grouping)==2])
   } else rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(grouping$grouping)
