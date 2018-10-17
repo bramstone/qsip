@@ -39,7 +39,7 @@ calc_wad <- function(data, filter=FALSE) {
   # ft <- base::Map(function(y, x) apply(y, 2, wad, x, na.rm=TRUE), ft, dv)
   ra <- base::lapply(ra, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x})
   ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ra, dv)
-  ft <- base::lapply(ft_2, colSums, na.rm=T)
+  ft <- base::lapply(ft, colSums, na.rm=T)
   # apply filtering first if desired
   if(filter && length(data@qsip@filter) > 0) {
     ft <- do.call(rbind, ft)
