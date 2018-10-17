@@ -159,7 +159,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     # clean workspace
     rm(ft_i, subsample, subsample_n, subsample_i)
     # summarize across iterations (lower CI, median, upper CI)
-    ci_data <- summarize_ci(boot_collect, ci, grouping=iso_group)
+    ci_data <- summarize_ci(boot_collect, ci, grouping=iso_group, ncols=n_taxa)
     ci_l_name <- paste0('atom_excess_ci_l')
     ci_u_name <- paste0('atom_excess_ci_u')
     data <- collate_results(data, ci_data$ci_l, tax_names=tax_names, ci_l_name, sparse=TRUE)

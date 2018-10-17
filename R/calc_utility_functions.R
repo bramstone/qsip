@@ -98,7 +98,7 @@ collate_results <- function(data, new_data, tax_names=NULL, metric, ...) {
 
 # function that generates confidence intervals for a metric (lower CI, median, upper CI)
 # also handles column names. Returns a list
-summrize_ci <- function(bootstraps, ci, grouping, list_names=c('ci_l', 'med', 'ci_u')) {
+summarize_ci <- function(bootstraps, ci, grouping, ncols, list_names=c('ci_l', 'med', 'ci_u')) {
   summaries <- t(apply(bootstraps, 1,
                        quantile,
                        c((1 - ci)/2, .5, (1 - ci)/2 + ci),
@@ -106,12 +106,17 @@ summrize_ci <- function(bootstraps, ci, grouping, list_names=c('ci_l', 'med', 'c
   ci_l <- summaries[,1]
   med <- summaries[,2]
   ci_u <- summaries[,3]
+  # arrange into matrices
+  ci_l <- matrix(ci_l, ncol=ncols, byrow=T)
+  med <- matrix(med, ncol=ncols, byrow=T)
+  ci_u <- matrix(ci_u, ncol=ncols, byrow=T)
+  # assign rownames (colnames assigned in collate_results)
   if(isTRUE(all.equal(grouping[,1], grouping$grouping))) {
     rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- unique(grouping$grouping[as.numeric(grouping$grouping)==2])
   } else {
     rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(grouping$grouping)
-    # NEXT, NEED TO CONVERT BACK TO MATRIX
   }
+  # put into list and return
   output <- list(ci_l, med, ci_u)
   names(output) <- list_names
   return(output)

@@ -3,16 +3,16 @@
 #' Calculates population growth and death rates
 #'
 #' @param data Data as a \code{phyloseq} object
-#'
-#' @details Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
-#'   change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
 #' @param ci_method Character value indicating how to calculate confidence intervals of stable isotope atom excess.
 #'   Options are \code{bootstrap} or \code{bayesian} (see \code{details} below for discussion on their differences).
 #'   The default is blank indicating that no confidence intervals will be calculated.
 #' @param ci Numeric value from 0 to 1 indicating the width of the confidence interval for bootsrapped atom excess values.
 #' @param iters Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.
+#' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+#'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #'
-#' @details Some text here about proper coding of timepoints and grouping of different treatments and experimental groups.
+#' @details Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
+#'   change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
 #'
 #' @return \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@@qsip@@.Data} slot
 #'   of population birth rates for each taxon at each group of replicates. The row and column specifications will mirror those of the \code{phylosip}'s
@@ -30,7 +30,7 @@
 #'
 #' @export
 
-calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999) {
+calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   if(length(data@qsip@timepoint)==0) stop('Must specify different sample times with timepoint')
@@ -203,10 +203,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       boot_rnames <- expand.grid(tax_names,
                                  levels(time_group$grouping),
                                  stringsAsFactors=FALSE)
-      rownames(boot_collect_r) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
+      rownames(boot_collect_b) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
       boot_collect_d <- boot_collect_b
       rm(boot_rnames)
     }
+    #
     for(i in 1:iters) {
       # subsample WADs
       subsample_i_wads <- lapply(subsample_wads, function(x) x[,i])
@@ -235,13 +236,12 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
       ft_i <- ft_i[,match(time_group2$interaction, colnames(ft_i))] # re-order columns to match time_group2$interaction
       n_t_names <- paste0('n_t_',levels(time_group2$time))
-      # NOTE: This function uses t in for-loop iterations to designate cycle through different timepoints
+      # t represents different timepoints
       for(t in 1:nlevels(time_group2$time)) {
         assign(n_t_names[t],
                ft_i[,time_group2$time==levels(time_group2$time)[t]])
       }
-      # calculate pop fluxes
-      # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
+      # calculate pop fluxes, start with mol. weight heavy max
       mw_max <- (12.07747 * 0.6) + mw_l
       # calculate proportion in light fraction (N_light) at any time after 0
       n_l_names <- paste0('n_l_', levels(time_group2$time))
@@ -277,21 +277,35 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       boot_collect_b[,i] <- c(b)
       boot_collect_d[,i] <- c(d)
     }
-    # END FOR LOOP
+    # END OF BOOTSTRAP ITERATIONS
+    #
     # clean workspace
-    rm(ft_i, wads_i, subsample, subsample_wads, subsample_n, subsample_i, subsample_wads_i, b, d)
+    rm(ft_i, wads_i, subsample, subsample_wads,
+       subsample_n, subsample_i, subsample_i_wads, b, d,
+       b_names, d_names, n_l_names, n_t_names)
     # summarize birth, death, flux across iterations (lower CI, median, upper CI)
-    ci_birth <- summarize_ci(boot_collect_b, ci, grouping=time_group)
-    ci_death <- summarize(boot_collect_d, ci, grouping=time_group)
-    ci_flux <- summarize(boot_collect_b - boot_collect_d, ci, grouping=time_group)
+    ci_birth <- summarize_ci(boot_collect_b, ci, grouping=time_group, ncols=n_taxa)
+    ci_death <- summarize_ci(boot_collect_d, ci, grouping=time_group, ncols=n_taxa)
+    ci_flux <- summarize_ci(boot_collect_b - boot_collect_d, ci, grouping=time_group, ncols=n_taxa)
     rm(boot_collect_b, boot_collect_d)
     # collate results
-    # NEED TO UPDATE FOR BIRTH, DEATH, AND FLUX
-    ci_l_name <- paste0('atom_excess_ci_l')
-    ci_u_name <- paste0('atom_excess_ci_u')
-    data <- collate_results(data, ci_l, tax_names=tax_names, ci_l_name, sparse=TRUE)
-    data <- collate_results(data, med, tax_names=tax_names, 'atom_excess', sparse=TRUE)
-    data <- collate_results(data, ci_u, tax_names=tax_names, ci_u_name, sparse=TRUE)
+    objects <- c('ci_birth', 'ci_death', 'ci_flux')
+    metric <- c('pop_birth', 'pop_death', 'pop_flux')
+    ci_level <- c('ci_l', 'med', 'ci_u')
+    for(i in 1:3) {
+      for(j in 1:3) {
+        data <- collate_results(data,
+                                get(objects[i])[[j]],
+                                tax_names=tax_names,
+                                metric=paste(metric[i], ci_level[j], sep='_'),
+                                sparse=TRUE)
+      }
+    }
+    # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
+    data <- suppressWarnings(calc_wad(data, filter=filter))
+    data <- suppressWarnings(calc_d_wad(data))
+    data <- suppressWarnings(calc_mw(data))
+    return(data)
   #
   # -------------------------------------------------------------
   # CI values obtained through bootstrap subsampling
