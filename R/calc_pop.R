@@ -162,6 +162,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # calculate and create subsampling criteria for 16S gene copy number......................
     # transform sequencing abundances to 16S copy numbers (taxa as columns)
     ft <- copy_no(data)
+    ft <- ft[,colnames(ft) %in% tax_names]
     # calculate total 16S copy abundance for each sample
     ft <- split_data(data, ft, data@qsip@rep_id)
     ft <- lapply(ft, colSums, na.rm=T)
@@ -180,7 +181,6 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- ft[!is.na(time_group$time),]
     time_group <- time_group[!is.na(time_group$time),]
     # split across replicate groups
-    sam_names <- rownames(ft)
     time_group$interaction <- factor(time_group$interaction) # limit to existing combinations only
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
     # how many samples in each group to subsample with?
