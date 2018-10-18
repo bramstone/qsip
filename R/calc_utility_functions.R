@@ -121,3 +121,32 @@ summarize_ci <- function(bootstraps, ci, grouping, ncols, list_names=c('ci_l', '
   names(output) <- list_names
   return(output)
 }
+
+# function that removes invalid (missing) rows between matrix (ft, WADS, diff_WADS, etc.) and grouping data.frame
+# returns a list of 2; [[1]] is the matrix, [[2]] is the grouping data.frame with invalid rows removed
+# samples should be rows in feature table
+valid_samples <- function(data, feature_table, grouping=c('iso', 'time'), quiet=FALSE) {
+  grouping <- match.arg(grouping, c('iso', 'time'))
+  # grouping by isotope or timepoint?
+  if(grouping=='iso') {
+    group_data <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+  } else {
+    group_data <- time_grouping(data, data@qsip@timepoint, data@qsip@rep_id, data@qsip@rep_group)
+  }
+  # identify any NAs that occur across iso/timepoint column, replicate IDs, or grouping variable
+  invalid <- sapply(group_data, is.na)
+  invalid <- apply(invalid, 1, any)
+  # issue warning of samples lost
+  if(sum(invalid) > 0 && quiet==FALSE) {
+    warning('Dropping group(s): ',
+            paste(as.character(group_data$replicate[invalid]), collapse=', '),
+            ' - from calculation', call.=FALSE)
+  }
+  # match matrix rows with samples with complete data
+  group_data <- group_data[!invalid,]
+  # re-level factors
+  group_data <- data.frame(lapply(group_data, factor))
+  feature_table <- feature_table[match(group_data$replicate, rownames(feature_table)),]
+  # return data
+  return(list(feature_table, group_data))
+}
