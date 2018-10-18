@@ -37,19 +37,8 @@ calc_d_wad <- function(data, filter=FALSE) {
   tax_names <- colnames(ft)
   # manipulate data matrix and calculate
   # split by replicate groups, but keep track of light and heavy fractions
-  iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-  ft <- ft[match(iso_group$replicate, rownames(ft)),] # match row orders to replicate ID names
-  # Drop any rows (probably NA) that don't appear in ft rownames, also drop any rows with NA for isotope
-  keep_rows <- (iso_group$replicate %in% rownames(ft) & !is.na(iso_group$iso))
-  if(sum(!keep_rows) > 0) {
-    warning('Dropping group(s): ',
-            paste(as.character(iso_group$replicate[!keep_rows]), collapse=', '),
-            ' - from calculation', call.=FALSE)
-  }
-  iso_group <- iso_group[iso_group$replicate %in% rownames(ft),]
-  ft <- ft[!is.na(iso_group$iso),]
-  iso_group <- iso_group[!is.na(iso_group$iso),]
-  iso_group$interaction <- factor(iso_group$interaction) # limit to existing combinations only
+  ft <- valid_samples(data, ft, 'iso')
+  iso_group <- ft[[2]]; ft <- ft[[1]]
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # WAD values of 0 indicate no taxa presence in that replicate, convert to NA
   # so that mean WAD values are not pulled down
