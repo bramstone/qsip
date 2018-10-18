@@ -48,26 +48,15 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- copy_no(data)
     n_taxa <- ncol(ft)
     tax_names <- colnames(ft)
-    # calculate total 16S copy abundance for each sample
+    # calculate per-taxon total 16S copy abundance for each sample
     ft <- split_data(data, ft, data@qsip@rep_id)
     ft <- lapply(ft, colSums, na.rm=T)
     ft <- do.call(rbind, ft)
-    # separate samples based on timepoint
-    time_group <- time_grouping(data, data@qsip@timepoint, data@qsip@rep_id, data@qsip@rep_group)
-    ft <- ft[match(time_group$replicate, rownames(ft)),] # match row orders to replicate IDs
-    # Drop any rows (probably NA) that don't appear in ft rownames, also drop any rows with NA for timepoint
-    keep_rows <- (time_group$replicate %in% rownames(ft) & !is.na(time_group$time))
-    if(sum(!keep_rows) > 0) {
-      warning('Dropping group(s): ',
-              paste(as.character(time_group$replicate[!keep_rows]), collapse=', '),
-              ' - from calculation', call.=FALSE)
-    }
-    time_group <- time_group[time_group$replicate %in% rownames(ft),]
-    ft <- ft[!is.na(time_group$time),]
-    time_group <- time_group[!is.na(time_group$time),]
-    # split and sum 16S copy no.s across replicate groups, cbind so that taxa are ROWS
+    # separate samples based on timepoint, keeping only valid samples
+    ft <- valid_samples(data, ft, 'time')
+    time_group <- ft[[2]]; ft <- ft[[1]]
     sam_names <- rownames(ft)
-    iso_group$interaction <- factor(time_group$interaction) # limit to existing combinations only
+    # calculate per-taxon total 16S copy abundance for each group:time interaction point
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
     ft <- lapply(ft, colSums, na.rm=T)
     ft <- do.call(cbind, ft)
@@ -140,16 +129,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     if(phyloseq::taxa_are_rows(data)) wads <- t(wads)
     n_taxa <- ncol(wads)
     tax_names <- colnames(wads)
-    iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-    wads <- wads[match(iso_group$replicate, rownames(wads)),] # match row orders to replicate IDs
-    # keep only valid rows
-    keep_rows <- (iso_group$replicate %in% rownames(wads) & !is.na(iso_group$iso))
-    iso_group <- iso_group[iso_group$replicate %in% rownames(wads),]
-    wads <- wads[!is.na(iso_group$iso),]
-    iso_group <- iso_group[!is.na(iso_group$iso),]
+    # keep only valid samples
+    wads <- valid_samples(data, wads, 'iso', quiet=TRUE)
+    iso_group <- wads[[2]]; wads <- wads[[1]]
     # split by replicate groups
     sam_names_wads <- rownames(wads)
-    iso_group$interaction <- factor(iso_group$interaction) # limit to existing combinations only
     wads <- split_data(data, wads, iso_group$interaction, grouping_w_phylosip=FALSE)
     # how many samples in each group to subsample WADS with?
     subsample_n <- base::lapply(wads, nrow)
@@ -162,26 +146,14 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # calculate and create subsampling criteria for 16S gene copy number......................
     # transform sequencing abundances to 16S copy numbers (taxa as columns)
     ft <- copy_no(data)
-    ft <- ft[,colnames(ft) %in% tax_names]
-    # calculate total 16S copy abundance for each sample
+    if(filter) ft <- ft[,colnames(ft) %in% tax_names]
+    # calculate per-taxon total 16S copy abundance for each sample
     ft <- split_data(data, ft, data@qsip@rep_id)
     ft <- lapply(ft, colSums, na.rm=T)
     ft <- do.call(rbind, ft)
-    # separate samples based on timepoint
-    time_group <- time_grouping(data, data@qsip@timepoint, data@qsip@rep_id, data@qsip@rep_group)
-    ft <- ft[match(time_group$replicate, rownames(ft)),] # match row orders to replicate IDs
-    # Drop any rows (probably NA) that don't appear in ft rownames, also drop any rows with NA for timepoint
-    keep_rows <- (time_group$replicate %in% rownames(ft) & !is.na(time_group$time))
-    if(sum(!keep_rows) > 0) {
-      warning('Dropping group(s): ',
-              paste(as.character(time_group$replicate[!keep_rows]), collapse=', '),
-              ' - from calculation', call.=FALSE)
-    }
-    time_group <- time_group[time_group$replicate %in% rownames(ft),]
-    ft <- ft[!is.na(time_group$time),]
-    time_group <- time_group[!is.na(time_group$time),]
-    # split across replicate groups
-    time_group$interaction <- factor(time_group$interaction) # limit to existing combinations only
+    # separate samples based on timepoint, keeping only valid samples
+    ft <- valid_samples(data, ft, 'time')
+    time_group <- ft[[2]]; ft <- ft[[1]]
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
     # how many samples in each group to subsample with?
     subsample_n <- base::lapply(ft, nrow)
@@ -191,7 +163,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
                               subsample,
                               nrow=subsample_n,
                               byrow=F, SIMPLIFY=FALSE)
-    # collect output in matrices (each column is an pop matrix from that iterations subsampling)
+    # collect output in matrices (each column is a pop matrix from that iterations' subsampling)
     if(isTRUE(all.equal(time_group$time, time_group$grouping))) {
       boot_collect_b <- matrix(0, nrow=n_taxa, ncol=iters)
       rownames(boot_collect_b) <- tax_names
@@ -227,12 +199,13 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         if(is.matrix(mw_l)) mw_l <- t(mw_l)
       }
       # subsample abundances
+      # calculate per-taxon total 16S copy abundance for each group:time interaction point
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- mapply(function(x, y) x[y,], ft, subsample_i, SIMPLIFY=FALSE)
       ft_i <- lapply(ft_i, colSums, na.rm=T)
       ft_i <- do.call(cbind, ft_i)
       ft_i[ft_i==0] <- NA
-      # get 16S copy numbers for different timepoints
+      # get per-taxon 16S copy numbers for different timepoints
       time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
       ft_i <- ft_i[,match(time_group2$interaction, colnames(ft_i))] # re-order columns to match time_group2$interaction
       n_t_names <- paste0('n_t_',levels(time_group2$time))
