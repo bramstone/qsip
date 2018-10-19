@@ -62,6 +62,7 @@ calc_d_wad <- function(data, filter=FALSE) {
                        ncol=n_taxa)
   names(d_ft) <- levels(iso_group$grouping)
   # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
+  drop_groups <- integer(0)
     for(i in 1:length(d_ft)) {
       # use numbers to reference non-labeled additions since they're element agnostic
       # any NA values result here when a taxa is completely missing from a heavy or light treatment in a replicate group
@@ -69,10 +70,19 @@ calc_d_wad <- function(data, filter=FALSE) {
                              as.numeric(iso_group2$iso)==1)
       which_heavy <- which(as.numeric(iso_group2$grouping)==i &
                              as.numeric(iso_group2$iso)==2)
+      # If there's no light OR no heavy treatment for a group of replicates, remove them
+      if(length(which_light)==0 || length(which_heavy)==0) {
+        warning('Unpaired isotope treatment in replicate group(s): ', names(d_ft)[1],
+                '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(d_ft)[i], 'replicate']), collapse=', '),
+                ' - from calculation', call.=FALSE)
+        drop_groups <- c(drop_groups, i)
+        next
+      }
       light <- ft[[which_light]]
       heavy <- ft[[which_heavy]]
       d_ft[[i]] <- heavy - light
     }
+  d_ft <- d_ft[-drop_groups]
   }
   # organize and add new data as S4 matrix
   data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
