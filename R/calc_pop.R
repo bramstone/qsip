@@ -79,8 +79,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     mw_lab <- data@qsip[['mw_label']]
     mw_lab <- as(mw_lab, 'matrix')
     mw_l <- data@qsip[['mw_light']]
-    if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
-    if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
+    if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix, then to vector
+    if(!phyloseq::taxa_are_rows(data)) {mw_lab <- t(mw_lab); mw_lab <- rowMeans(mw_lab, na.rm=TRUE)}
     # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
     mw_max <- (12.07747 * 0.6) + mw_l
     # calculate proportion in light fraction (N_light) at any time after 0
@@ -151,7 +151,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- split_data(data, ft, data@qsip@rep_id)
     ft <- lapply(ft, colSums, na.rm=T)
     ft <- do.call(rbind, ft)
-    # separate samples based on timepoint, keeping only valid samples
+    # separate abundances based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
@@ -165,39 +165,39 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
                               byrow=F, SIMPLIFY=FALSE)
     # collect output in matrices (each column is a pop matrix from that iterations' subsampling)
     if(isTRUE(all.equal(time_group$time, time_group$grouping))) {
-      boot_collect_b <- matrix(0, nrow=n_taxa, ncol=iters)
-      rownames(boot_collect_b) <- tax_names
-      boot_collect_d <- boot_collect_d
+      n_groups <- 1
+      boot_rnames <-  expand.grid(tax_names,
+                                  levels(time_group$time)[2:nlevels(time_group$time)],
+                                  stringsAsFactors=FALSE)
+      boot_rnames <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
     } else {
-      boot_collect_b <- matrix(0,
-                             nrow=n_taxa * nlevels(time_group$grouping),
-                             ncol=iters)
+      n_groups <- nlevels(time_group$grouping)
       boot_rnames <- expand.grid(tax_names,
                                  levels(time_group$grouping),
+                                 levels(time_group$time)[2:nlevels(time_group$time)],
                                  stringsAsFactors=FALSE)
-      rownames(boot_collect_b) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
-      boot_collect_d <- boot_collect_b
-      rm(boot_rnames)
+      boot_rnames <- interaction(boot_rnames[,1], boot_rnames[,2], boot_rnames[,3], sep=':')
     }
+    n_timepoints <- nlevels(time_group$time) - 1
+    boot_collect_b <- matrix(0, nrow=n_taxa * n_groups * n_timepoints, ncol=iters)
+    rownames(boot_collect_b) <- boot_rnames
+    boot_collect_d <- boot_collect_b
+    rm(boot_rnames)
     #
     for(i in 1:iters) {
       # subsample WADs
       subsample_i_wads <- lapply(subsample_wads, function(x) x[,i])
-      wads_i <- mapply(function(x, y) x[y,], ft, subsample_i_wads, SIMPLIFY=FALSE)
+      wads_i <- mapply(function(x, y) x[y,], wads, subsample_i_wads, SIMPLIFY=FALSE)
       wads_i <- do.call(rbind, wads_i)
       rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
       data <- suppressWarnings(calc_d_wad(data))
-      data <- suppressWarnings(calc_mw(data))
+      data <- suppressWarnings(calc_mw(data, separate_wad_light=FALSE))
       mw_lab <- data@qsip[['mw_label']]
       mw_lab <- as(mw_lab, 'matrix')
       mw_l <- data@qsip[['mw_light']]
-      if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
-      if(!phyloseq::taxa_are_rows(data)) {
-        mw_lab <- t(mw_lab)
-        if(is.matrix(mw_l)) mw_l <- t(mw_l)
-      }
+      if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
       # subsample abundances
       # calculate per-taxon total 16S copy abundance for each group:time interaction point
       subsample_i <- lapply(subsample, function(x) x[,i])
@@ -212,19 +212,27 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # t represents different timepoints
       for(t in 1:nlevels(time_group2$time)) {
         assign(n_t_names[t],
-               ft_i[,time_group2$time==levels(time_group2$time)[t]])
+               ft_i[,t])
       }
       # calculate pop fluxes, start with mol. weight heavy max
       mw_max <- (12.07747 * 0.6) + mw_l
       # calculate proportion in light fraction (N_light) at any time after 0
       n_l_names <- paste0('n_l_', levels(time_group2$time))
       for(t in 2:nlevels(time_group2$time)) {
-        n <- ((mw_max - mw_lab)/(mw_max - mw_l)) * get(n_t_names[t])
+        if(isTRUE(all.equal(time_group2$time, time_group2$grouping))) {
+          # if there is no grouping separate from timepoints, go by the column timepoints
+          mw_lab_t <- mw_lab[,t - 1]
+          # else break mw_lab into list
+        } else {
+          mw_lab <- split_data(data, mw_lab, rownames(mw_lab), grouping_with_phylosip=FALSE)
+          mw_lab_t <- mw_lab[[t - 1]]
+        }
+        n <- ((mw_max - mw_lab_t)/(mw_max - mw_l)) * get(n_t_names[t])
         colnames(n) <- colnames(get(n_t_names[t]))
         # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
         n[n < 0] <- NA
         assign(n_l_names[t], n)
-      }; rm(n)
+      }; rm(n, mw_lab_t)
       # calculate birth and death rate for each timepoint after 0
       b_names <- paste0('b_', levels(time_group2$time))
       d_names <- paste0('d_', levels(time_group2$time))
@@ -238,10 +246,10 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         assign(b_names[t], b)
         assign(d_names[t], d)
       }; rm(b,d)
-      # if more than two timepoints (0, and t), combine resulting matrices
+      # if more than two timepoints (0, and t), combine resulting matrices, but skip time 0
       if(length(n_t_names) > 2) {
-        b <- do.call(cbind, mget(b_names))
-        d <- do.call(cbind, mget(d_names))
+        b <- do.call(cbind, mget(b_names[2:length(b_names)]))
+        d <- do.call(cbind, mget(d_names[2:length(d_names)]))
       } else {
         b <- get(b_names[2])
         d <- get(d_names[2])
@@ -255,11 +263,17 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # clean workspace
     rm(ft_i, wads_i, subsample, subsample_wads,
        subsample_n, subsample_i, subsample_i_wads, b, d,
-       b_names, d_names, n_l_names, n_t_names)
+       b_names, d_names, n_l_names, n_t_names, ft, wads, mw_lab, mw_l)
     # summarize birth, death, flux across iterations (lower CI, median, upper CI)
-    ci_birth <- summarize_ci(boot_collect_b, ci, grouping=time_group, ncols=n_taxa)
-    ci_death <- summarize_ci(boot_collect_d, ci, grouping=time_group, ncols=n_taxa)
-    ci_flux <- summarize_ci(boot_collect_b - boot_collect_d, ci, grouping=time_group, ncols=n_taxa)
+    ci_birth <- summarize_ci(boot_collect_b, ci,
+                             grouping=time_group,
+                             ncols=n_taxa)
+    ci_death <- summarize_ci(boot_collect_d, ci,
+                             grouping=time_group,
+                             ncols=n_taxa)
+    ci_flux <- summarize_ci(boot_collect_b - boot_collect_d, ci,
+                            grouping=time_group,
+                            ncols=n_taxa)
     rm(boot_collect_b, boot_collect_d)
     # collate results
     objects <- c('ci_birth', 'ci_death', 'ci_flux')
