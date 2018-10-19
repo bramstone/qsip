@@ -88,6 +88,8 @@ calc_d_wad <- function(data, filter=FALSE) {
   data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
   # return weighted average densities of light calcs only
   iso_group2 <- iso_group2[match(names(ft), iso_group2$interaction),] # match row order to ft
+  ft <- ft[!as.numeric(iso_group2$grouping) %in% drop_groups] # remove unpaired & dropped groups
+  iso_group2 <- iso_group2[!as.numeric(iso_group2$grouping) %in% drop_groups,] # remove unpaired & dropped groups
   wl <- ft[which(as.numeric(iso_group2$iso)==1)]
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
   return(data)
