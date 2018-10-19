@@ -138,7 +138,7 @@ valid_samples <- function(data, feature_table, grouping=c('iso', 'time'), quiet=
   invalid <- apply(invalid, 1, any)
   # issue warning of samples lost
   if(sum(invalid) > 0 && quiet==FALSE) {
-    warning('Dropping group(s): ',
+    warning('Dropping sample(s): ',
             paste(as.character(group_data$replicate[invalid]), collapse=', '),
             ' - from calculation', call.=FALSE)
   }
