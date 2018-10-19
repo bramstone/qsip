@@ -116,9 +116,12 @@ summarize_ci <- function(bootstraps, ci, grouping, ncols, list_names=c('ci_l', '
   ci_u <- matrix(ci_u, ncol=ncols, byrow=T)
   # assign rownames (colnames assigned in collate_results)
   if(isTRUE(all.equal(grouping[,1], grouping$grouping))) {
-    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- unique(grouping$grouping[as.numeric(grouping$grouping)==2])
+    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(time_group$time)[2:nlevels(time_group$time)]
   } else {
-    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(grouping$grouping)
+    rnames <- expand.grid(levels(time_group$grouping),
+                          levels(time_group$time)[2:nlevels(time_group$time)],
+                          stringsAsFactors=FALSE)
+    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
   }
   # put into list and return
   output <- list(ci_l, med, ci_u)
