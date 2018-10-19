@@ -19,7 +19,9 @@ iso_grouping <- function(data, iso, rep_id, grouping) {
   output <- data.frame(iso=data@sam_data[[iso]],
                        replicate=data@sam_data[[rep_id]],
                        grouping=data@sam_data[[grouping]])
-  output$interaction <- interaction(output$iso, output$grouping)
+  if(isTRUE(all.equal(output$iso, output$grouping))) {
+    output$interaction <- output$iso
+  } else output$interaction <- interaction(output$iso, output$grouping)
   output <- output[!duplicated(output$replicate),]
   rownames(output) <- NULL
   return(output)
@@ -31,7 +33,9 @@ time_grouping <- function(data, timepoint, rep_id, grouping) {
   output <- data.frame(time=as.factor(data@sam_data[[timepoint]]),
                        replicate=data@sam_data[[rep_id]],
                        grouping=data@sam_data[[grouping]])
-  output$interaction <- interaction(output$time, output$grouping)
+  if(isTRUE(all.equal(output$time, output$grouping))) {
+    output$interaction <- output$time
+  } else output$interaction <- interaction(output$time, output$grouping)
   output <- output[!duplicated(output$replicate),]
   rownames(output) <- NULL
   return(output)
