@@ -121,7 +121,7 @@ summarize_ci <- function(bootstraps, ci, grouping, ncols, list_names=c('ci_l', '
     rnames <- expand.grid(levels(grouping$grouping),
                           levels(grouping$time)[2:nlevels(grouping$time)],
                           stringsAsFactors=FALSE)
-    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
+    rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- interaction(rnames[,1], rnames[,2], sep=':')
   }
   # put into list and return
   output <- list(ci_l, med, ci_u)
