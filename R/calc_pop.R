@@ -116,7 +116,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # organize and add new data as S4 matrices
     data <- collate_results(data, t(b), tax_names=tax_names, 'pop_birth', sparse=T)
     data <- collate_results(data, t(d), tax_names=tax_names, 'pop_death', sparse=T)
-    data <- collate_results(data, t(b - d), tax_names=tax_names, 'pop_flux', sparse=T)
+    data <- collate_results(data, t(b + d), tax_names=tax_names, 'pop_flux', sparse=T)
     return(data)
   #
   # -------------------------------------------------------------
@@ -271,7 +271,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ci_death <- summarize_ci(boot_collect_d, ci,
                              grouping=time_group,
                              ncols=n_taxa)
-    ci_flux <- summarize_ci(boot_collect_b - boot_collect_d, ci,
+    ci_flux <- summarize_ci(boot_collect_b + boot_collect_d, ci,
                             grouping=time_group,
                             ncols=n_taxa)
     rm(boot_collect_b, boot_collect_d)
