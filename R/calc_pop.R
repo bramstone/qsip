@@ -224,8 +224,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
           mw_lab_t <- mw_lab[,t - 1]
           # else break mw_lab into list
         } else {
-          mw_lab <- split_data(data, mw_lab, rownames(mw_lab), grouping_with_phylosip=FALSE)
-          mw_lab_t <- mw_lab[[t - 1]]
+          mw_lab_t <- split_data(data, t(mw_lab), rownames(t(mw_lab)), grouping_w_phylosip=FALSE)
+          mw_lab_t <- mw_lab_t[[t - 1]]
         }
         n <- ((mw_max - mw_lab_t)/(mw_max - mw_l)) * get(n_t_names[t])
         colnames(n) <- colnames(get(n_t_names[t]))
