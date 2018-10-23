@@ -305,7 +305,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         data <- collate_results(data,
                                 get(objects[i])[[j]],
                                 tax_names=tax_names,
-                                metric=paste(metric[i], ci_level[j], sep='_'),
+                                metric=sub('_{1}$', '', paste(metric[i], ci_level[j], sep='_')),
                                 sparse=TRUE)
       }
     }
