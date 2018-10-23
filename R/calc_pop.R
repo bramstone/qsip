@@ -244,7 +244,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         }
         n <- ((mw_max - mw_lab_t)/(mw_max - mw_l)) * get(n_t_names[t])
         colnames(n) <- colnames(get(n_t_names[t]))
-        # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
+        # remove negative abundances (occurs when labeled MWs are heavier than heavymax)
         n[n < 0] <- NA
         assign(n_l_names[t], n)
       }; rm(n, mw_lab_t)
