@@ -10,6 +10,8 @@
 #' @param iters Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.
 #' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
+#' @param growth_model Character vector specifying whether growth rates should be calculated using exponential or linear growth.
+#'   Default is \code{exponential}.
 #'
 #' @details Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
 #'   change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
@@ -30,9 +32,10 @@
 #'
 #' @export
 
-calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE) {
+calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear')) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
+  growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
   if(length(data@qsip@timepoint)==0) stop('Must specify different sample times with timepoint')
   if(data@qsip@iso!='18O') stop('Must use 18O-labeled treatment to calculate population flux')
   #
@@ -56,9 +59,10 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
     sam_names <- rownames(ft)
-    # calculate per-taxon total 16S copy abundance for each group:time interaction point
+    # calculate per-taxon average 16S copy abundance for each group:time interaction point
+    # it should be average in case time 0 data weren't fractioned
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
-    ft <- lapply(ft, colSums, na.rm=T)
+    ft <- lapply(ft, colMeans, na.rm=T)
     ft <- do.call(cbind, ft)
     ft[ft==0] <- NA
     # get 16S copy numbers for different timepoints
@@ -96,11 +100,18 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     b_names <- paste0('b_', levels(time_group2$time))
     d_names <- paste0('d_', levels(time_group2$time))
     for(t in 2:nlevels(time_group2$time)) {
-      b <- get(n_t_names[t]) / get(n_l_names[t])
-      d <- get(n_l_names[t]) / get(n_t_names[1])
       incubate_time <- as.numeric(levels(time_group2$time)[t])
-      b <- log(b) / incubate_time
-      d <- log(d) / incubate_time
+      if(growth_model=='exponential') {
+        b <- get(n_t_names[t]) / get(n_l_names[t])
+        d <- get(n_l_names[t]) / get(n_t_names[1])
+        b <- log(b) / incubate_time
+        d <- log(d) / incubate_time
+      } else {
+        b <- get(n_t_names[t]) - get(n_l_names[t])
+        d <- get(n_l_names[t]) - get(n_t_names[1])
+        b <- b / incubate_time
+        d <- d / incubate_time
+      }
       colnames(b) <- colnames(d) <- colnames(get(n_t_names[t]))
       assign(b_names[t], b)
       assign(d_names[t], d)
@@ -147,7 +158,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # transform sequencing abundances to 16S copy numbers (taxa as columns)
     ft <- copy_no(data)
     if(filter) ft <- ft[,colnames(ft) %in% tax_names]
-    # calculate per-taxon total 16S copy abundance for each sample
+    # calculate per-taxon 16S copy abundance for each sample
     ft <- split_data(data, ft, data@qsip@rep_id)
     ft <- lapply(ft, colSums, na.rm=T)
     ft <- do.call(rbind, ft)
@@ -199,10 +210,10 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       mw_l <- data@qsip[['mw_light']]
       if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
       # subsample abundances
-      # calculate per-taxon total 16S copy abundance for each group:time interaction point
+      # calculate per-taxon average 16S copy abundance for each group:time interaction point
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- mapply(function(x, y) x[y,], ft, subsample_i, SIMPLIFY=FALSE)
-      ft_i <- lapply(ft_i, colSums, na.rm=T)
+      ft_i <- lapply(ft_i, colMeans, na.rm=T)
       ft_i <- do.call(cbind, ft_i)
       ft_i[ft_i==0] <- NA
       # get per-taxon 16S copy numbers for different timepoints
@@ -212,7 +223,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # t represents different timepoints
       for(t in 1:nlevels(time_group2$time)) {
         assign(n_t_names[t],
-               ft_i[,t])
+               ft_i[,time_group2$time==levels(time_group2$time)[t]])
       }
       # calculate pop fluxes, start with mol. weight heavy max
       mw_max <- (12.07747 * 0.6) + mw_l
@@ -222,10 +233,12 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         if(isTRUE(all.equal(time_group2$time, time_group2$grouping))) {
           # if there is no grouping separate from timepoints, go by the column timepoints
           mw_lab_t <- mw_lab[,t - 1]
-          # else break mw_lab into list
+          # else break mw_lab into list separated by timepoint
         } else {
-          mw_lab_t <- split_data(data, t(mw_lab), rownames(t(mw_lab)), grouping_w_phylosip=FALSE)
-          mw_lab_t <- mw_lab_t[[t - 1]]
+          time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
+          time_group_t$time <- factor(time_group_t$time)
+          mw_lab_t <- split_data(data, t(mw_lab), time_group_t$time, grouping_w_phylosip=FALSE)
+          mw_lab_t <- t(mw_lab_t[[t - 1]])
         }
         n <- ((mw_max - mw_lab_t)/(mw_max - mw_l)) * get(n_t_names[t])
         colnames(n) <- colnames(get(n_t_names[t]))
@@ -237,12 +250,18 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       b_names <- paste0('b_', levels(time_group2$time))
       d_names <- paste0('d_', levels(time_group2$time))
       for(t in 2:nlevels(time_group2$time)) {
-        b <- get(n_t_names[t]) / get(n_l_names[t])
-        d <- get(n_l_names[t]) / get(n_t_names[1])
         incubate_time <- as.numeric(levels(time_group2$time)[t])
-        b <- log(b) / incubate_time
-        d <- log(d) / incubate_time
-        colnames(b) <- colnames(d) <- colnames(get(n_t_names[t]))
+        if(growth_model=='exponential') {
+          b <- get(n_t_names[t]) / get(n_l_names[t])
+          d <- get(n_l_names[t]) / get(n_t_names[1])
+          b <- log(b) / incubate_time
+          d <- log(d) / incubate_time
+        } else {
+          b <- get(n_t_names[t]) - get(n_l_names[t])
+          d <- get(n_l_names[t]) - get(n_t_names[1])
+          b <- b / incubate_time
+          d <- d / incubate_time
+        }
         assign(b_names[t], b)
         assign(d_names[t], d)
       }; rm(b,d)
