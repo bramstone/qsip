@@ -12,6 +12,8 @@
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #' @param growth_model Character vector specifying whether growth rates should be calculated using exponential or linear growth.
 #'   Default is \code{exponential}.
+#' @param mu Numeric value from 0 to 1 indicating the expected incorporation of labeled O into DNA during replication.
+#'   Default is \code{0.60}.
 #'
 #' @details Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
 #'   change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
@@ -32,7 +34,7 @@
 #'
 #' @export
 
-calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear')) {
+calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'), mu=0.6) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
@@ -86,7 +88,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix, then to vector
     if(!phyloseq::taxa_are_rows(data)) {mw_lab <- t(mw_lab); mw_lab <- rowMeans(mw_lab, na.rm=TRUE)}
     # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-    mw_max <- (12.07747 * 0.6) + mw_l
+    mw_max <- (12.07747 * mu) + mw_l
     # calculate proportion in light fraction (N_light) at any time after 0
     n_l_names <- paste0('n_l_', levels(time_group2$time))
     for(t in 2:nlevels(time_group2$time)) {
@@ -226,7 +228,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
                ft_i[,time_group2$time==levels(time_group2$time)[t]])
       }
       # calculate pop fluxes, start with mol. weight heavy max
-      mw_max <- (12.07747 * 0.6) + mw_l
+      mw_max <- (12.07747 * mu) + mw_l
       # calculate proportion in light fraction (N_light) at any time after 0
       n_l_names <- paste0('n_l_', levels(time_group2$time))
       for(t in 2:nlevels(time_group2$time)) {
