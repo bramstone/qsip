@@ -299,7 +299,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # collate results
     objects <- c('ci_birth', 'ci_death', 'ci_flux')
     metric <- c('pop_birth', 'pop_death', 'pop_flux')
-    ci_level <- c('ci_l', 'med', 'ci_u')
+    ci_level <- c('ci_l', '', 'ci_u')
     for(i in 1:3) {
       for(j in 1:3) {
         data <- collate_results(data,
