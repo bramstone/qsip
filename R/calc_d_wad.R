@@ -54,6 +54,7 @@ calc_d_wad <- function(data, filter=FALSE) {
     d_ft <- ft[[2]] - ft[[1]]
     d_ft <- matrix(d_ft, nrow=1)
     rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso)==2]
+    keep_groups <- !logical(2)
   } else { # use a for-loop to subtract heavy from light fraction in each group
   # create a new list to add results of mean WAD difference into
   d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
@@ -91,7 +92,7 @@ calc_d_wad <- function(data, filter=FALSE) {
   ft <- ft[iso_group2$grouping %in% levels(iso_group2$grouping)[keep_groups]] # remove unpaired & dropped groups
   iso_group2 <- iso_group2[iso_group2$grouping %in% levels(iso_group2$grouping)[keep_groups],] # remove unpaired & dropped groups
   wl <- ft[which(as.numeric(iso_group2$iso)==1)]
-  names(wl) <- unique(iso_group2$grouping)
+  if(isFALSE(all.equal(iso_group2$iso, iso_group2$grouping))) names(wl) <- unique(iso_group2$grouping)
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
   return(data)
 }
