@@ -195,7 +195,7 @@ filter_qsip <- function(data, replicate=0, fraction=0, code=character(), filter_
   if(length(data@qsip) > 0) {
     types <- sapply(data@qsip@.Data, function(x) class(x)[1])
     # remove taxa from each qSIP-related output object in the data@qsip@.Data list
-    for(i in 1:length(dat@qsip)) {
+    for(i in 1:length(data@qsip)) {
       x <- data@qsip@.Data[[1]]
       if(types[i]=='dgCMatrix') {
         if(phyloseq::taxa_are_rows(data)) {
