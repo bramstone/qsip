@@ -114,7 +114,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
       n[n < 0] <- NA
       assign(n_l_names[t], n)
-    }; rm(n, mw_lab_t, mw_l_t, time_group_t, mw_max)
+    }; suppressWarnings(rm(n, mw_lab_t, mw_l_t, time_group_t, mw_max))
     # calculate birth and death rate for each timepoint after 0
     b_names <- paste0('b_', levels(time_group2$time))
     d_names <- paste0('d_', levels(time_group2$time))
@@ -233,7 +233,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # subsample abundances
       # calculate per-taxon average 16S copy abundance for each group:time interaction point
       subsample_i <- lapply(subsample, function(x) x[,i])
-      ft_i <- mapply(function(x, y) x[y,], ft, subsample_i, SIMPLIFY=FALSE)
+      ft_i <- mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
       ft_i <- lapply(ft_i, colMeans, na.rm=T)
       ft_i <- do.call(cbind, ft_i)
       ft_i[ft_i==0] <- NA
@@ -269,7 +269,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
         n[n < 0] <- NA
         assign(n_l_names[t], n)
-      }; rm(n, mw_lab_t, mw_l_t, time_group_t, mw_max)
+      }; suppressWarnings(rm(n, mw_lab_t, mw_l_t, time_group_t, mw_max))
       # calculate birth and death rate for each timepoint after 0
       b_names <- paste0('b_', levels(time_group2$time))
       d_names <- paste0('d_', levels(time_group2$time))
