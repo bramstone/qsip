@@ -41,8 +41,8 @@ calc_mw <- function(data, separate_wad_light=TRUE, filter=FALSE) {
   # calculate GC content of each taxa (averaged across all groups of samples or not)
   if(!separate_wad_light) {
     wl <- colMeans(wl, na.rm=T)
-    wl[is.nan(wl)] <- NA
   }
+  wl[is.nan(wl)] <- NA
   gc <- (1 / 0.083506) * (wl - 1.646057)
   # calculate mol. weight of taxa without isotope
   mw_l <- (0.496 * gc) + 307.691
