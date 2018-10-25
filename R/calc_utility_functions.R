@@ -21,8 +21,13 @@ iso_grouping <- function(data, iso, rep_id, grouping) {
                        grouping=data@sam_data[[grouping]])
   if(isTRUE(all.equal(output$iso, output$grouping))) {
     output$interaction <- output$iso
-  } else output$interaction <- interaction(output$iso, output$grouping)
-  output <- output[!duplicated(output$replicate),]
+    output$full.interaction <- output$interaction
+  } else {
+    output$interaction <- interaction(output$iso, output$grouping)
+    output$full.interaction <- interaction(output$replicate, output$interaction)
+  }
+  output <- output[!duplicated(output$full.interaction),]
+  output$full.interaction <- NULL
   rownames(output) <- NULL
   return(output)
 }
@@ -35,8 +40,13 @@ time_grouping <- function(data, timepoint, rep_id, grouping) {
                        grouping=data@sam_data[[grouping]])
   if(isTRUE(all.equal(output$time, output$grouping))) {
     output$interaction <- output$time
-  } else output$interaction <- interaction(output$time, output$grouping)
-  output <- output[!duplicated(output$replicate),]
+    output$full.interaction <- output$interaction
+  } else {
+    output$interaction <- interaction(output$time, output$grouping)
+    output$full.interaction <- interaction(output$replicate, output$interaction)
+  }
+  output <- output[!duplicated(output$full.interaction),]
+  output$full.interaction <- NULL
   rownames(output) <- NULL
   return(output)
 }
