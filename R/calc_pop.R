@@ -86,18 +86,32 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     mw_lab <- as(mw_lab, 'matrix')
     mw_l <- data@qsip[['mw_light']]
     if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix, then to vector
-    if(!phyloseq::taxa_are_rows(data)) {mw_lab <- t(mw_lab); mw_lab <- rowMeans(mw_lab, na.rm=TRUE)}
-    # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-    mw_max <- (12.07747 * mu) + mw_l
+    if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
+    if(!phyloseq::taxa_are_rows(data) && is.matrix(mw_l)) mw_l <- t(mw_l)
     # calculate proportion in light fraction (N_light) at any time after 0
     n_l_names <- paste0('n_l_', levels(time_group2$time))
     for(t in 2:nlevels(time_group2$time)) {
-      n <- ((mw_max - mw_lab)/(mw_max - mw_l)) * get(n_t_names[t])
+      if(isTRUE(all.equal(time_group2$time, time_group2$grouping))) {
+        # if there is no grouping separate from timepoints, go by the column timepoints
+        mw_lab_t <- mw_lab[,t-1]
+        mw_l_t <- mw_l[,t-1]
+        # else break mw_label and mw_light into list separated by timepoint
+      } else {
+        time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
+        time_group_t$time <- factor(time_group_t$time)
+        mw_lab_t <- split_data(data, t(mw_lab), time_group_t$time, grouping_w_phylosip=FALSE)
+        mw_l_t <- split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE)
+        mw_lab_t <- t(mw_lab_t[[t - 1]])
+        mw_l_t <- t(mw_l_t[[t - 1]])
+      }
+      # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
+      mw_max <- (12.07747 * mu) + mw_l_t
+      n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
       colnames(n) <- colnames(get(n_t_names[t]))
       # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
       n[n < 0] <- NA
       assign(n_l_names[t], n)
-    }; rm(n)
+    }; rm(n, mw_lab_t, mw_l_t, time_group_t, mw_max)
     # calculate birth and death rate for each timepoint after 0
     b_names <- paste0('b_', levels(time_group2$time))
     d_names <- paste0('d_', levels(time_group2$time))
@@ -111,17 +125,17 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       } else {
         b <- get(n_t_names[t]) - get(n_l_names[t])
         d <- get(n_l_names[t]) - get(n_t_names[1])
-        b <- b / incubate_time
-        d <- d / incubate_time
+        b <- (b / get(n_t_names[1])) / incubate_time
+        d <- (d / get(n_t_names[1])) / incubate_time
       }
       colnames(b) <- colnames(d) <- colnames(get(n_t_names[t]))
       assign(b_names[t], b)
       assign(d_names[t], d)
     }; rm(b,d)
-    # if more than two timepoints (0, and t), combine resulting matrices
+    # if more than two timepoints (0, and t), combine resulting matrices, but skip time 0
     if(length(n_t_names) > 2) {
-      b <- do.call(cbind, mget(b_names))
-      d <- do.call(cbind, mget(d_names))
+      b <- do.call(cbind, mget(b_names[2:length(b_names)]))
+      d <- do.call(cbind, mget(d_names[2:length(d_names)]))
     } else {
       b <- get(b_names[2])
       d <- get(d_names[2])
@@ -206,11 +220,13 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
       data <- suppressWarnings(calc_d_wad(data))
-      data <- suppressWarnings(calc_mw(data, separate_wad_light=FALSE))
+      data <- suppressWarnings(calc_mw(data, separate_wad_light=TRUE))
       mw_lab <- data@qsip[['mw_label']]
       mw_lab <- as(mw_lab, 'matrix')
       mw_l <- data@qsip[['mw_light']]
+      if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')
       if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
+      if(!phyloseq::taxa_are_rows(data) && is.matrix(mw_l)) mw_l <- t(mw_l)
       # subsample abundances
       # calculate per-taxon average 16S copy abundance for each group:time interaction point
       subsample_i <- lapply(subsample, function(x) x[,i])
@@ -227,27 +243,30 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         assign(n_t_names[t],
                ft_i[,time_group2$time==levels(time_group2$time)[t]])
       }
-      # calculate pop fluxes, start with mol. weight heavy max
-      mw_max <- (12.07747 * mu) + mw_l
       # calculate proportion in light fraction (N_light) at any time after 0
       n_l_names <- paste0('n_l_', levels(time_group2$time))
       for(t in 2:nlevels(time_group2$time)) {
         if(isTRUE(all.equal(time_group2$time, time_group2$grouping))) {
           # if there is no grouping separate from timepoints, go by the column timepoints
-          mw_lab_t <- mw_lab[,t - 1]
-          # else break mw_lab into list separated by timepoint
+          mw_lab_t <- mw_lab[,t-1]
+          mw_l_t <- mw_l[,t-1]
+          # else break mw_label and mw_light into list separated by timepoint
         } else {
           time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
           time_group_t$time <- factor(time_group_t$time)
           mw_lab_t <- split_data(data, t(mw_lab), time_group_t$time, grouping_w_phylosip=FALSE)
+          mw_l_t <- split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE)
           mw_lab_t <- t(mw_lab_t[[t - 1]])
+          mw_l_t <- t(mw_l_t[[t - 1]])
         }
-        n <- ((mw_max - mw_lab_t)/(mw_max - mw_l)) * get(n_t_names[t])
+        # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
+        mw_max <- (12.07747 * mu) + mw_l_t
+        n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
         colnames(n) <- colnames(get(n_t_names[t]))
-        # remove negative abundances (occurs when labeled MWs are heavier than heavymax)
+        # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
         n[n < 0] <- NA
         assign(n_l_names[t], n)
-      }; rm(n, mw_lab_t)
+      }; rm(n, mw_lab_t, mw_l_t, time_group_t, mw_max)
       # calculate birth and death rate for each timepoint after 0
       b_names <- paste0('b_', levels(time_group2$time))
       d_names <- paste0('d_', levels(time_group2$time))
@@ -261,8 +280,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         } else {
           b <- get(n_t_names[t]) - get(n_l_names[t])
           d <- get(n_l_names[t]) - get(n_t_names[1])
-          b <- b / incubate_time
-          d <- d / incubate_time
+          b <- (b / get(n_t_names[1])) / incubate_time
+          d <- (d / get(n_t_names[1])) / incubate_time
         }
         assign(b_names[t], b)
         assign(d_names[t], d)
