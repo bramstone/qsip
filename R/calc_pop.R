@@ -38,8 +38,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
+  if(data@qsip@iso!='18O') stop('Must use 18O-labeled treatment to calculate population change')
   if(length(data@qsip@timepoint)==0) stop('Must specify different sample times with timepoint')
-  if(data@qsip@iso!='18O') stop('Must use 18O-labeled treatment to calculate population flux')
+  times <- data@sam_data[[data@qsip@timepoint]]
+  if(nlevels(times)==1 || length(unique(times))==1) stop('Only one timepoint present in the data - cannot calculate population change')
+  rm(times)
   #
   # -------------------------------------------------------------
   # no CI and resampling
