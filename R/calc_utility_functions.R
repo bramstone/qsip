@@ -16,17 +16,18 @@ copy_no <- function(data) {
 # Function to generate small reference data frame of unique isotope and isotope x grouping combinations
 # to use with grouped calculations where the light and heavy treatments must be identified
 iso_grouping <- function(data, iso, rep_id, grouping) {
+  if(length(data@qsip@rep_group)==0) grouping <- 1 else grouping <- data@sam_data[[grouping]]
   output <- data.frame(iso=data@sam_data[[iso]],
                        replicate=data@sam_data[[rep_id]],
-                       grouping=data@sam_data[[grouping]])
-  if(isTRUE(all.equal(output$iso, output$grouping))) {
-    output$interaction <- output$iso
-    output$full.interaction <- output$interaction
-  } else {
+                       grouping=grouping)
+  #if(length(data@qsip@rep_group)==0) {
+ #   output$interaction <- output$iso
+ #   output$full.interaction <- output$interaction
+ # } else {
     output$interaction <- interaction(output$iso, output$grouping)
     output$full.interaction <- interaction(output$replicate, output$interaction)
-  }
-  output <- output[!duplicated(output$full.interaction),]
+#  }
+  output <- output[!duplicated(output$full.interaction) | is.na(output$full.interaction),]
   output$full.interaction <- NULL
   rownames(output) <- NULL
   return(output)
@@ -35,17 +36,18 @@ iso_grouping <- function(data, iso, rep_id, grouping) {
 # Function to generate small reference data frame of unique replicate and timepoint combinations
 # to use with pop calculations where the time 0 and time t must be identified
 time_grouping <- function(data, timepoint, rep_id, grouping) {
+  if(length(data@qsip@rep_group)==0) grouping <- 1 else grouping <- data@sam_data[[grouping]]
   output <- data.frame(time=data@sam_data[[timepoint]],
                        replicate=data@sam_data[[rep_id]],
-                       grouping=data@sam_data[[grouping]])
-  if(isTRUE(all.equal(output$time, output$grouping))) {
-    output$interaction <- output$time
-    output$full.interaction <- output$interaction
-  } else {
+                       grouping=grouping)
+  #if(length(data@qsip@rep_group)==0) {
+  #  output$interaction <- output$time
+  #  output$full.interaction <- output$interaction
+  #} else {
     output$interaction <- interaction(output$time, output$grouping)
     output$full.interaction <- interaction(output$replicate, output$interaction)
-  }
-  output <- output[!duplicated(output$full.interaction),]
+  #}
+  output <- output[!duplicated(output$full.interaction) | is.na(output$full.interaction),]
   output$full.interaction <- NULL
   rownames(output) <- NULL
   return(output)

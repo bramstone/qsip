@@ -27,7 +27,7 @@ calc_d_wad <- function(data, filter=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
-  if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
+  #if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso_trt)==0) stop('Must specify treatment and controls with iso_trt')
   # extract WAD values and convert to S3 matrix
   ft <- data@qsip[['wad']]
@@ -50,7 +50,7 @@ calc_d_wad <- function(data, filter=FALSE) {
   # If there is no replicate grouping (i.e., all replicates in a treatment are grouped)...
   iso_group2 <- unique(iso_group[,!names(iso_group) %in% 'replicate']) # only get unique elements to match levels in ft
   iso_group2 <- iso_group2[match(names(ft), iso_group2$interaction),]
-  if(isTRUE(all.equal(iso_group2$iso, iso_group2$grouping))) {
+  if(length(data@qsip@rep_group)==0) {
     d_ft <- ft[[2]] - ft[[1]]
     d_ft <- matrix(d_ft, nrow=1)
     rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso)==2]

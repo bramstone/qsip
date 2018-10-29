@@ -91,6 +91,11 @@ impose_filter <- function(data, replicate=0, fraction=0, code=character()) {
   ft <- do.call(rbind, ft)
   # split by replicate group
   iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+  if(length(data@qsip@timepoint) > 0) {
+    time_group <- time_grouping(data, data@qsip@timepoint, data@qsip@rep_id, data@qsip@rep_group)
+    time_group <- time_group[match(iso_group$replicate, time_group$replicate),]
+    iso_group$interaction <- factor(paste(iso_group$interaction, time_group$interaction, sep=':'))
+  }
   # Drop any rows (probably NA) that don't appear in ft rownames
   iso_group <- iso_group[match(rownames(ft), iso_group$replicate),]
   ft <- ft[!is.na(iso_group$iso),]

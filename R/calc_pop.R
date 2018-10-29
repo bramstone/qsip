@@ -94,7 +94,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # calculate proportion in light fraction (N_light) at any time after 0
     n_l_names <- paste0('n_l_', levels(time_group2$time))
     for(t in 2:nlevels(time_group2$time)) {
-      if(isTRUE(all.equal(time_group2$time, time_group2$grouping))) {
+      if(length(data@qsip@rep_group)==0) {
         # if there is no grouping separate from timepoints, go by the column timepoints
         mw_lab_t <- mw_lab[,t-1]
         mw_l_t <- mw_l[,t-1]
@@ -194,7 +194,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
                               nrow=subsample_n,
                               byrow=F, SIMPLIFY=FALSE)
     # collect output in matrices (each column is a pop matrix from that iterations' subsampling)
-    if(isTRUE(all.equal(time_group$time, time_group$grouping))) {
+    if(length(data@qsip@rep_group)==0) {
       n_groups <- 1
       boot_rnames <-  expand.grid(tax_names,
                                   levels(time_group$time)[2:nlevels(time_group$time)],
@@ -249,7 +249,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # calculate proportion in light fraction (N_light) at any time after 0
       n_l_names <- paste0('n_l_', levels(time_group2$time))
       for(t in 2:nlevels(time_group2$time)) {
-        if(isTRUE(all.equal(time_group2$time, time_group2$grouping))) {
+        if(length(data@qsip@rep_group)==0) {
           # if there is no grouping separate from timepoints, go by the column timepoints
           mw_lab_t <- mw_lab[,t-1]
           mw_l_t <- mw_l[,t-1]
