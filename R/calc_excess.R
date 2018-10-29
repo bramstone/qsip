@@ -153,9 +153,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       # atom excess
       excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
       # organize and add data as single column in bootstrap output matrix
-      if(percent) excess <- excess * 100
       boot_collect[,i] <- c(excess)
     }
+    if(percent) boot_collect <- boot_collect * 100
     # clean workspace
     rm(ft_i, subsample, subsample_n, subsample_i)
     # summarize across iterations (lower CI, median, upper CI)
