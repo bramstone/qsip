@@ -82,21 +82,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
     n_taxa <- ncol(ft)
     tax_names <- colnames(ft)
-    iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-    ft <- ft[match(iso_group$replicate, rownames(ft)),] # match row orders to replicate IDs
-    # keep only valid rows
-    keep_rows <- (iso_group$replicate %in% rownames(ft) & !is.na(iso_group$iso))
-    if(sum(!keep_rows) > 0 && is.null(data@qsip[['d_wad']])) {
-      warning('Dropping group(s): ',
-              paste(as.character(iso_group$replicate[!keep_rows]), collapse=', '),
-              ' - from calculation', call.=FALSE)
-    }
-    iso_group <- iso_group[iso_group$replicate %in% rownames(ft),]
-    ft <- ft[!is.na(iso_group$iso),]
-    iso_group <- iso_group[!is.na(iso_group$iso),]
-    # split by replicate groups
-    sam_names <- rownames(ft)
-    iso_group$interaction <- factor(iso_group$interaction) # limit to existing combinations only
+    ft <- valid_samples(data, ft, 'iso')
+    iso_group <- ft[[2]]; ft <- ft[[1]]
+    sam_names <- iso_group$replicate
     ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=FALSE)
     # how many samples in each group to subsample with?
     subsample_n <- base::lapply(ft, nrow)
@@ -125,7 +113,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       # subsample WAD values, calc diff_WAD and molecular weights
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- mapply(function(x, y) x[y,], ft, subsample_i, SIMPLIFY=FALSE)
-      ft_i <- do.call(rbind, ft_i)
+      ft_i <- recombine_in_order(ft_i, iso_group, n_taxa)
       rownames(ft_i) <- sam_names
       data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
       data <- suppressWarnings(calc_d_wad(data))
