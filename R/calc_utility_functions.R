@@ -127,7 +127,7 @@ summarize_ci <- function(bootstraps, ci, grouping, ncols, list_names=c('ci_l', '
   med <- matrix(med, ncol=ncols, byrow=T)
   ci_u <- matrix(ci_u, ncol=ncols, byrow=T)
   # assign rownames (colnames assigned in collate_results)
-  if(isTRUE(all.equal(grouping[,1], grouping$grouping))) {
+  if(length(data@qsip@rep_group)==0) {
     rownames(ci_l) <- rownames(med) <- rownames(ci_u) <- levels(grouping[,1])[2:nlevels(grouping[,1])]
   } else {
     rnames <- expand.grid(levels(grouping$grouping),
@@ -168,4 +168,17 @@ valid_samples <- function(data, feature_table, grouping=c('iso', 'time'), quiet=
   feature_table <- feature_table[match(group_data$replicate, rownames(feature_table)),]
   # return data
   return(list(feature_table, group_data))
+}
+
+
+# function which recombines randomly subsampled matrix in the correct order so that downstream calculations will
+# be performed on the correct subsets
+recombine_in_order <- function(ft, grouping, n_taxa) {
+  which_group <- as.numeric(grouping[,4])
+  group_counts <- sapply(ft, nrow)
+  temp <- matrix(nrow=sum(group_counts), ncol=n_taxa)
+  for(i in 1:nlevels(grouping[,4])) {
+    temp[which_group==i,] <- ft[[i]]
+  }
+  return(temp)
 }
