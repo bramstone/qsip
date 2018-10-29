@@ -114,7 +114,7 @@ collate_results <- function(data, new_data, tax_names=NULL, metric, ...) {
 
 # function that generates confidence intervals for a metric (lower CI, median, upper CI)
 # also handles column names. Returns a list
-summarize_ci <- function(bootstraps, ci, grouping, ncols, list_names=c('ci_l', 'med', 'ci_u')) {
+summarize_ci <- function(bootstraps, ci, grouping, ncols, list_names=c('ci_l', 'med', 'ci_u'), data) {
   summaries <- t(apply(bootstraps, 1,
                        quantile,
                        c((1 - ci)/2, .5, (1 - ci)/2 + ci),

@@ -137,16 +137,16 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     }; rm(b,d)
     # if more than two timepoints (0, and t), combine resulting matrices, but skip time 0
     if(length(n_t_names) > 2) {
-      b <- do.call(cbind, mget(b_names[2:length(b_names)]))
-      d <- do.call(cbind, mget(d_names[2:length(d_names)]))
+      b <- t(do.call(cbind, mget(b_names[2:length(b_names)])))
+      d <- t(do.call(cbind, mget(d_names[2:length(d_names)])))
     } else {
       b <- get(b_names[2])
       d <- get(d_names[2])
     }
     # organize and add new data as S4 matrices
-    data <- collate_results(data, t(b), tax_names=tax_names, 'pop_birth', sparse=T)
-    data <- collate_results(data, t(d), tax_names=tax_names, 'pop_death', sparse=T)
-    data <- collate_results(data, t(b + d), tax_names=tax_names, 'pop_flux', sparse=T)
+    data <- collate_results(data, b, tax_names=tax_names, 'pop_birth', sparse=T)
+    data <- collate_results(data, d, tax_names=tax_names, 'pop_death', sparse=T)
+    data <- collate_results(data, b + d, tax_names=tax_names, 'pop_flux', sparse=T)
     return(data)
   #
   # -------------------------------------------------------------
@@ -184,6 +184,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # separate abundances based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
+    sam_names <- time_group$replicate
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
     # how many samples in each group to subsample with?
     subsample_n <- base::lapply(ft, nrow)
@@ -218,7 +219,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # subsample WADs
       subsample_i_wads <- lapply(subsample_wads, function(x) x[,i])
       wads_i <- mapply(function(x, y) x[y,], wads, subsample_i_wads, SIMPLIFY=FALSE)
-      wads_i <- do.call(rbind, wads_i)
+      wads_i <- recombine_in_order(ft_i, iso_group, n_taxa)
       rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
@@ -235,7 +236,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
       ft_i <- lapply(ft_i, colMeans, na.rm=T)
-      ft_i <- do.call(cbind, ft_i)
+      ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa))
+      colnames(ft_i) <- sam_names
       ft_i[ft_i==0] <- NA
       # get per-taxon 16S copy numbers for different timepoints
       time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
@@ -310,13 +312,16 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # summarize birth, death, flux across iterations (lower CI, median, upper CI)
     ci_birth <- summarize_ci(boot_collect_b, ci,
                              grouping=time_group,
-                             ncols=n_taxa)
+                             ncols=n_taxa,
+                             data=data)
     ci_death <- summarize_ci(boot_collect_d, ci,
                              grouping=time_group,
-                             ncols=n_taxa)
+                             ncols=n_taxa,
+                             data=data)
     ci_flux <- summarize_ci(boot_collect_b + boot_collect_d, ci,
                             grouping=time_group,
-                            ncols=n_taxa)
+                            ncols=n_taxa,
+                            data=data)
     rm(boot_collect_b, boot_collect_d)
     # collate results
     objects <- c('ci_birth', 'ci_death', 'ci_flux')
