@@ -318,14 +318,14 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
                              grouping=time_group,
                              ncols=n_taxa,
                              data=data)
-    ci_flux <- summarize_ci(boot_collect_b + boot_collect_d, ci,
+    ci_net <- summarize_ci(boot_collect_b + boot_collect_d, ci,
                             grouping=time_group,
                             ncols=n_taxa,
                             data=data)
     rm(boot_collect_b, boot_collect_d)
     # collate results
-    objects <- c('ci_birth', 'ci_death', 'ci_flux')
-    metric <- c('pop_birth', 'pop_death', 'pop_flux')
+    objects <- c('ci_birth', 'ci_death', 'ci_net')
+    metric <- c('birth_rate', 'death_rate', 'growth_rate')
     ci_level <- c('ci_l', '', 'ci_u')
     for(i in 1:3) {
       for(j in 1:3) {
