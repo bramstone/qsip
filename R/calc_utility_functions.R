@@ -173,11 +173,15 @@ valid_samples <- function(data, feature_table, grouping=c('iso', 'time'), quiet=
 
 # function which recombines randomly subsampled matrix in the correct order so that downstream calculations will
 # be performed on the correct subsets
-recombine_in_order <- function(ft, grouping, n_taxa) {
-  which_group <- as.numeric(grouping[,4])
-  group_counts <- sapply(ft, nrow)
+recombine_in_order <- function(ft, grouping, n_taxa, condensed_grouping=FALSE) {
+  if(condensed_grouping) {
+    # pop value abundances are summarized, reducing number of samples of each group to 1
+    grouping <- grouping[!duplicated(grouping$interaction),]
+    group_counts <- nlevels(grouping$interaction)
+  } else group_counts <- sapply(ft, nrow)
+  which_group <- as.numeric(grouping$interaction)
   temp <- matrix(nrow=sum(group_counts), ncol=n_taxa)
-  for(i in 1:nlevels(grouping[,4])) {
+  for(i in 1:nlevels(grouping$interaction)) {
     temp[which_group==i,] <- ft[[i]]
   }
   return(temp)

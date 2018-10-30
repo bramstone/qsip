@@ -219,7 +219,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # subsample WADs
       subsample_i_wads <- lapply(subsample_wads, function(x) x[,i])
       wads_i <- mapply(function(x, y) x[y,], wads, subsample_i_wads, SIMPLIFY=FALSE)
-      wads_i <- recombine_in_order(ft_i, iso_group, n_taxa)
+      wads_i <- recombine_in_order(wads_i, iso_group, n_taxa)
       rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
@@ -236,8 +236,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
       ft_i <- lapply(ft_i, colMeans, na.rm=T)
-      ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa))
-      colnames(ft_i) <- sam_names
+      ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa, condensed_grouping=TRUE))
+      colnames(ft_i) <- time_group$interaction[!duplicated(time_group$interaction)]
       ft_i[ft_i==0] <- NA
       # get per-taxon 16S copy numbers for different timepoints
       time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
