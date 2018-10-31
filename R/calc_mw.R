@@ -26,7 +26,7 @@
 #'
 #' @export
 
-calc_mw <- function(data, separate_mw_light=TRUE, filter=FALSE) {
+calc_mw <- function(data, separate_mw_light=FALSE, filter=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if delta-WAD values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
