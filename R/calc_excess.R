@@ -44,15 +44,15 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
     if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter)
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
-    mw_lab <- data@qsip[['mw_label']]
-    mw_lab <- as(mw_lab, 'matrix')
+    mw_h <- data@qsip[['mw_label']]
+    mw_h <- as(mw_h, 'matrix')
     mw_l <- data@qsip[['mw_light']]
     if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
     if(!phyloseq::taxa_are_rows(data)) {
-      mw_lab <- t(mw_lab)
+      mw_h <- t(mw_h)
       if(is.matrix(mw_l)) mw_l <- t(mw_l)
     }
-    tax_names <- rownames(mw_lab)
+    tax_names <- rownames(mw_h)
     # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
     if(data@qsip@iso=='18O') {
       adjust <- 12.07747
@@ -66,7 +66,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     }
     mw_max <- adjust + mw_l
     # calculate atom excess
-    excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
+    excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
     # organize and add new data as S4 matrix
     if(percent) excess <- excess * 100
     data <- collate_results(data, t(excess), tax_names=tax_names, 'atom_excess', sparse=TRUE)
@@ -118,12 +118,12 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
       data <- suppressWarnings(calc_d_wad(data))
       data <- suppressWarnings(calc_mw(data))
-      mw_lab <- data@qsip[['mw_label']]
-      mw_lab <- as(mw_lab, 'matrix')
+      mw_h <- data@qsip[['mw_label']]
+      mw_h <- as(mw_h, 'matrix')
       mw_l <- data@qsip[['mw_light']]
       if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
       if(!phyloseq::taxa_are_rows(data)) {
-        mw_lab <- t(mw_lab)
+        mw_h <- t(mw_h)
         if(is.matrix(mw_l)) mw_l <- t(mw_l)
       }
       # calculate atom excess for this subsampling iteration
@@ -139,7 +139,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       }
       mw_max <- adjust + mw_l
       # atom excess
-      excess <- ((mw_lab - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
+      excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
       # organize and add data as single column in bootstrap output matrix
       boot_collect[,i] <- c(excess)
     }
