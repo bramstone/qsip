@@ -112,7 +112,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     for(i in 1:iters) {
       # subsample WAD values, calc diff_WAD and molecular weights
       subsample_i <- lapply(subsample, function(x) x[,i])
-      ft_i <- mapply(function(x, y) x[y,], ft, subsample_i, SIMPLIFY=FALSE)
+      ft_i <- mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
       ft_i <- recombine_in_order(ft_i, iso_group, n_taxa)
       rownames(ft_i) <- sam_names
       data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
