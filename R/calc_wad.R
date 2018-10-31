@@ -32,13 +32,12 @@ calc_wad <- function(data, filter=FALSE) {
   ft <- copy_no(data)
   tax_names <- colnames(ft)
   # manipulate data matrix and calculate
-  ra <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
   ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
   dv <- split(data@sam_data[[data@qsip@density]],
               data@sam_data[[data@qsip@rep_id]]) # split densities by replicate IDs
   # ft <- base::Map(function(y, x) apply(y, 2, wad, x, na.rm=TRUE), ft, dv)
-  ra <- base::lapply(ra, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x}) # create relative abundances
-  ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ra, dv)
+  ft <- base::lapply(ft, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x}) # create relative abundances
+  ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ft, dv)
   ft <- base::lapply(ft, colSums, na.rm=T)
   # apply filtering first if desired
   if(filter && length(data@qsip@filter) > 0) {
