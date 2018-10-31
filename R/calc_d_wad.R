@@ -3,8 +3,10 @@
 #' Calculates differences in weighted average densities across replicates due to isotope incorporation
 #'
 #' @param data Data as a \code{phyloseq} object
-#' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+#' @param filter Logical value specifying whether or not to filter taxa from the weighted average density calculation.
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
+#' @param return_diffs Logical value specifying whether to return difference in mean WADs between light and heavy samples
+#'   or to return mean heavy WADs and mean light WADs (the default).
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities have not been calculated
 #'   beforehand, \code{calc_d_wad} will compute those first.
@@ -23,7 +25,7 @@
 #'
 #' @export
 
-calc_d_wad <- function(data, filter=FALSE) {
+calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
@@ -56,15 +58,15 @@ calc_d_wad <- function(data, filter=FALSE) {
     rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso)==2]
     keep_groups <- !logical(2)
   } else { # use a for-loop to subtract heavy from light fraction in each group
-  # create a new list to add results of mean WAD difference into
-  d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
-  d_ft <- base::lapply(d_ft, matrix,
-                       rep(0, n_taxa),
-                       nrow=1,
-                       ncol=n_taxa)
-  names(d_ft) <- levels(iso_group$grouping)
-  # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
-  keep_groups <- !logical(length(d_ft))
+    # create a new list to add results of mean WAD difference into
+    d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
+    d_ft <- base::lapply(d_ft, matrix,
+                         rep(0, n_taxa),
+                         nrow=1,
+                         ncol=n_taxa)
+    names(d_ft) <- levels(iso_group$grouping)
+    # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
+    keep_groups <- !logical(length(d_ft))
     for(i in 1:length(d_ft)) {
       # use numbers to reference non-labeled additions since they're element agnostic
       # any NA values result here when a taxa is completely missing from a heavy or light treatment in a replicate group
@@ -84,15 +86,17 @@ calc_d_wad <- function(data, filter=FALSE) {
       heavy <- ft[[which_heavy]]
       d_ft[[i]] <- heavy - light
     }
-  d_ft <- d_ft[keep_groups]
+    d_ft <- d_ft[keep_groups]
   }
   # organize and add new data as S4 matrix
-  data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
   # return weighted average densities of light calcs only
   ft <- ft[iso_group2$grouping %in% levels(iso_group2$grouping)[keep_groups]] # remove unpaired & dropped groups
   iso_group2 <- iso_group2[iso_group2$grouping %in% levels(iso_group2$grouping)[keep_groups],] # remove unpaired & dropped groups
   wl <- ft[which(as.numeric(iso_group2$iso)==1)]
-  if(isFALSE(all.equal(iso_group2$iso, iso_group2$grouping))) names(wl) <- unique(iso_group2$grouping)
+  wh <- ft[which(as.numeric(iso_group2$iso)==2)]
+  if(length(data@qsip@rep_group)!=0) names(wl) <- names(wh) <- unique(iso_group2$grouping)
+  data <- collate_results(data, wh, tax_names=tax_names, 'wad_heavy', sparse=TRUE)
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
+  if(return_diffs) data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
   return(data)
 }
