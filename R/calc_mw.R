@@ -31,8 +31,8 @@ calc_mw <- function(data, separate_mw_light=TRUE, filter=FALSE) {
   # if delta-WAD values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
   if(is.null(data@qsip[['wad_light']])) data <- calc_d_wad(data, filter=filter)
-  # extract d_WAD / WAD-light values and convert to S3 matrices
-  wh <- data@qsip[['wad_heavy']]
+  # extract WAD-heavy / WAD-light values and convert to S3 matrices
+  wh <- data@qsip[['wad_label']]
   wh <- as(wh, 'matrix')
   wl <- data@qsip[['wad_light']]
   wl <- as(wl, 'matrix')
@@ -43,13 +43,14 @@ calc_mw <- function(data, separate_mw_light=TRUE, filter=FALSE) {
     wl <- colMeans(wl, na.rm=T)
   }
   wl[is.nan(wl)] <- NA
+  wh[is.nan(wh)] <- NA
   gc <- (1 / 0.083506) * (wl - 1.646057)
   # calculate mol. weight of taxa without isotope
   mw_l <- (0.496 * gc) + 307.691
   # calculate mol. weight of taxa in labeled treatments
-  mw_lab <- (((wh - wl)/wl) + 1) * mw_l
+  mw_h <- (((wh - wl)/wl) + 1) * mw_l
   # organize and add new data as S4 matrices
-  data <- collate_results(data, mw_lab, tax_names=tax_names, 'mw_label', sparse=TRUE)
+  data <- collate_results(data, mw_h, tax_names=tax_names, 'mw_label', sparse=TRUE)
   data <- collate_results(data, mw_l, tax_names=tax_names, 'mw_light', sparse=TRUE)
   return(data)
 }
