@@ -56,8 +56,6 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the replicate level
 #' @param fraction Numeric vector specifying the minimum frequency of occurrence of microbial taxa across fractions within a sample.
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the fraction level
-#' @param code Optional character vector specifying a particular combination of replicate and fraction frequency to test.
-#'   Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})
 #'
 #' @details \code{impose_filter} is primarily utilized within other functions.
 #'
@@ -68,14 +66,7 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
 #' @examples
 #' # Filter a tax table
 
-impose_filter <- function(data, replicate=0, fraction=0, code=character()) {
-  # if !is.null(code) parse and use code
-  if(missing(code)) {
-    if(length(code) > 1) warning('More than one filter code provided; will only use ', code[1], call.=F)
-    code <- strsplit(code, ':')[[1]]
-    replicate <- code[1]
-    fraction <- code[2]
-  }
+impose_filter <- function(data, replicate=0, fraction=0) {
   # extract feature table and convert to matrix with taxa as columns
   ft <- as(data@otu_table, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
@@ -173,8 +164,6 @@ explore_filters <- function(data, filters=data@qsip@filter_levels) {
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the replicate level
 #' @param fraction Numeric vector specifying the minimum frequency of occurrence of microbial taxa across fractions within a sample.
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the fraction level
-#' @param code Optional character vector specifying a particular combination of replicate and fraction frequency to test.
-#'   Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})
 #' @param filter_phyloseq Logical value indicating whether or not to filter taxa from \code{data@@otu_table} and \code{data@@tax_table}.
 #'
 #' @details \code{filter_qsip} Has twofold actions. First, it produces a character vector of taxa names that have passed the specified
@@ -193,9 +182,9 @@ explore_filters <- function(data, filters=data@qsip@filter_levels) {
 #'
 #' @export
 
-filter_qsip <- function(data, replicate=0, fraction=0, code=character(), filter_phyloseq=FALSE) {
+filter_qsip <- function(data, replicate=0, fraction=0, filter_phyloseq=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
-  tax_filter <- impose_filter(data, replicate=replicate, fraction=fraction, code=code)
+  tax_filter <- impose_filter(data, replicate=replicate, fraction=fraction)
   tax_filter <- names(tax_filter[tax_filter > 0])
   if(length(data@qsip) > 0) {
     types <- sapply(data@qsip@.Data, function(x) class(x)[1])
