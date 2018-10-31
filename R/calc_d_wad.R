@@ -95,7 +95,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE) {
   wl <- ft[which(as.numeric(iso_group2$iso)==1)]
   wh <- ft[which(as.numeric(iso_group2$iso)==2)]
   if(length(data@qsip@rep_group)!=0) names(wl) <- names(wh) <- unique(iso_group2$grouping)
-  data <- collate_results(data, wh, tax_names=tax_names, 'wad_heavy', sparse=TRUE)
+  data <- collate_results(data, wh, tax_names=tax_names, 'wad_label', sparse=TRUE)
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
   if(return_diffs) data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
   return(data)

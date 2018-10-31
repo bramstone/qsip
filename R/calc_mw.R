@@ -30,14 +30,14 @@ calc_mw <- function(data, separate_mw_light=TRUE, filter=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if delta-WAD values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-  if(is.null(data@qsip[['d_wad']])) data <- calc_d_wad(data, filter=filter)
+  if(is.null(data@qsip[['wad_light']])) data <- calc_d_wad(data, filter=filter)
   # extract d_WAD / WAD-light values and convert to S3 matrices
-  ft <- data@qsip[['d_wad']]
-  ft <- as(ft, 'matrix')
+  wh <- data@qsip[['wad_heavy']]
+  wh <- as(wh, 'matrix')
   wl <- data@qsip[['wad_light']]
   wl <- as(wl, 'matrix')
-  if(phyloseq::taxa_are_rows(data)) {ft <- t(ft); wl <- t(wl)}
-  tax_names <- colnames(ft)
+  if(phyloseq::taxa_are_rows(data)) {wh <- t(wh); wl <- t(wl)}
+  tax_names <- colnames(wh)
   # calculate GC content of each taxa (averaged across all groups of samples or not)
   if(!separate_mw_light) {
     wl <- colMeans(wl, na.rm=T)
@@ -47,7 +47,7 @@ calc_mw <- function(data, separate_mw_light=TRUE, filter=FALSE) {
   # calculate mol. weight of taxa without isotope
   mw_l <- (0.496 * gc) + 307.691
   # calculate mol. weight of taxa in labeled treatments
-  mw_lab <- ((ft/wl) + 1) * mw_l
+  mw_lab <- (((wh - wl)/wl) + 1) * mw_l
   # organize and add new data as S4 matrices
   data <- collate_results(data, mw_lab, tax_names=tax_names, 'mw_label', sparse=TRUE)
   data <- collate_results(data, mw_l, tax_names=tax_names, 'mw_light', sparse=TRUE)
