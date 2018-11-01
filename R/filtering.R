@@ -94,7 +94,7 @@ impose_filter <- function(data, replicate=0, fraction=0) {
   # calculate within replicate (i.e., fraction frequency)
   ft <- lapply(ft, colSums, na.rm=T)
   # combine, apply filter
-  # ft <- lapply(ft, function(x) ifelse(x >= fraction, 1, 0))
+  #ft <- lapply(ft, function(x) ifelse(x >= fraction, 1, 0))
   ft <- do.call(rbind, ft)
   ft <- ifelse(ft >= fraction, 1, 0)
   # split by replicate group
@@ -109,10 +109,11 @@ impose_filter <- function(data, replicate=0, fraction=0) {
   ft <- ft[!is.na(iso_group$iso),]
   iso_group <- iso_group[!is.na(iso_group$iso),]
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
-  # apply filter, combine
+  # combine, apply filter
   ft <- lapply(ft, colSums, na.rm=T)
-  ft <- lapply(ft, function(x) ifelse(x >= replicate, 1, 0))
+  #ft <- lapply(ft, function(x) ifelse(x >= replicate, 1, 0))
   ft <- do.call(rbind, ft)
+  ft <- ifelse(ft >= replicate, 1, 0)
   # add in taxa names and calculate presence or absence after filters
   colnames(ft) <- phyloseq::taxa_names(data)
   output <- colSums(ft)
