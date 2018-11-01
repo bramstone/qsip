@@ -4,11 +4,17 @@
 #'
 #' @param data Data as a \code{phylosip} object
 #' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
-#'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
+#'   A hard filter is applied for \code{calc_wad} (meaning taxa are removed from all replicates/groups if they don't meet threshold).
+#'   Note, however, that this will have different outcomes depending on whether or not \code{filter_qsip} has been called
+#'   before calculations or not (see \code{details})
 #'
 #' @details Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
 #'   that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
 #'   of \code{NA} for every taxa in a sample with missing density data.
+#'
+#'   Filtering for \code{calc_wad} utilized \code{filter_qsip} and employs a hard filter. If filtering is specified using
+#'   \code{filter=TRUE}, then filtering is employed on fractions \emph{only} (\emph{i.e.}, \code{filter_qsip} is implemented with
+#'   \code{replicate=1}). In order to set more stringent hard filters, \code{filter_qsip} must be employed before calculating WAD values.
 #'
 #' @return \code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
 #'   the \code{qsip} slot of the object. of weighted average density values for each taxon at each sample. The row and column
@@ -29,8 +35,11 @@ calc_wad <- function(data, filter=FALSE) {
   if(length(data@qsip@rep_id)==0) stop('Must specify replicate IDs with rep_id')
   # transform sequencing abundances to 16S copy numbers
   # returns matrix with taxa as columns, samples as rows
-  ft <- copy_no(data)
+  ft <- pa <- copy_no(data)
+  pa <- ceiling(pa/max(pa))
+  storage.mode(pa) <- 'integer'
   tax_names <- colnames(ft)
+  n_taxa <- ncol(ft)
   # manipulate data matrix and calculate
   ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
   dv <- split(data@sam_data[[data@qsip@density]],
@@ -39,13 +48,49 @@ calc_wad <- function(data, filter=FALSE) {
   ft <- base::lapply(ft, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x}) # create relative abundances
   ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ft, dv)
   ft <- base::lapply(ft, colSums, na.rm=T)
-  # apply filtering first if desired. Filtering here is hard filter
-  if(filter && length(data@qsip@filter) > 0) {
+  # apply filtering first if desired.
+  # 1. Soft filter
+  # Here, taxa who do not meet the threshold(s) have their group-specific WAD values converted to 0
+  if(filter && any(data@qsip@filter_levels$soft)) {
+    filter_levels <- data@qsip@filter_levels
+    fraction <- filter_levels$frac_freq[which(filter_levels$soft)[1]]
+    replicate <- filter_levels$rep_freq[which(filter_levels$soft)[1]]
+    pa <- split_data(data, pa, data@qsip@rep_id)
+    pa <- base::lapply(pa, colSums, na.rm=T)
+    pa <- do.call(rbind, pa)
+    sam_names <- rownames(pa)
+    # fraction filtering
+    pa <- ifelse(pa >= fraction, 1, 0)
+    # replicate-treatment grouping filtering
+    iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    iso_group <- iso_group[match(rownames(pa), iso_group$replicate),]
+    pa <- pa[!is.na(iso_group$iso),]
+    iso_group <- iso_group[!is.na(iso_group$iso),]
+    pa <- split_data(data, pa, iso_group$interaction, grouping_w_phylosip=F)
+    pa <- base::lapply(pa, colSums, na.rm=T)
+    pa <- do.call(rbind, pa)
+    pa <- ifelse(pa >= replicate, 1, 0)
+    # regroup in order to match ft
+    sf <- matrix(1L, nrow=length(sam_names), ncol=n_taxa) # sf = soft filter
+    rownames(sf) <- sam_names
+    groups <- levels(iso_group$interaction)
+    for(i in 1:length(groups)) {
+      relevant_samples <- iso_group$replicate[iso_group$interaction==groups[i]]
+      sf[relevant_samples,] <- pa[groups[i],]
+    }
+    sf <- split_data(data, sf, rownames(sf), grouping_w_phylosip=FALSE)
+    # apply filter to WAD values
+    ft <- base::Map('*', ft, sf)
+    rm(pa, sf)
+  }
+    # 2. Hard filter
+    # Unless taxa are removed beforehand, filtering here is hard filter on fractions only (i.e., replicate threshold is 1)
+  if(filter && length(data@qsip@filter) > 0 && any(data@qsip@filter_levels$hard)) {
     ft <- do.call(rbind, ft)
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
-  } else if(filter && length(data@qsip@filter)==0) {
-    data <- filter_qsip(data)
+  } else if(filter && length(data@qsip@filter)==0 && any(data@qsip@filter_levels$hard)) {
+    data <- filter_qsip(data, replicate=1)
     ft <- do.call(rbind, ft)
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
