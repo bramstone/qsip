@@ -8,6 +8,10 @@
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the fraction level
 #' @param rm_combn Optional character vector specifying any particular combinations of replicate and fraction frequency to remove.
 #'   Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})
+#' @param hard Single-length numeric value indicating which filtering option is to be made a hard filtering criteria.
+#'   Valid values are \code{1:nrow(data)}
+#' @param soft Single-length numeric value indicating which filtering option is to be made a soft filtering criteria.
+#'   Valid values are \code{1:nrow(data)}
 #'
 #' @details \code{create_filters} should be used to specify the desired frequencies of microbial taxa \emph{prior} to calculation of
 #'   atom excess fraction / atom percent excess. Filters must also be specified so that diagnostic functions can be run as well.
@@ -15,8 +19,16 @@
 #'   be used to construct the resulting data frame If certain combinations are not desirable, the \code{rm_combn} argument can be
 #'   supplied to remove them.
 #'
+#'   hard and soft filtering parameters indicate whether taxa should be removed completely if they fail to satisfy the minimum
+#'   frequency threshold across all cases (hard) or if they should be removed only from invdividual comparisons if they fail to
+#'   meet the frequency threshold in that comparison. For example, in a data set with two replicate groups (representing some two
+#'   distinct biological or ecological units), a taxon meets the minimum frequency requirment in group one (meaning it occurs in both
+#'   the unlabeled and labeled treatments of group one) but not group two (it is not frequent enough in the labeled treatment).
+#'   A hard filter would remove it from both group one and two while a soft filter would remove it only from the group two comparisons.
+#'
 #' @return \code{create_filters} produces a data frane of replicate frequencies and within-replicate-fraction frequencies to be
-#'   investigated in downstream analyses.
+#'   investigated in downstream analyses. In addition the logical columns \code{hard} and \code{soft} indicate which frequencies to
+#'   be utilized for hard or soft cut-offs.
 #'
 #' @examples
 #' # Only filter on samples
@@ -30,7 +42,8 @@
 #'
 #' @export
 
-create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
+create_filters <- function(replicate=0, fraction=0, rm_combn=character(), hard=0, soft=0) {
+  if(length(hard) > 1 || length(soft) > 1) warning('Only one value should be indicated for hard or soft cut-offs. Using first value(s)')
   filters <- expand.grid(replicate, fraction)
   names(filters) <- c('rep_freq', 'frac_freq')
   filters <- filters[order(filters$rep_freq),]
@@ -43,6 +56,9 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
                            filters$frac_freq!=rm_combn[i,2],]
     }
   }
+  filters$hard <- filters$soft <- logical(nrow(filters))
+  filters$hard[hard[1]] <- TRUE
+  filters$soft[soft[1]] <- TRUE
   rownames(filters) <- NULL
   return(filters)
 }
@@ -57,7 +73,7 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character()) {
 #' @param fraction Numeric vector specifying the minimum frequency of occurrence of microbial taxa across fractions within a sample.
 #'   Keeping the default value of \code{0} will apply no frequency threshold at the fraction level
 #'
-#' @details \code{impose_filter} is primarily utilized within other functions.
+#' @details \code{impose_filter} is primarily utilized within other functions and imposes a hard filter on the data.
 #'
 #' @return Returns a
 #'
@@ -184,6 +200,14 @@ explore_filters <- function(data, filters=data@qsip@filter_levels) {
 
 filter_qsip <- function(data, replicate=0, fraction=0, filter_phyloseq=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
+  # if user supplies no frequencies, apply from @qsip@filter_levels
+  if(missing(replicate) && missing(fraction)) {
+    filter_levels <- data@qsip@filter_levels
+    if(any(data@qsip@filter_levels$hard==TRUE)) {
+      replicate <- filter_levels$replicate[which(filter_levels$hard==TRUE)[1]]
+      fraction <- filter_levels$fraction[which(filter_levels$hard==TRUE)[1]]
+    } else {replicate <- replicate; fraction <- fraction}
+  }
   tax_filter <- impose_filter(data, replicate=replicate, fraction=fraction)
   tax_filter <- names(tax_filter[tax_filter > 0])
   if(length(data@qsip) > 0) {
