@@ -41,10 +41,11 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE) {
   # split by replicate groups, but keep track of light and heavy fractions
   ft <- valid_samples(data, ft, 'iso')
   iso_group <- ft[[2]]; ft <- ft[[1]]
-  ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
   # WAD values of 0 indicate no taxa presence in that replicate, convert to NA
   # so that mean WAD values are not pulled down
-  ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
+  ft[ft==0] <- NA
+  ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
+ #ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
   # calculate average WAD per taxa for each replicate group
   ft <- base::lapply(ft, colMeans, na.rm=T)
   # remove any NaNs resulting from when a taxon is missing in all replicates
