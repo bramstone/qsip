@@ -93,9 +93,10 @@ impose_filter <- function(data, replicate=0, fraction=0) {
   ft <- split_data(data, ft, data@qsip@rep_id)
   # calculate within replicate (i.e., fraction frequency)
   ft <- lapply(ft, colSums, na.rm=T)
-  # apply filter, combine
-  ft <- lapply(ft, function(x) ifelse(x >= fraction, 1, 0))
+  # combine, apply filter
+  # ft <- lapply(ft, function(x) ifelse(x >= fraction, 1, 0))
   ft <- do.call(rbind, ft)
+  ft <- ifelse(ft >= fraction, 1, 0)
   # split by replicate group
   iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
   if(length(data@qsip@timepoint) > 0) {
