@@ -201,12 +201,16 @@ explore_filters <- function(data, filters=data@qsip@filter_levels) {
 filter_qsip <- function(data, replicate=0, fraction=0, filter_phyloseq=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if user supplies no frequencies, apply from @qsip@filter_levels
-  if(missing(replicate) && missing(fraction)) {
-    filter_levels <- data@qsip@filter_levels
-    if(any(data@qsip@filter_levels$hard==TRUE)) {
+  filter_levels <- data@qsip@filter_levels
+  if(missing(replicate)) {
+    if(any(filter_levels$hard==TRUE)) {
       replicate <- filter_levels$replicate[which(filter_levels$hard==TRUE)[1]]
+    }
+  }
+  if(missing(fraction)) {
+    if(any(filter_levels$hard==TRUE)) {
       fraction <- filter_levels$fraction[which(filter_levels$hard==TRUE)[1]]
-    } else {replicate <- replicate; fraction <- fraction}
+    }
   }
   tax_filter <- impose_filter(data, replicate=replicate, fraction=fraction)
   tax_filter <- names(tax_filter[tax_filter > 0])
