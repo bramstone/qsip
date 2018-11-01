@@ -205,12 +205,12 @@ filter_qsip <- function(data, replicate=0, fraction=0, filter_phyloseq=FALSE) {
   # if user supplies no frequencies, apply from @qsip@filter_levels
   filter_levels <- data@qsip@filter_levels
   if(missing(replicate)) {
-    if(any(filter_levels$hard==TRUE)) {
+    if(any(filter_levels$hard)) {
       replicate <- filter_levels$replicate[which(filter_levels$hard==TRUE)[1]]
     }
   }
   if(missing(fraction)) {
-    if(any(filter_levels$hard==TRUE)) {
+    if(any(filter_levels$hard)) {
       fraction <- filter_levels$fraction[which(filter_levels$hard==TRUE)[1]]
     }
   }
