@@ -39,13 +39,16 @@ calc_wad <- function(data, filter=FALSE) {
   ft <- base::lapply(ft, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x}) # create relative abundances
   ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ft, dv)
   ft <- base::lapply(ft, colSums, na.rm=T)
-  # apply filtering first if desired
+  # apply filtering first if desired. Filtering here is hard filter
   if(filter && length(data@qsip@filter) > 0) {
     ft <- do.call(rbind, ft)
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
   } else if(filter && length(data@qsip@filter)==0) {
-    warning('No filtering data contained in ', deparse(substitute(data)), '; returning unfiltered values', call.=FALSE)
+    data <- filter_qsip(data)
+    ft <- do.call(rbind, ft)
+    colnames(ft) <- phyloseq::taxa_names(data)
+    ft <- ft[,colnames(ft) %in% data@qsip@filter]
   }
   # organize and add new data as S4 matrix
   data <- collate_results(data, ft, tax_names=tax_names, 'wad', sparse=TRUE)
