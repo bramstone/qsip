@@ -36,7 +36,7 @@ calc_wad <- function(data, filter=FALSE) {
   # transform sequencing abundances to 16S copy numbers
   # returns matrix with taxa as columns, samples as rows
   ft <- pa <- copy_no(data)
-  pa <- ceiling(pa/max(pa))
+  pa <- ceiling(pa/max(pa, na.rm=T))
   storage.mode(pa) <- 'integer'
   tax_names <- colnames(ft)
   n_taxa <- ncol(ft)
@@ -79,6 +79,7 @@ calc_wad <- function(data, filter=FALSE) {
       sf[relevant_samples,] <- pa[groups[i],]
     }
     sf <- split_data(data, sf, rownames(sf), grouping_w_phylosip=FALSE)
+    sf <- lapply(sf, c)
     # apply filter to WAD values
     ft <- base::Map('*', ft, sf)
     rm(pa, sf)
@@ -94,6 +95,13 @@ calc_wad <- function(data, filter=FALSE) {
     ft <- do.call(rbind, ft)
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
+  }
+  # Regardless of hard filter, remove taxa that don't occur at all (all WADs=0) after applying soft filter
+  if(filter && any(data@qsip@filter_levels$soft)) {
+    ft <- do.call(rbind, ft)
+    colnames(ft) <- phyloseq::taxa_names(data)
+    ft <- ft[, colSums(ft) > 0]
+    data@qsip@filter <- colnames(ft)
   }
   # organize and add new data as S4 matrix
   data <- collate_results(data, ft, tax_names=tax_names, 'wad', sparse=TRUE)
