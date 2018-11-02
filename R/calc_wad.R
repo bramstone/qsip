@@ -81,8 +81,7 @@ calc_wad <- function(data, filter=FALSE) {
     sf <- split_data(data, sf, rownames(sf), grouping_w_phylosip=FALSE)
     sf <- lapply(sf, c)
     # apply filter to WAD values
-    ft <- base::Map('*', ft, sf)
-    rm(pa, sf)
+    ft <- base::Map('*', ft, sf) # or sf <- Map('*', ft, sf)
   }
     # 2. Hard filter
     # Unless taxa are removed beforehand, filtering here is hard filter on fractions only (i.e., replicate threshold is 1)
@@ -98,9 +97,10 @@ calc_wad <- function(data, filter=FALSE) {
   }
   # Regardless of hard filter, remove taxa that don't occur at all (all WADs=0) after applying soft filter
   if(filter && any(data@qsip@filter_levels$soft)) {
+    #sf <- do.call(rbind, sf)
     ft <- do.call(rbind, ft)
     colnames(ft) <- phyloseq::taxa_names(data)
-    ft <- ft[, colSums(ft) > 0]
+    ft <- ft[, colSums(ft) > 0] # or colSums(sf)
     data@qsip@filter <- colnames(ft)
   }
   # organize and add new data as S4 matrix

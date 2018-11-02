@@ -50,7 +50,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
   if(ci_method=='') {
     # if MW values don't exist, calculate those first
     # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data)
+    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter)
     # transform sequencing abundances to 16S copy numbers
     # returns feature table (as matrix) with taxa as columns, samples as rows
     ft <- copy_no(data)
