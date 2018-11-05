@@ -8,6 +8,10 @@
 #'   genetic molecular weight in the absence of isotope addition.
 #' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
+#' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
+#' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+#'   Taxa are ordered by lowest difference in WAD values.
+#'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
@@ -26,11 +30,12 @@
 #'
 #' @export
 
-calc_mw <- function(data, separate_mw_light=FALSE, filter=FALSE) {
+calc_mw <- function(data, separate_mw_light=FALSE, filter=FALSE, correction=FALSE, offset_taxa=0.1) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if delta-WAD values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-  if(is.null(data@qsip[['wad_light']]) || is.null(data@qsip[['wad_label']])) data <- calc_d_wad(data, filter=filter)
+  if(is.null(data@qsip[['wad_light']]) || is.null(data@qsip[['wad_label']])) data <- calc_d_wad(data, filter=filter,
+                                                                                                correction=correction, offset_taxa=offset_taxa)
   # extract WAD-heavy / WAD-light values and convert to S3 matrices
   wh <- data@qsip[['wad_label']]
   wh <- as(wh, 'matrix')

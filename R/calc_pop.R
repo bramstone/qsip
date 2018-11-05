@@ -14,6 +14,10 @@
 #'   Default is \code{exponential}.
 #' @param mu Numeric value from 0 to 1 indicating the expected incorporation of labeled O into DNA during replication.
 #'   Default is \code{0.60}.
+#' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
+#' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+#'   Taxa are ordered by lowest difference in WAD values.
+#'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
 #'
 #' @details Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
 #'   change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
@@ -34,7 +38,7 @@
 #'
 #' @export
 
-calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'), mu=0.6) {
+calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'), mu=0.6, correction=FALSE, offset_taxa=0.1) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
@@ -50,7 +54,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
   if(ci_method=='') {
     # if MW values don't exist, calculate those first
     # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter)
+    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter,
+                                                                                             correction=correction, offset_taxa=offset_taxa)
     # transform sequencing abundances to 16S copy numbers
     # returns feature table (as matrix) with taxa as columns, samples as rows
     ft <- copy_no(data)
@@ -223,7 +228,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
-      data <- suppressWarnings(calc_d_wad(data))
+      data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa))
       data <- suppressWarnings(calc_mw(data, separate_mw_light=TRUE))
       mw_lab <- data@qsip[['mw_label']]
       mw_lab <- as(mw_lab, 'matrix')
@@ -338,7 +343,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     }
     # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
     data <- suppressWarnings(calc_wad(data, filter=filter))
-    data <- suppressWarnings(calc_d_wad(data))
+    data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa))
     data <- suppressWarnings(calc_mw(data))
     return(data)
   #

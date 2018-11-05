@@ -11,6 +11,10 @@
 #' @param iters Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.
 #' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
+#' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
+#' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+#'   Taxa are ordered by lowest difference in WAD values.
+#'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
@@ -32,7 +36,7 @@
 #'
 #' @export
 
-calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE) {
+calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, correction=FALSE, offset_taxa=0.1) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   #
@@ -42,7 +46,8 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
   if(ci_method=='') {
     # if MW values don't exist, calculate those first
     # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter)
+    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter,
+                                                                                             correction=correction, offset_taxa=offset_taxa)
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
     mw_h <- data@qsip[['mw_label']]
     mw_h <- as(mw_h, 'matrix')
@@ -116,7 +121,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       ft_i <- recombine_in_order(ft_i, iso_group, n_taxa)
       rownames(ft_i) <- sam_names
       data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
-      data <- suppressWarnings(calc_d_wad(data))
+      data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa))
       data <- suppressWarnings(calc_mw(data, separate_mw_light=FALSE))
       mw_h <- data@qsip[['mw_label']]
       mw_h <- as(mw_h, 'matrix')
@@ -153,7 +158,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     data <- collate_results(data, ci_data$ci_u, tax_names=tax_names, 'atom_excess_ci_u', sparse=TRUE)
     # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
     data <- suppressWarnings(calc_wad(data, filter=filter))
-    data <- suppressWarnings(calc_d_wad(data))
+    data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa))
     data <- suppressWarnings(calc_mw(data))
     return(data)
     #
