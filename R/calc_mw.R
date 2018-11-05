@@ -27,7 +27,7 @@
 #'
 #' @export
 
-calc_mw <- function(data, separate_mw_light=FALSE, filter=FALSE, correction=FALSE, offset_taxa=0.1) {
+calc_mw <- function(data, filter=FALSE, correction=FALSE, offset_taxa=0.1) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if delta-WAD values don't exist, calculate those first
   # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
@@ -45,7 +45,11 @@ calc_mw <- function(data, separate_mw_light=FALSE, filter=FALSE, correction=FALS
   # calculate mol. weight of taxa without isotope
   mw_l <- (0.496 * gc) + 307.691
   # calculate mol. weight of taxa in labeled treatments
-  mw_h <- (((wh - wl)/wl) + 1) * mw_l
+  if(all(dim(wh)==dim(wl))) {
+    mw_h <- (((wh - wl)/wl) + 1) * mw_l
+    } else {
+    mw_h <- sweep(wh, 2, wl, function(x, y) ((x - y)/y + 1) * y)
+  }
   # organize and add new data as S4 matrices
   data <- collate_results(data, mw_h, tax_names=tax_names, 'mw_label', sparse=TRUE)
   data <- collate_results(data, mw_l, tax_names=tax_names, 'mw_light', sparse=TRUE)
