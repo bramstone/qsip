@@ -31,7 +31,7 @@
 #'
 #' @export
 
-calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=TRUE, offset_taxa=0.1) {
+calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=TRUE, offset_taxa=0.05) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
@@ -117,7 +117,8 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=TRUE, 
     pa <- pa[which(as.numeric(iso_group2$iso)==2)]
     pa <- base::lapply(pa, function(x) colSums(x) / nrow(x)) # creates frequency code 0 - 1
     names(pa) <- names(wl)
-    shift <- base::Map(function(x, y) x[y==1], d_ft, pa)
+    shift <- base::lapply(wh, '-', light)
+    shift <- base::Map(function(x, y) x[y==1], shift, pa)
     # sort by lowest diff WAD
     shift <- base::lapply(shift, sort, decreasing=F)
     # calculate median of lowest 10% of diff WADs
