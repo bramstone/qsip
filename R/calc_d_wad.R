@@ -34,7 +34,7 @@
 #'
 #' @export
 
-calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE, offset_taxa=0.1) {
+calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE, offset_taxa=0.1, separate_wad_light=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
@@ -130,7 +130,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
     wh <- base::Map('-', wh, shift)
   }
   wh[is.nan(wh)] <- NA
-  if(separate_wad_light) {
+  if(!separate_wad_light) {
     wl <- colMeans(wl, na.rm=T)
     wl[is.nan(wl)] <- NA
   }
