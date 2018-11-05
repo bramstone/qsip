@@ -129,8 +129,9 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
     # subtract shift from labeled WAD values
     wh <- base::Map('-', wh, shift)
   }
-  wh[is.nan(wh)] <- NA
+  wh <- base::lapply(wh, function(x) {x[is.nan(x)] <- NA; x})
   if(!separate_wad_light) {
+    wl <- do.call(rbind, wl)
     wl <- colMeans(wl, na.rm=T)
     wl[is.nan(wl)] <- NA
   }
