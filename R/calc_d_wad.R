@@ -52,7 +52,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=TRUE, 
   # WAD values of 0 indicate no taxa presence in that replicate, convert to NA
   # so that mean WAD values are not pulled down
   ft[ft==0] <- NA
-  pa <- ifelse(is.na(ft), 0L, 1L)
+  #pa <- ifelse(is.na(ft), 0L, 1L)
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
  #ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
   # calculate average WAD per taxa for each replicate group
@@ -113,12 +113,12 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=TRUE, 
       light[is.nan(light)] <- NA
     }
     # only utilize taxa that are present in every replicate
-    pa <- split_data(data, pa, iso_group$interaction, grouping_w_phylosip=F)
-    pa <- pa[which(as.numeric(iso_group2$iso)==2)]
-    pa <- base::lapply(pa, function(x) colSums(x) / nrow(x)) # creates frequency code 0 - 1
-    names(pa) <- names(wl)
+    #pa <- split_data(data, pa, iso_group$interaction, grouping_w_phylosip=F)
+    #pa <- pa[which(as.numeric(iso_group2$iso)==2)]
+    #pa <- base::lapply(pa, function(x) colSums(x) / nrow(x)) # creates frequency code 0 - 1
+    #names(pa) <- names(wl)
     shift <- base::lapply(wh, '-', light)
-    shift <- base::Map(function(x, y) x[y==1], shift, pa)
+    #shift <- base::Map(function(x, y) x[y==1], shift, pa)
     # sort by lowest diff WAD
     shift <- base::lapply(shift, sort, decreasing=F)
     # calculate median of lowest 10% of diff WADs
