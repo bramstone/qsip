@@ -31,7 +31,7 @@
 #'
 #' @export
 
-calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=TRUE, offset_taxa=0.05) {
+calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE, offset_taxa=0.1) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
