@@ -7,6 +7,9 @@
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #' @param return_diffs Logical value specifying whether to return difference in mean WADs between light and heavy samples
 #'   or to return mean heavy WADs and mean light WADs (the default).
+#' @param separate_wad_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
+#'   If \code{FALSE}, WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon representing it's
+#'   genetic molecular weight in the absence of isotope addition.
 #' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
 #' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
 #'   Taxa are ordered by lowest difference in WAD values.
@@ -125,6 +128,11 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
     shift <- base::lapply(shift, function(x) median(x[1:floor(offset_taxa * length(x))], na.rm=T))
     # subtract shift from labeled WAD values
     wh <- base::Map('-', wh, shift)
+  }
+  wh[is.nan(wh)] <- NA
+  if(separate_wad_light) {
+    wl <- colMeans(wl, na.rm=T)
+    wl[is.nan(wl)] <- NA
   }
   data <- collate_results(data, wh, tax_names=tax_names, 'wad_label', sparse=TRUE)
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)

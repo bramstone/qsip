@@ -3,9 +3,6 @@
 #' Calculates molecular weights of microbial taxa due to isotope incorporation
 #'
 #' @param data Data as a \code{phyloseq} object
-#' @param separate_mw_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
-#'   If \code{FALSE}, WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon representing it's
-#'   genetic molecular weight in the absence of isotope addition.
 #' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
@@ -44,11 +41,6 @@ calc_mw <- function(data, separate_mw_light=FALSE, filter=FALSE, correction=FALS
   if(phyloseq::taxa_are_rows(data)) {wh <- t(wh); wl <- t(wl)}
   tax_names <- colnames(wh)
   # calculate GC content of each taxa (averaged across all groups of samples or not)
-  if(!separate_mw_light) {
-    wl <- colMeans(wl, na.rm=T)
-  }
-  wl[is.nan(wl)] <- NA
-  wh[is.nan(wh)] <- NA
   gc <- (1 / 0.083506) * (wl - 1.646057)
   # calculate mol. weight of taxa without isotope
   mw_l <- (0.496 * gc) + 307.691
