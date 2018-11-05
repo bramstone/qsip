@@ -7,9 +7,15 @@
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #' @param return_diffs Logical value specifying whether to return difference in mean WADs between light and heavy samples
 #'   or to return mean heavy WADs and mean light WADs (the default).
+#' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
+#' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+#'   Taxa are ordered by lowest difference in WAD values.
+#'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities have not been calculated
 #'   beforehand, \code{calc_d_wad} will compute those first.
+#'
+#'   More details about tube-level corrections.
 #'
 #' @return \code{calc_d_wad} adds two S4 Matrix objects to the \code{data@@qsip@@.Data} slot, one for differences
 #'   in weighted average density, and the other for weighted average density values of light treatments only (to be used in
@@ -25,12 +31,14 @@
 #'
 #' @export
 
-calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE) {
+calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=TRUE, offset_taxa=0.1) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # if WAD values don't exist, calculate those first, this will also handle rep_id validity
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
   #if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso_trt)==0) stop('Must specify treatment and controls with iso_trt')
+  if(offset_taxa > 1 && correction) offset_taxa <- 1
+  if(offset_taxa <= 0 && correction) stop('Must specify non-negative proportion of taxa generate offset values for WAD correction')
   # extract WAD values and convert to S3 matrix
   ft <- data@qsip[['wad']]
   ft <- as(ft, 'matrix')
@@ -44,6 +52,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE) {
   # WAD values of 0 indicate no taxa presence in that replicate, convert to NA
   # so that mean WAD values are not pulled down
   ft[ft==0] <- NA
+  pa <- ifelse(is.na(ft), 0L, 1L)
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
  #ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
   # calculate average WAD per taxa for each replicate group
@@ -96,6 +105,26 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE) {
   wl <- ft[which(as.numeric(iso_group2$iso)==1)]
   wh <- ft[which(as.numeric(iso_group2$iso)==2)]
   if(length(data@qsip@rep_group)!=0) names(wl) <- names(wh) <- unique(iso_group2$grouping)
+  # Apply tube-level correction?
+  if(correction) {
+    if(length(data@qsip@rep_group)!=0) {
+      light <- do.call(rbind, wl)
+      light <- colMeans(light, na.rm=T)
+      light[is.nan(light)] <- NA
+    }
+    # only utilize taxa that are present in every replicate
+    pa <- split_data(data, pa, iso_group$interaction, grouping_w_phylosip=F)
+    pa <- pa[which(as.numeric(iso_group2$iso)==2)]
+    pa <- base::lapply(pa, function(x) colSums(x) / nrow(x)) # creates frequency code 0 - 1
+    names(pa) <- names(wl)
+    shift <- base::Map(function(x, y) x[y==1], d_ft, pa)
+    # sort by lowest diff WAD
+    shift <- base::lapply(shift, sort, decreasing=F)
+    # calculate median of lowest 10% of diff WADs
+    shift <- base::lapply(shift, function(x) median(x[1:floor(offset_taxa * length(x))], na.rm=T))
+    # subtract shift from labeled WAD values
+    wh <- base::Map('-', wh, shift)
+  }
   data <- collate_results(data, wh, tax_names=tax_names, 'wad_label', sparse=TRUE)
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
   if(return_diffs) data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
