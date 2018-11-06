@@ -60,6 +60,10 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # returns feature table (as matrix) with taxa as columns, samples as rows
     ft <- copy_no(data)
     n_taxa <- ncol(ft)
+    if(filter) {
+      tax_names <- data@qsip@filter
+      ft <- ft[,colnames(ft) %in% tax_names]
+    }
     tax_names <- colnames(ft)
     # calculate per-taxon total 16S copy abundance for each sample
     ft <- split_data(data, ft, data@qsip@rep_id)
@@ -108,13 +112,19 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
         time_group_t$time <- factor(time_group_t$time)
         mw_lab_t <- split_data(data, t(mw_lab), time_group_t$time, grouping_w_phylosip=FALSE)
-        mw_l_t <- split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE)
+        mw_l_t <- suppressWarnings(split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE))
         mw_lab_t <- t(mw_lab_t[[t - 1]])
         mw_l_t <- t(mw_l_t[[t - 1]])
       }
       # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
       mw_max <- (12.07747 * mu) + mw_l_t
-      n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
+      if(all(dim(mw_max)==dim(mw_lab_t))) {
+        n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
+      } else {
+        num <- sweep(mw_lab_t, 1, mw_max) * -1
+        denom <- sweep(mw_l_t, 1, mw_max) * -1
+        n <- sweep(num, 1, denom, '/') * get(n_t_names[t])
+      }
       colnames(n) <- colnames(get(n_t_names[t]))
       # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
       n[n < 0] <- NA
@@ -265,13 +275,19 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
           time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
           time_group_t$time <- factor(time_group_t$time)
           mw_lab_t <- split_data(data, t(mw_lab), time_group_t$time, grouping_w_phylosip=FALSE)
-          mw_l_t <- split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE)
+          mw_l_t <- suppressWarnings(split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE))
           mw_lab_t <- t(mw_lab_t[[t - 1]])
           mw_l_t <- t(mw_l_t[[t - 1]])
         }
         # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
         mw_max <- (12.07747 * mu) + mw_l_t
-        n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
+        if(all(dim(mw_max)==dim(mw_lab_t))) {
+          n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
+        } else {
+          num <- sweep(mw_lab_t, 1, mw_max) * -1
+          denom <- sweep(mw_l_t, 1, mw_max) * -1
+          n <- sweep(num, 1, denom, '/') * get(n_t_names[t])
+        }
         colnames(n) <- colnames(get(n_t_names[t]))
         # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
         n[n < 0] <- NA
