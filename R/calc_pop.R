@@ -233,7 +233,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     for(i in 1:iters) {
       # subsample WADs
       subsample_i_wads <- lapply(subsample_wads, function(x) x[,i])
-      wads_i <- mapply(function(x, y) x[y,], wads, subsample_i_wads, SIMPLIFY=FALSE)
+      wads_i <- mapply(function(x, y) x[y,,drop=FALSE], wads, subsample_i_wads, SIMPLIFY=FALSE)
       wads_i <- recombine_in_order(wads_i, iso_group, n_taxa)
       rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
