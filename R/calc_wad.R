@@ -110,8 +110,9 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
   if(filter && any(data@qsip@filter_levels$soft)) {
     #sf <- do.call(rbind, sf)
     ft <- do.call(rbind, ft)
+    labeled <- ft[iso_group$replicate[as.numeric(iso_group$iso)==2],]
     colnames(ft) <- phyloseq::taxa_names(data)
-    ft <- ft[, colSums(ft) > 0] # or colSums(sf)
+    ft <- ft[, colSums(labeled) > 0] # or colSums(sf)
     data@qsip@filter <- colnames(ft)
   }
   # organize and add new data as S4 matrix
