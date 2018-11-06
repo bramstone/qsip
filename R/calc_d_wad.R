@@ -40,6 +40,9 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
   #if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso_trt)==0) stop('Must specify treatment and controls with iso_trt')
+  trt_levels <- unique(data@sam_data[[data@qsip@iso_trt]])
+  trt_levels <- trt_levels[!is.na(trt_levels)]
+  if(length(trt_levels) > 2) stop('More than two treatment levels present for this comparison')
   if(offset_taxa > 1 && correction) offset_taxa <- 1
   if(offset_taxa <= 0 && correction) stop('Must specify non-negative proportion of taxa generate offset values for WAD correction')
   # extract WAD values and convert to S3 matrix
