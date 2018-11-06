@@ -89,7 +89,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
                              as.numeric(iso_group2$iso)==2)
       # If there's no light OR no heavy treatment for a group of replicates, remove them
       if(length(which_light)==0 || length(which_heavy)==0) {
-        warning('Unpaired isotope treatment in replicate group(s): ', names(d_ft)[1],
+        warning('Unpaired isotope treatment in replicate group(s): ', names(d_ft)[i],
                 '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(d_ft)[i], 'replicate']), collapse=', '),
                 ' - from calculation', call.=FALSE)
         keep_groups[i] <- FALSE
