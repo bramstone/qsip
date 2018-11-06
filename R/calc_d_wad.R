@@ -52,9 +52,6 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   # split by replicate groups, but keep track of light and heavy fractions
   ft <- valid_samples(data, ft, 'iso')
   iso_group <- ft[[2]]; ft <- ft[[1]]
-  # WAD values of 0 indicate no taxa presence in that replicate, convert to NA
-  # so that mean WAD values are not pulled down
-  ft[ft==0] <- NA
   #pa <- ifelse(is.na(ft), 0L, 1L)
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
  #ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})

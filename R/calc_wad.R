@@ -115,6 +115,8 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
     ft <- ft[, colSums(labeled) > 0] # or colSums(sf)
     data@qsip@filter <- colnames(ft)
   }
+  # WAD values of 0 indicate no taxa present
+  ft[ft==0] <- NA
   # organize and add new data as S4 matrix
   data <- collate_results(data, ft, tax_names=tax_names, 'wad', sparse=TRUE)
   return(data)
