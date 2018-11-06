@@ -7,6 +7,9 @@
 #'   A hard filter is applied for \code{calc_wad} (meaning taxa are removed from all replicates/groups if they don't meet threshold).
 #'   Note, however, that this will have different outcomes depending on whether or not \code{filter_qsip} has been called
 #'   before calculations or not (see \code{details})
+#' @param pool_unlabeled Logical vector specifying if unlabeled replicates should be pooled together across any grouping factor prior
+#'   to filtering. If \code{TRUE} (the default), unlabeled replicates will be pooled, and any soft filtering threshold will be applied to
+#'   \emph{all} unlabeled replicates together.
 #'
 #' @details Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
 #'   that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
@@ -30,7 +33,7 @@
 #'
 #' @export
 
-calc_wad <- function(data, filter=FALSE) {
+calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   if(length(data@qsip@rep_id)==0) stop('Must specify replicate IDs with rep_id')
   # transform sequencing abundances to 16S copy numbers
@@ -68,7 +71,15 @@ calc_wad <- function(data, filter=FALSE) {
     iso_group <- iso_group[!is.na(iso_group$iso),]
     pa <- split_data(data, pa, iso_group$interaction, grouping_w_phylosip=F)
     pa <- base::lapply(pa, colSums, na.rm=T)
+    # if pool unlabeled, combine frequencies across all unlabeled replicate groups
+    # then replace frequencies in pa corresponding to those unlabeled groups
     pa <- do.call(rbind, pa)
+    if(pool_unlabeled) {
+      unlabeled <- rownames(pa) %in% iso_group$interaction[as.numeric(iso_group$iso)==1]
+      pa_unlab <- pa[unlabeled,]
+      pa_unlab <- colSums(pa_unlab, na.rm=T)
+      pa[unlabeled,] <- rep(pa_unlab, each=sum(unlabeled))
+    }
     pa <- ifelse(pa >= replicate, 1, 0)
     # regroup in order to match ft
     sf <- matrix(1L, nrow=length(sam_names), ncol=n_taxa) # sf = soft filter
@@ -76,7 +87,7 @@ calc_wad <- function(data, filter=FALSE) {
     groups <- levels(iso_group$interaction)
     for(i in 1:length(groups)) {
       relevant_samples <- iso_group$replicate[iso_group$interaction==groups[i]]
-      sf[relevant_samples,] <- pa[groups[i],]
+      sf[relevant_samples,] <- rep(pa[groups[i],], each=length(relevant_samples))
     }
     sf <- split_data(data, sf, rownames(sf), grouping_w_phylosip=FALSE)
     sf <- lapply(sf, c)
