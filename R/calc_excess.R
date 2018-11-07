@@ -71,7 +71,13 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     }
     mw_max <- adjust + mw_l
     # calculate atom excess
-    excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
+    if(all(dim(mw_max)==dim(mw_h))) {
+      excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
+    } else {
+      num <- sweep(mw_h, 1, mw_l)
+      denom <- mw_max - mw_l
+      excess <- sweep(num, 1, denom, '/') * (1 - nat_abund)
+    }
     # organize and add new data as S4 matrix
     if(percent) excess <- excess * 100
     data <- collate_results(data, t(excess), tax_names=tax_names, 'atom_excess', sparse=TRUE)
@@ -144,7 +150,13 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       }
       mw_max <- adjust + mw_l
       # atom excess
-      excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
+      if(all(dim(mw_max)==dim(mw_h))) {
+        excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
+      } else {
+        num <- sweep(mw_h, 1, mw_l)
+        denom <- mw_max - mw_l
+        excess <- sweep(num, 1, denom, '/') * (1 - nat_abund)
+      }
       # organize and add data as single column in bootstrap output matrix
       boot_collect[,i] <- c(excess)
     }
