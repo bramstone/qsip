@@ -106,7 +106,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       if(length(data@qsip@rep_group)==0) {
         # if there is no grouping separate from timepoints, go by the column timepoints
         mw_lab_t <- mw_lab[,t-1]
-        mw_l_t <- mw_l[,t-1]
+        mw_l_t <- as.matrix(mw_l)[,t-1]
         # else break mw_label and mw_light into list separated by timepoint
       } else {
         time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
@@ -269,7 +269,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         if(length(data@qsip@rep_group)==0) {
           # if there is no grouping separate from timepoints, go by the column timepoints
           mw_lab_t <- mw_lab[,t-1]
-          mw_l_t <- mw_l[,t-1]
+          mw_l_t <- as.matrix(mw_l)[,t-1]
           # else break mw_label and mw_light into list separated by timepoint
         } else {
           time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]

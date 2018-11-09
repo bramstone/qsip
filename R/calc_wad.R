@@ -76,7 +76,7 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
     pa <- do.call(rbind, pa)
     if(pool_unlabeled) {
       unlabeled <- rownames(pa) %in% iso_group$interaction[as.numeric(iso_group$iso)==1]
-      pa_unlab <- pa[unlabeled,]
+      pa_unlab <- pa[unlabeled,,drop=FALSE]
       pa_unlab <- colSums(pa_unlab, na.rm=T)
       pa[unlabeled,] <- rep(pa_unlab, each=sum(unlabeled))
     }
@@ -86,7 +86,7 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
     rownames(sf) <- sam_names
     groups <- levels(iso_group$interaction)
     for(i in 1:length(groups)) {
-      relevant_samples <- iso_group$replicate[iso_group$interaction==groups[i]]
+      relevant_samples <- as.character(iso_group$replicate[iso_group$interaction==groups[i]])
       sf[relevant_samples,] <- rep(pa[groups[i],], each=length(relevant_samples))
     }
     sf <- split_data(data, sf, rownames(sf), grouping_w_phylosip=FALSE)
@@ -110,7 +110,8 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
   if(filter && any(data@qsip@filter_levels$soft)) {
     #sf <- do.call(rbind, sf)
     ft <- do.call(rbind, ft)
-    labeled <- ft[iso_group$replicate[as.numeric(iso_group$iso)==2],]
+    rownames(ft) <- sam_names
+    labeled <- ft[as.character(iso_group$replicate[as.numeric(iso_group$iso)==2]),]
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[, colSums(labeled) > 0] # or colSums(sf)
     data@qsip@filter <- colnames(ft)
