@@ -76,7 +76,7 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
     pa <- do.call(rbind, pa)
     if(pool_unlabeled) {
       unlabeled <- rownames(pa) %in% iso_group$interaction[as.numeric(iso_group$iso)==1]
-      pa_unlab <- pa[unlabeled,]
+      pa_unlab <- pa[unlabeled,,drop=FALSE]
       pa_unlab <- colSums(pa_unlab, na.rm=T)
       pa[unlabeled,] <- rep(pa_unlab, each=sum(unlabeled))
     }
