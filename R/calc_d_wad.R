@@ -114,7 +114,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
       light <- do.call(rbind, wl)
       light <- colMeans(light, na.rm=T)
       light[is.nan(light)] <- NA
-    }
+    } else light <- do.call(rbind, wl)
     # only utilize taxa that are present in every replicate
     #pa <- split_data(data, pa, iso_group$interaction, grouping_w_phylosip=F)
     #pa <- pa[which(as.numeric(iso_group2$iso)==2)]
