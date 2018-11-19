@@ -101,8 +101,8 @@ read_qiime2_tax <- function(file, confidence=TRUE, feature_type=c('OTU', 'ASV'),
     tax <- sapply(tax, function(x) sub('\\s?\\w{1}__', '', x, perl=T))
   } else {
     na.strings <- c('', ' s__', ' g__', ' f__', ' o__', ' c__', ' p__', ' k__')
-    tax <- read.table(text=as.character(data$Taxon), sep=';', fill=T, stringsAsFactors=F, na.strings=na.strings)
-    tax <- sapply(tax, function(x) sub('\\s?\\w{1}__', '', x, perl=T))
+    tax <- read.table(text=as.character(data$Taxon), sep=';', fill=T, stringsAsFactors=F, na.strings=na.strings, header=F, row.names=NULL)
+    tax <- sapply(tax, function(x) sub('\\s?\\w{1}__|D_\\d{1}__', '', x, perl=T))
   }
   colnames(tax) <- c('Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus' ,'Species')
   #  if(confidence) {
