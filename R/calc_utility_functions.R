@@ -54,19 +54,25 @@ time_grouping <- function(data, timepoint, rep_id, grouping) {
 }
 
 # Function used to split qSIP data into list of sub-matrices
-split_data <- function(data, new_data, grouping, grouping_w_phylosip=T, keep_sample_names=F) {
+split_data <- function(data, new_data, grouping, grouping_w_phylosip=T, keep_names=0) {
   if(grouping_w_phylosip) grouping <- data@sam_data[[grouping]]
+  if(keep_names==1) {
+    sam_names <- rownames(new_data)
+    sam_names <- split(sam_names, grouping)
+  } else if(keep_names==2) {
+    sam_names <- rownames(new_data)
+    sam_names <- split(sam_names, grouping)
+  }
   n_taxa <- ncol(new_data)
   new_data <- split(new_data, grouping)
   new_data <- base::lapply(new_data, matrix,
                      byrow=FALSE,
                      ncol=n_taxa)
-  if(keep_sample_names) {
-    if(phyloseq::taxa_are_rows(data)) {
-      sam_names <- colnames(new_data)
-    } else sam_names <- rownames(new_data)
-    sam_names <- split(sam_names, grouping)
+
+  if(keep_names==1) {
     new_data <- base::Map(function(x,y) {rownames(x) <- y; x}, new_data, sam_names)
+  } else if(keep_names==2) {
+    new_data <- base::Map(function(x,y) {colnames(x) <- y; x}, new_data, sam_names)
   }
   return(new_data)
 }
