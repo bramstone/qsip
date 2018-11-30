@@ -15,6 +15,12 @@
 #' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
 #'   Taxa are ordered by lowest difference in WAD values.
 #'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
+#' @param separate_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
+#'   If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
+#'   representing it's genetic molecular weight in the absence of isotope addition.
+#' @param separate_label Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
+#'   If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
+#'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
@@ -23,6 +29,10 @@
 #'   of molecular weights for each taxon at each group of replicates in the labeled and unlabeled groups. The row and column
 #'   specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}}, meaning if taxa are listed on the table rows,
 #'   they will in the resulting S4 Matrix class.
+#'
+#'   Note that the bootstrap method produces a \emph{single} bootstrapped median (and matching confidence intervals) for groups of replicates,
+#'   either grouped by isotope treatment alone, or also by some other grouping factor (if \code{data@@qsip@@rep_group} is specified).
+#'   Using no bootstrap value allows separate enrichment values to be attained for each replicate, if \code{separate_label=TRUE}.
 #'
 #' @seealso \code{\link{calc_wad}}, \code{\link{calc_d_wad}}, \code{\link{calc_mw}}
 #'
@@ -36,7 +46,8 @@
 #'
 #' @export
 
-calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, correction=FALSE, offset_taxa=0.1) {
+calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE,
+                        correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   #
@@ -46,8 +57,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
   if(ci_method=='') {
     # if MW values don't exist, calculate those first
     # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter,
-                                                                                             correction=correction, offset_taxa=offset_taxa)
+    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) {
+      data <- calc_mw(data, filter=filter, correction=correction, offset_taxa=offset_taxa,
+                      separate_light=separate_light, separate_label=separate_label)
+    }
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
     mw_h <- data@qsip[['mw_label']]
     mw_h <- as(mw_h, 'matrix')
@@ -77,10 +90,11 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       num <- sweep(mw_h, 1, mw_l)
       denom <- mw_max - mw_l
       excess <- sweep(num, 1, denom, '/') * (1 - nat_abund)
+      if(!phyloseq::taxa_are_rows(data)) excess <- t(excess)
     }
     # organize and add new data as S4 matrix
     if(percent) excess <- excess * 100
-    data <- collate_results(data, t(excess), tax_names=tax_names, 'atom_excess', sparse=TRUE)
+    data <- collate_results(data, excess, tax_names=tax_names, 'atom_excess', sparse=TRUE)
     return(data)
     #
     # -------------------------------------------------------------
@@ -127,7 +141,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       ft_i <- recombine_in_order(ft_i, iso_group, n_taxa)
       rownames(ft_i) <- sam_names
       data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
-      data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa))
+      data <- suppressWarnings(calc_d_wad(data, correction=correction,
+                                          offset_taxa=offset_taxa,
+                                          separate_light=separate_light,
+                                          separate_label=FALSE))
       data <- suppressWarnings(calc_mw(data))
       mw_h <- data@qsip[['mw_label']]
       mw_h <- as(mw_h, 'matrix')
