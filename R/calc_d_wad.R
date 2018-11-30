@@ -181,6 +181,12 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
     wh <- base::Map('-', wh, shift)
   }
   wh <- base::lapply(wh, function(x) {x[is.nan(x)] <- NA; x})
+  if(separate_label) {
+    sam_names <- iso_group[as.numeric(iso_group$iso)==2,]
+    sam_names <- sam_names[order(sam_names$grouping),]
+    wh <- do.call(rbind, wh)
+    rownames(wh) <- sam_names$replicate
+  }
   if(!separate_light) wl <- grouped_light
   data <- collate_results(data, wh, tax_names=tax_names, 'wad_label', sparse=TRUE)
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
