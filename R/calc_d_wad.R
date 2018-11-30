@@ -62,51 +62,99 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   # split by replicate groups, but keep track of light and heavy fractions
   ft <- valid_samples(data, ft, 'iso')
   iso_group <- ft[[2]]; ft <- ft[[1]]
-  #pa <- ifelse(is.na(ft), 0L, 1L)
   ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
- #ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
-  # calculate average WAD per taxa for each replicate group
-  ft <- base::lapply(ft, colMeans, na.rm=T)
-  # remove any NaNs resulting from when a taxon is missing in all replicates
-  ft <- base::lapply(ft, function(x) {x[is.nan(x)] <- NA; x})
   # If there is no replicate grouping (i.e., all replicates in a treatment are grouped)...
   iso_group2 <- unique(iso_group[,!names(iso_group) %in% 'replicate']) # only get unique elements to match levels in ft
   iso_group2 <- iso_group2[match(names(ft), iso_group2$interaction),]
-  if(length(data@qsip@rep_group)==0) {
-    d_ft <- ft[[2]] - ft[[1]]
-    d_ft <- matrix(d_ft, nrow=1)
-    rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso)==2]
-    keep_groups <- !logical(2)
-  } else { # use a for-loop to subtract heavy from light fraction in each group
-    # create a new list to add results of mean WAD difference into
-    d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
-    d_ft <- base::lapply(d_ft, matrix,
-                         rep(0, n_taxa),
-                         nrow=1,
-                         ncol=n_taxa)
-    names(d_ft) <- levels(iso_group$grouping)
-    # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
-    keep_groups <- !logical(length(d_ft))
-    for(i in 1:length(d_ft)) {
-      # use numbers to reference non-labeled additions since they're element agnostic
-      # any NA values result here when a taxa is completely missing from a heavy or light treatment in a replicate group
-      which_light <- which(as.numeric(iso_group2$grouping)==i &
-                             as.numeric(iso_group2$iso)==1)
-      which_heavy <- which(as.numeric(iso_group2$grouping)==i &
-                             as.numeric(iso_group2$iso)==2)
-      # If there's no light OR no heavy treatment for a group of replicates, remove them
-      if(length(which_light)==0 || length(which_heavy)==0) {
-        warning('Unpaired isotope treatment in replicate group(s): ', names(d_ft)[i],
-                '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(d_ft)[i], 'replicate']), collapse=', '),
-                ' - from calculation', call.=FALSE)
-        keep_groups[i] <- FALSE
-        next
+  # average light values across all groups
+  if(!separate_light) {
+    grouped_light <- ft[which(as.numeric(iso_group2$iso)==1)]
+    grouped_light <- do.call(rbind, grouped_light)
+    grouped_light <- colMeans(grouped_light, na.rm=T)
+    grouped_light[is.nan(grouped_light)] <- NA
+  }
+  # If combining labeled replicates
+  if(!separate_label) {
+    # calculate average WAD per taxa for each replicate group
+    ft <- base::lapply(ft, colMeans, na.rm=T)
+    # remove any NaNs resulting from when a taxon is missing in all replicates
+    ft <- base::lapply(ft, function(x) {x[is.nan(x)] <- NA; x})
+    if(length(data@qsip@rep_group)==0) {
+      d_ft <- ft[[2]] - ft[[1]]
+      d_ft <- matrix(d_ft, nrow=1)
+      rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso)==2]
+      keep_groups <- !logical(2)
+    } else { # use a for-loop to subtract heavy from light fraction in each group
+      # create a new list to add results of mean WAD difference into
+      d_ft <- as.list(rep(0, nlevels(iso_group$grouping)))
+      d_ft <- base::lapply(d_ft, matrix, 0, nrow=1, ncol=n_taxa)
+      names(d_ft) <- levels(iso_group$grouping)
+      # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
+      keep_groups <- !logical(length(d_ft))
+      for(i in 1:length(d_ft)) {
+        # use numbers to reference non-labeled additions since they're isotope agnostic
+        # any NA values result here when a taxa is completely missing from a heavy or light treatment in a replicate group
+        which_light <- which(as.numeric(iso_group2$grouping)==i &
+                               as.numeric(iso_group2$iso)==1)
+        which_heavy <- which(as.numeric(iso_group2$grouping)==i &
+                               as.numeric(iso_group2$iso)==2)
+        # use grouped light values if specified
+        if(!separate_light) which_light <- grouped_light
+        # If there's no light OR no heavy treatment for a group of replicates, remove them
+        if(length(which_light)==0 || length(which_heavy)==0) {
+          warning('Unpaired isotope treatment in replicate group(s): ', names(d_ft)[i],
+                  '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(d_ft)[i], 'replicate']), collapse=', '),
+                  ' - from calculation', call.=FALSE)
+          keep_groups[i] <- FALSE
+          next
+        }
+        light <- ft[[which_light]]
+        heavy <- ft[[which_heavy]]
+        d_ft[[i]] <- heavy - light
       }
-      light <- ft[[which_light]]
-      heavy <- ft[[which_heavy]]
-      d_ft[[i]] <- heavy - light
+      d_ft <- d_ft[keep_groups]
     }
-    d_ft <- d_ft[keep_groups]
+  # If keeping labeled replicates separate
+  } else if(separate_label) {
+    if(length(data@qsip@rep_group)==0) {
+      d_ft <- ft[[2]] - ft[[1]]
+      d_ft <- matrix(d_ft, nrow=1)
+      rownames(d_ft) <- iso_group2$iso[as.numeric(iso_group2$iso)==2]
+      keep_groups <- !logical(2)
+    } else { # use a for-loop to subtract heavy from light fraction in each group
+      # create a new list to add results of mean WAD difference into
+      n_rows <- iso_group[as.numeric(iso_group$iso)==2,]
+      n_rows <- table(n_rows$grouping)
+      d_ft <- base::Map(matrix, 0, n_rows, n_taxa)
+      names(d_ft) <- levels(iso_group$grouping)
+      # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
+      keep_groups <- !logical(length(d_ft))
+      for(i in 1:length(d_ft)) {
+        # use numbers to reference non-labeled additions since they're isotope agnostic
+        # any NA values result here when a taxa is completely missing from a heavy or light treatment in a replicate group
+        which_light <- which(as.numeric(iso_group2$grouping)==i &
+                               as.numeric(iso_group2$iso)==1)
+        which_heavy <- which(as.numeric(iso_group2$grouping)==i &
+                               as.numeric(iso_group2$iso)==2)
+        # If there's no light OR no heavy treatment for a group of replicates, remove them
+        if(length(which_light)==0 || length(which_heavy)==0) {
+          warning('Unpaired isotope treatment in replicate group(s): ', names(d_ft)[i],
+                  '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(d_ft)[i], 'replicate']), collapse=', '),
+                  ' - from calculation', call.=FALSE)
+          keep_groups[i] <- FALSE
+          next
+        }
+        # average light values
+        light <- ft[[which_light]]
+        light <- colMeans(light, na.rm=T)
+        light[is.nan(light)] <- NA
+        # use combined light values (across all samples) if specified
+        if(!separate_light) light <- grouped_light
+        heavy <- ft[[which_heavy]]
+        d_ft[[i]] <- heavy - light
+      }
+      d_ft <- d_ft[keep_groups]
+    }
   }
   # organize and add new data as S4 matrix
   # return weighted average densities of light calcs only
@@ -117,11 +165,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   if(length(data@qsip@rep_group)!=0) names(wl) <- names(wh) <- unique(iso_group2$grouping)
   # Apply tube-level correction?
   if(correction) {
-    if(length(data@qsip@rep_group)!=0) {
-      light <- do.call(rbind, wl)
-      light <- colMeans(light, na.rm=T)
-      light[is.nan(light)] <- NA
-    } else light <- do.call(rbind, wl)
+    if(length(data@qsip@rep_group)!=0) light <- grouped_light else light <- do.call(rbind, wl)
     # only utilize taxa that are present in every replicate
     #pa <- split_data(data, pa, iso_group$interaction, grouping_w_phylosip=F)
     #pa <- pa[which(as.numeric(iso_group2$iso)==2)]
@@ -131,17 +175,13 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
     #shift <- base::Map(function(x, y) x[y==1], shift, pa)
     # sort by lowest diff WAD
     shift <- base::lapply(shift, sort, decreasing=F)
-    # calculate median of lowest 10% of diff WADs
+    # calculate median of lowest x% of diff WADs, default is 10%
     shift <- base::lapply(shift, function(x) median(x[1:floor(offset_taxa * length(x))], na.rm=T))
     # subtract shift from labeled WAD values
     wh <- base::Map('-', wh, shift)
   }
   wh <- base::lapply(wh, function(x) {x[is.nan(x)] <- NA; x})
-  if(!separate_light) {
-    wl <- do.call(rbind, wl)
-    wl <- colMeans(wl, na.rm=T)
-    wl[is.nan(wl)] <- NA
-  }
+  if(!separate_light) wl <- grouped_light
   data <- collate_results(data, wh, tax_names=tax_names, 'wad_label', sparse=TRUE)
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
   if(return_diffs) data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
