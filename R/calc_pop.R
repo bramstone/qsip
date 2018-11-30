@@ -18,16 +18,26 @@
 #' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
 #'   Taxa are ordered by lowest difference in WAD values.
 #'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
+#' @param separate_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
+#'   If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
+#'   representing it's genetic molecular weight in the absence of isotope addition.
+#' @param separate_label Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
+#'   If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
+#'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.
 #'
 #' @details Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
 #'   change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
+#'
+#'   Timepoint should be in units of days, so that birth will be new 16S copies d-1 and death will be loss of light 16S copies d-1.
+#'   Use of different time increments will yield growth rates (e.g. per hour), but must be appropriate for the frequency of sampling.
 #'
 #' @return \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@@qsip@@.Data} slot
 #'   of population birth rates for each taxon at each group of replicates. The row and column specifications will mirror those of the \code{phylosip}'s
 #'   \code{\link{otu_table}}, meaning if taxa are listed on the table rows, they will in the resulting S4 Matrix class.
 #'
-#'   Timepoint should be in units of days, so that birth will be new 16S copies d-1 and death will be loss of light 16S copies d-1.
-#'   Use of different time increments will yield growth rates (e.g. per hour), but must be appropriate for the frequency of sampling.
+#'   Note that the bootstrap method produces a \emph{single} bootstrapped median (and matching confidence intervals) for groups of replicates,
+#'   either grouped by isotope treatment alone, or also by some other grouping factor (if \code{data@@qsip@@rep_group} is specified).
+#'   Using no bootstrap value allows separate enrichment values to be attained for each replicate, if \code{separate_label=TRUE}.
 #'
 #' @seealso \code{\link{calc_mw}}
 #'
@@ -38,7 +48,8 @@
 #'
 #' @export
 
-calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'), mu=0.6, correction=FALSE, offset_taxa=0.1) {
+calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'),
+                     mu=0.6, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
@@ -54,8 +65,10 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
   if(ci_method=='') {
     # if MW values don't exist, calculate those first
     # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter,
-                                                                                             correction=correction, offset_taxa=offset_taxa)
+    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) {
+      data <- calc_mw(data, filter=filter, correction=correction, offset_taxa=offset_taxa,
+                      separate_light=separate_light, separate_label=separate_label)
+    }
     # transform sequencing abundances to 16S copy numbers
     # returns feature table (as matrix) with taxa as columns, samples as rows
     ft <- copy_no(data)
@@ -72,16 +85,28 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # separate samples based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
-    sam_names <- rownames(ft)
-    # calculate per-taxon average 16S copy abundance for each group:time interaction point
-    # it should be average in case time 0 data weren't fractioned
-    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
-    ft <- lapply(ft, colMeans, na.rm=T)
-    ft <- do.call(cbind, ft)
-    ft[ft==0] <- NA
-    # get 16S copy numbers for different timepoints
+    # remove light samples from abundance calcs
+    iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    light_group <- iso_group[as.numeric(iso_group$iso)==1,]
+    ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    time_group <- time_group[match(rownames(ft), time_group$replicate),]
+    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
-    ft <- ft[,match(time_group2$interaction, colnames(ft))] # re-order columns to match time_group2$interaction
+    # if keeping labeled 16S abundances and MWs separate ft will be in a list
+    if(separate_label) {
+      ft <- ft[match(time_group2$interaction, names(ft))]
+      ft_0 <- ft[as.numeric(time_group2$time)==1]
+      ft_0 <- base::lapply(ft_0, colMeans, na.rm=TRUE)
+      ft[as.numeric(time_group2$time)==1] <- ft_0
+      ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
+    # if averaging labeled 16S abundances and MWs ft will be in matrix
+    } else {
+      ft <- base::lapply(ft, colMeans, na.rm=T)
+      ft <- do.call(cbind, ft)
+      ft[ft==0] <- NA
+      ft <- ft[,match(time_group2$interaction, colnames(ft))] # re-order columns to match time_group2$interaction
+    }
+    # get 16S copy numbers for different timepoints
     n_t_names <- paste0('n_t_',levels(time_group2$time))
     if(!any(time_group2$time==0)) {
       warning('No timepoints designated as time 0; using time ',
@@ -89,53 +114,65 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
               ' as time before isotope addition', call.=FALSE)
     }
     # NOTE: This function uses t in for-loop iterations to designate cycle through different timepoints
-    for(t in 1:nlevels(time_group2$time)) {
-      assign(n_t_names[t],
-             ft[,time_group2$time==levels(time_group2$time)[t]])
+    if(separate_label) { # get n_t values from list
+      for(t in 1:nlevels(time_group2$time)) {
+        ft_t <- ft[time_group2$time==levels(time_group2$time)[t]]
+        assign(n_t_names[t], t(do.call(rbind, ft_t)))
+      }; rm(ft_t)
+    } else { # get n_t values from matrix
+      for(t in 1:nlevels(time_group2$time)) {
+        assign(n_t_names[t], ft[,time_group2$time==levels(time_group2$time)[t]])
+      }
     }
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
-    mw_lab <- data@qsip[['mw_label']]
-    mw_lab <- as(mw_lab, 'matrix')
+    mw_h <- data@qsip[['mw_label']]
+    mw_h <- as(mw_h, 'matrix')
     mw_l <- data@qsip[['mw_light']]
     if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix, then to vector
-    if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
+    if(!phyloseq::taxa_are_rows(data)) mw_h <- t(mw_h)
     if(!phyloseq::taxa_are_rows(data) && is.matrix(mw_l)) mw_l <- t(mw_l)
     # calculate proportion in light fraction (N_light) at any time after 0
     n_l_names <- paste0('n_l_', levels(time_group2$time))
     for(t in 2:nlevels(time_group2$time)) {
       if(length(data@qsip@rep_group)==0) {
         # if there is no grouping separate from timepoints, go by the column timepoints
-        mw_lab_t <- mw_lab[,t-1]
+        mw_h_t <- mw_h[,t-1]
         mw_l_t <- as.matrix(mw_l)[,t-1]
         # else break mw_label and mw_light into list separated by timepoint
       } else {
         time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
         time_group_t$time <- factor(time_group_t$time)
-        mw_lab_t <- split_data(data, t(mw_lab), time_group_t$time, grouping_w_phylosip=FALSE)
+        mw_h_t <- split_data(data, t(mw_h), time_group_t$time, grouping_w_phylosip=FALSE, keep_names=1)
         mw_l_t <- suppressWarnings(split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE))
-        mw_lab_t <- t(mw_lab_t[[t - 1]])
+        mw_h_t <- t(mw_h_t[[t - 1]])
         mw_l_t <- t(mw_l_t[[t - 1]])
       }
       # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
       mw_max <- (12.07747 * mu) + mw_l_t
-      if(all(dim(mw_max)==dim(mw_lab_t))) {
-        n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
+      if(separate_label)  mw_h_t <- mw_h_t[,match(colnames(get(n_t_names[t])), colnames(mw_h_t))]
+      # calculate abundances
+      if(all(dim(mw_max)==dim(mw_h_t))) {
+        n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
       } else {
-        num <- sweep(mw_lab_t, 1, mw_max) * -1
-        denom <- sweep(mw_l_t, 1, mw_max) * -1
-        n <- sweep(num, 1, denom, '/') * get(n_t_names[t])
+        num <- sweep(mw_h_t, 1, mw_max) * -1 # mw_max - mw_h
+        denom <- sweep(mw_l_t, 1, mw_max) * -1 # mw_max - mw_l
+        n <- sweep(num, 1, denom, '/') * get(n_t_names[t]) # MW_proportion * N_t
       }
-      colnames(n) <- colnames(get(n_t_names[t]))
+      if(!separate_label) colnames(n) <- colnames(get(n_t_names[t]))
       # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
       n[n < 0] <- NA
       assign(n_l_names[t], n)
-    }; suppressWarnings(rm(n, mw_lab_t, mw_l_t, time_group_t, mw_max))
+    }; suppressWarnings(rm(n, mw_h_t, mw_l_t, time_group_t, mw_max))
     # calculate birth and death rate for each timepoint after 0
     b_names <- paste0('b_', levels(time_group2$time))
     d_names <- paste0('d_', levels(time_group2$time))
     for(t in 2:nlevels(time_group2$time)) {
       incubate_time <- as.numeric(levels(time_group2$time)[t])
       if(growth_model=='exponential') {
+
+        # NEED TO DO WORK HERE SO THAT ABUNDANCES AT TIME T MATCH UP TO TIME 0
+        # RIGHT NOW THEY HAVE DIFFERENT DIMENSIONS IF SEPARATE_LABEL=TRUE
+
         b <- get(n_t_names[t]) / get(n_l_names[t])
         d <- get(n_l_names[t]) / get(n_t_names[1])
         b <- log(b) / incubate_time
@@ -238,13 +275,16 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
-      data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa, separate_light=TRUE))
+      data <- suppressWarnings(calc_d_wad(data, correction=correction,
+                                          offset_taxa=offset_taxa,
+                                          separate_label=FALSE,
+                                          separate_light=separate_light))
       data <- suppressWarnings(calc_mw(data))
-      mw_lab <- data@qsip[['mw_label']]
-      mw_lab <- as(mw_lab, 'matrix')
+      mw_h <- data@qsip[['mw_label']]
+      mw_h <- as(mw_h, 'matrix')
       mw_l <- data@qsip[['mw_light']]
       if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')
-      if(!phyloseq::taxa_are_rows(data)) mw_lab <- t(mw_lab)
+      if(!phyloseq::taxa_are_rows(data)) mw_h <- t(mw_h)
       if(!phyloseq::taxa_are_rows(data) && is.matrix(mw_l)) mw_l <- t(mw_l)
       # subsample abundances
       # calculate per-taxon average 16S copy abundance for each group:time interaction point
@@ -268,23 +308,23 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       for(t in 2:nlevels(time_group2$time)) {
         if(length(data@qsip@rep_group)==0) {
           # if there is no grouping separate from timepoints, go by the column timepoints
-          mw_lab_t <- mw_lab[,t-1]
+          mw_h_t <- mw_h[,t-1]
           mw_l_t <- as.matrix(mw_l)[,t-1]
           # else break mw_label and mw_light into list separated by timepoint
         } else {
           time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
           time_group_t$time <- factor(time_group_t$time)
-          mw_lab_t <- split_data(data, t(mw_lab), time_group_t$time, grouping_w_phylosip=FALSE)
+          mw_h_t <- split_data(data, t(mw_h), time_group_t$time, grouping_w_phylosip=FALSE)
           mw_l_t <- suppressWarnings(split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE))
-          mw_lab_t <- t(mw_lab_t[[t - 1]])
+          mw_h_t <- t(mw_h_t[[t - 1]])
           mw_l_t <- t(mw_l_t[[t - 1]])
         }
         # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
         mw_max <- (12.07747 * mu) + mw_l_t
-        if(all(dim(mw_max)==dim(mw_lab_t))) {
-          n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
+        if(all(dim(mw_max)==dim(mw_h_t))) {
+          n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
         } else {
-          num <- sweep(mw_lab_t, 1, mw_max) * -1
+          num <- sweep(mw_h_t, 1, mw_max) * -1
           denom <- sweep(mw_l_t, 1, mw_max) * -1
           n <- sweep(num, 1, denom, '/') * get(n_t_names[t])
         }
@@ -292,7 +332,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
         n[n < 0] <- NA
         assign(n_l_names[t], n)
-      }; suppressWarnings(rm(n, mw_lab_t, mw_l_t, time_group_t, mw_max))
+      }; suppressWarnings(rm(n, mw_h_t, mw_l_t, time_group_t, mw_max))
       # calculate birth and death rate for each timepoint after 0
       b_names <- paste0('b_', levels(time_group2$time))
       d_names <- paste0('d_', levels(time_group2$time))
