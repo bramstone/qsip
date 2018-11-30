@@ -7,16 +7,16 @@
 #'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
 #' @param return_diffs Logical value specifying whether to return difference in mean WADs between light and heavy samples
 #'   or to return mean heavy WADs and mean light WADs (the default).
+#' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
+#' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+#'   Taxa are ordered by lowest difference in WAD values.
+#'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
 #' @param separate_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 #'   representing it's genetic molecular weight in the absence of isotope addition.
 #' @param separate_label Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 #'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.
-#' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
-#' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
-#'   Taxa are ordered by lowest difference in WAD values.
-#'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities have not been calculated
 #'   beforehand, \code{calc_d_wad} will compute those first.
