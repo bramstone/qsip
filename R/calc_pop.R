@@ -78,7 +78,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       ft <- ft[,colnames(ft) %in% tax_names]
     }
     tax_names <- colnames(ft)
-    # calculate per-taxon total 16S copy abundance for each sample
+    # calculate per-taxon total 16S copy abundance for each sample (i.e., sum over fractions)
     ft <- split_data(data, ft, data@qsip@rep_id)
     ft <- lapply(ft, colSums, na.rm=T)
     ft <- do.call(rbind, ft)
@@ -86,6 +86,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
     # remove light samples from abundance calcs
+    # Maybe make user option for this action
     iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
     light_group <- iso_group[as.numeric(iso_group$iso)==1,]
     ft <- ft[!rownames(ft) %in% light_group$replicate,]
@@ -106,22 +107,22 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       ft[ft==0] <- NA
       ft <- ft[,match(time_group2$interaction, colnames(ft))] # re-order columns to match time_group2$interaction
     }
-    # get 16S copy numbers for different timepoints
-    n_t_names <- paste0('n_t_',levels(time_group2$time))
+    # Does a time 0 exist in these data?
     if(!any(time_group2$time==0)) {
       warning('No timepoints designated as time 0; using time ',
               levels(time_group2$time)[1],
               ' as time before isotope addition', call.=FALSE)
     }
-    # NOTE: This function uses t in for-loop iterations to designate cycle through different timepoints
+    # get 16S copy numbers for different timepoints
+    n_t_names <- paste0('n_t_',levels(time_group2$time))
     if(separate_label) { # get n_t values from list
-      for(t in 1:nlevels(time_group2$time)) {
-        ft_t <- ft[time_group2$time==levels(time_group2$time)[t]]
-        assign(n_t_names[t], t(do.call(rbind, ft_t)))
+      for(time in 1:nlevels(time_group2$time)) {
+        ft_t <- ft[time_group2$time==levels(time_group2$time)[time]]
+        assign(n_t_names[time], t(do.call(rbind, ft_t)))
       }; rm(ft_t)
     } else { # get n_t values from matrix
-      for(t in 1:nlevels(time_group2$time)) {
-        assign(n_t_names[t], ft[,time_group2$time==levels(time_group2$time)[t]])
+      for(time in 1:nlevels(time_group2$time)) {
+        assign(n_t_names[time], ft[,time_group2$time==levels(time_group2$time)[time]])
       }
     }
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
@@ -133,60 +134,70 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     if(!phyloseq::taxa_are_rows(data) && is.matrix(mw_l)) mw_l <- t(mw_l)
     # calculate proportion in light fraction (N_light) at any time after 0
     n_l_names <- paste0('n_l_', levels(time_group2$time))
-    for(t in 2:nlevels(time_group2$time)) {
+    for(time in 2:nlevels(time_group2$time)) {
       if(length(data@qsip@rep_group)==0) {
         # if there is no grouping separate from timepoints, go by the column timepoints
-        mw_h_t <- mw_h[,t-1]
-        mw_l_t <- as.matrix(mw_l)[,t-1]
+        mw_h_t <- mw_h[,time - 1]
+        if(is.null(dim(mw_l))) mw_l_t <- mw_l else mw_l_t <- as.matrix(mw_l)[,time - 1]
         # else break mw_label and mw_light into list separated by timepoint
       } else {
         time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
         time_group_t$time <- factor(time_group_t$time)
         mw_h_t <- split_data(data, t(mw_h), time_group_t$time, grouping_w_phylosip=FALSE, keep_names=1)
-        mw_l_t <- suppressWarnings(split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE))
-        mw_h_t <- t(mw_h_t[[t - 1]])
-        mw_l_t <- t(mw_l_t[[t - 1]])
+        mw_h_t <- t(mw_h_t[[time - 1]])
+        if(is.null(dim(mw_l))) {
+          mw_l_t <- mw_l
+        } else {
+            mw_l_t <- suppressWarnings(split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE))
+            mw_l_t <- t(mw_l_t[[time - 1]])
+        }
       }
       # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
       mw_max <- (12.07747 * mu) + mw_l_t
-      if(separate_label)  mw_h_t <- mw_h_t[,match(colnames(get(n_t_names[t])), colnames(mw_h_t))]
+      if(separate_label)  mw_h_t <- mw_h_t[,match(colnames(get(n_t_names[time])), colnames(mw_h_t))]
       # calculate abundances
       if(all(dim(mw_max)==dim(mw_h_t))) {
-        n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
+        n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[time])
       } else {
         num <- sweep(mw_h_t, 1, mw_max) * -1 # mw_max - mw_h
         denom <- sweep(mw_l_t, 1, mw_max) * -1 # mw_max - mw_l
-        n <- sweep(num, 1, denom, '/') * get(n_t_names[t]) # MW_proportion * N_t
+        n <- sweep(num, 1, denom, '/') * get(n_t_names[time]) # MW_proportion * N_t
       }
-      if(!separate_label) colnames(n) <- colnames(get(n_t_names[t]))
+      if(!separate_label) colnames(n) <- colnames(get(n_t_names[time]))
       # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
       n[n < 0] <- NA
-      assign(n_l_names[t], n)
+      assign(n_l_names[time], n)
     }; suppressWarnings(rm(n, mw_h_t, mw_l_t, time_group_t, mw_max))
     # calculate birth and death rate for each timepoint after 0
     b_names <- paste0('b_', levels(time_group2$time))
     d_names <- paste0('d_', levels(time_group2$time))
-    for(t in 2:nlevels(time_group2$time)) {
-      incubate_time <- as.numeric(levels(time_group2$time)[t])
+    for(time in 2:nlevels(time_group2$time)) {
+      incubate_time <- as.numeric(levels(time_group2$time)[time])
+      n_col_t <- ncol(get(n_t_names[time]))
+      n_col_0 <- ncol(get(n_t_names[1]))
+      # separate labeled samples which will likely have different dimensions than unlabeled
+      if(n_col_t > n_col_0) {
+        sam_names_t <- colnames(get(n_t_names[time]))
+        group_repeat <- time_group[match(sam_names_t, time_group$replicate), 'grouping']
+        time_group_0 <- time_group2[time_group2$time==levels(time_group2$time)[1],]
+        group_repeat <- as.character(time_group_0[match(group_repeat, time_group2$grouping), 'interaction'])
+        assign(n_t_names[1], get(n_t_names[1])[,group_repeat])
+      }
       if(growth_model=='exponential') {
-
-        # NEED TO DO WORK HERE SO THAT ABUNDANCES AT TIME T MATCH UP TO TIME 0
-        # RIGHT NOW THEY HAVE DIFFERENT DIMENSIONS IF SEPARATE_LABEL=TRUE
-
-        b <- get(n_t_names[t]) / get(n_l_names[t])
-        d <- get(n_l_names[t]) / get(n_t_names[1])
+        b <- get(n_t_names[time]) / get(n_l_names[time])
+        d <- get(n_l_names[time]) / get(n_t_names[1])
         b <- log(b) / incubate_time
         d <- log(d) / incubate_time
       } else {
-        b <- get(n_t_names[t]) - get(n_l_names[t])
-        d <- get(n_l_names[t]) - get(n_t_names[1])
+        b <- get(n_t_names[time]) - get(n_l_names[time])
+        d <- get(n_l_names[time]) - get(n_t_names[1])
         b <- (b / get(n_t_names[1])) / incubate_time
         d <- (d / get(n_t_names[1])) / incubate_time
       }
-      colnames(b) <- colnames(d) <- colnames(get(n_t_names[t]))
-      assign(b_names[t], b)
-      assign(d_names[t], d)
-    }; rm(b,d)
+      colnames(b) <- colnames(d) <- colnames(get(n_t_names[time]))
+      assign(b_names[time], b)
+      assign(d_names[time], d)
+    }; suppressWarnings(rm(b, d, n_col_t, n_col_0, sam_names_t, group_repeat, time_group_0))
     # if more than two timepoints (0, and t), combine resulting matrices, but skip time 0
     if(length(n_t_names) > 2) {
       b <- t(do.call(cbind, mget(b_names[2:length(b_names)])))
@@ -305,52 +316,52 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       }
       # calculate proportion in light fraction (N_light) at any time after 0
       n_l_names <- paste0('n_l_', levels(time_group2$time))
-      for(t in 2:nlevels(time_group2$time)) {
+      for(time in 2:nlevels(time_group2$time)) {
         if(length(data@qsip@rep_group)==0) {
           # if there is no grouping separate from timepoints, go by the column timepoints
-          mw_h_t <- mw_h[,t-1]
-          mw_l_t <- as.matrix(mw_l)[,t-1]
+          mw_h_t <- mw_h[,time - 1]
+          mw_l_t <- as.matrix(mw_l)[,time - 1]
           # else break mw_label and mw_light into list separated by timepoint
         } else {
           time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
           time_group_t$time <- factor(time_group_t$time)
           mw_h_t <- split_data(data, t(mw_h), time_group_t$time, grouping_w_phylosip=FALSE)
           mw_l_t <- suppressWarnings(split_data(data, t(mw_l), time_group_t$time, grouping_w_phylosip=FALSE))
-          mw_h_t <- t(mw_h_t[[t - 1]])
-          mw_l_t <- t(mw_l_t[[t - 1]])
+          mw_h_t <- t(mw_h_t[[time - 1]])
+          mw_l_t <- t(mw_l_t[[time - 1]])
         }
         # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
         mw_max <- (12.07747 * mu) + mw_l_t
         if(all(dim(mw_max)==dim(mw_h_t))) {
-          n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
+          n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[time])
         } else {
           num <- sweep(mw_h_t, 1, mw_max) * -1
           denom <- sweep(mw_l_t, 1, mw_max) * -1
-          n <- sweep(num, 1, denom, '/') * get(n_t_names[t])
+          n <- sweep(num, 1, denom, '/') * get(n_t_names[time])
         }
-        colnames(n) <- colnames(get(n_t_names[t]))
+        colnames(n) <- colnames(get(n_t_names[time]))
         # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
         n[n < 0] <- NA
-        assign(n_l_names[t], n)
+        assign(n_l_names[time], n)
       }; suppressWarnings(rm(n, mw_h_t, mw_l_t, time_group_t, mw_max))
       # calculate birth and death rate for each timepoint after 0
       b_names <- paste0('b_', levels(time_group2$time))
       d_names <- paste0('d_', levels(time_group2$time))
-      for(t in 2:nlevels(time_group2$time)) {
-        incubate_time <- as.numeric(levels(time_group2$time)[t])
+      for(time in 2:nlevels(time_group2$time)) {
+        incubate_time <- as.numeric(levels(time_group2$time)[time])
         if(growth_model=='exponential') {
-          b <- get(n_t_names[t]) / get(n_l_names[t])
-          d <- get(n_l_names[t]) / get(n_t_names[1])
+          b <- get(n_t_names[time]) / get(n_l_names[time])
+          d <- get(n_l_names[time]) / get(n_t_names[1])
           b <- log(b) / incubate_time
           d <- log(d) / incubate_time
         } else {
-          b <- get(n_t_names[t]) - get(n_l_names[t])
-          d <- get(n_l_names[t]) - get(n_t_names[1])
+          b <- get(n_t_names[time]) - get(n_l_names[time])
+          d <- get(n_l_names[time]) - get(n_t_names[1])
           b <- (b / get(n_t_names[1])) / incubate_time
           d <- (d / get(n_t_names[1])) / incubate_time
         }
-        assign(b_names[t], b)
-        assign(d_names[t], d)
+        assign(b_names[time], b)
+        assign(d_names[time], d)
       }; rm(b,d)
       # if more than two timepoints (0, and t), combine resulting matrices, but skip time 0
       if(length(n_t_names) > 2) {
