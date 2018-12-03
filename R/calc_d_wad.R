@@ -99,7 +99,6 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
         which_heavy <- which(as.numeric(iso_group2$grouping)==i &
                                as.numeric(iso_group2$iso)==2)
         # use grouped light values if specified
-        if(!separate_light) which_light <- grouped_light
         # If there's no light OR no heavy treatment for a group of replicates, remove them
         if(length(which_light)==0 || length(which_heavy)==0) {
           warning('Unpaired isotope treatment in replicate group(s): ', names(d_ft)[i],
@@ -109,6 +108,8 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
           next
         }
         light <- ft[[which_light]]
+        # use combined light values (across all samples) if specified
+        if(!separate_light) which_light <- grouped_light
         heavy <- ft[[which_heavy]]
         d_ft[[i]] <- heavy - light
       }
