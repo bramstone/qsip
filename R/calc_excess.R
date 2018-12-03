@@ -142,7 +142,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
       data <- suppressWarnings(calc_d_wad(data, correction=correction,
                                           offset_taxa=offset_taxa,
-                                          separate_light=separate_light,
+                                          separate_light=FALSE,
                                           separate_label=FALSE))
       data <- suppressWarnings(calc_mw(data))
       mw_h <- data@qsip[['mw_label']]

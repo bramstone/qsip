@@ -289,7 +289,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       data <- suppressWarnings(calc_d_wad(data, correction=correction,
                                           offset_taxa=offset_taxa,
                                           separate_label=FALSE,
-                                          separate_light=separate_light))
+                                          separate_light=FALSE))
       data <- suppressWarnings(calc_mw(data))
       mw_h <- data@qsip[['mw_label']]
       mw_h <- as(mw_h, 'matrix')
