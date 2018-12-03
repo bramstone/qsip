@@ -378,9 +378,9 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # END OF BOOTSTRAP ITERATIONS
     #
     # clean workspace
-    rm(ft_i, wads_i, subsample, subsample_wads,
+    suppressWarnings(rm(ft_i, wads_i, subsample, subsample_wads,
        subsample_n, subsample_i, subsample_i_wads, b, d,
-       b_names, d_names, n_l_names, n_t_names, ft, wads, mw_lab, mw_l)
+       b_names, d_names, n_l_names, n_t_names, ft, wads, mw_lab, mw_l))
     # summarize birth, death, flux across iterations (lower CI, median, upper CI)
     ci_birth <- summarize_ci(boot_collect_b, ci,
                              grouping=time_group,
