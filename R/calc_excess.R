@@ -90,11 +90,10 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       num <- sweep(mw_h, 1, mw_l)
       denom <- mw_max - mw_l
       excess <- sweep(num, 1, denom, '/') * (1 - nat_abund)
-      if(!phyloseq::taxa_are_rows(data)) excess <- t(excess)
     }
     # organize and add new data as S4 matrix
     if(percent) excess <- excess * 100
-    data <- collate_results(data, excess, tax_names=tax_names, 'atom_excess', sparse=TRUE)
+    data <- collate_results(data, t(excess), tax_names=tax_names, 'atom_excess', sparse=TRUE)
     return(data)
     #
     # -------------------------------------------------------------
