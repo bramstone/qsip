@@ -166,7 +166,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # organize and add new data as S4 matrices
     data <- collate_results(data, t(b), tax_names=tax_names, 'birth_rate', sparse=T)
     data <- collate_results(data, t(d), tax_names=tax_names, 'death_rate', sparse=T)
-    data <- collate_results(data, t(b) + d, tax_names=tax_names, 'growth_rate', sparse=T)
+    data <- collate_results(data, t(b + d), tax_names=tax_names, 'growth_rate', sparse=T)
     return(data)
   #
   # -------------------------------------------------------------
