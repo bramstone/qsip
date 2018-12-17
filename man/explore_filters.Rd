@@ -4,7 +4,7 @@
 \alias{explore_filters}
 \title{Explore different filtering levels}
 \usage{
-explore_filters(data, filters = data@qsip@filter)
+explore_filters(data, filters = data@qsip@filter_levels)
 }
 \arguments{
 \item{data}{\code{Phylosip}-class object to pull feature taxa table from.}

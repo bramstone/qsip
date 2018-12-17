@@ -4,7 +4,7 @@
 \alias{impose_filter}
 \title{Creates filtering criteria}
 \usage{
-impose_filter(data, replicate = 0, fraction = 0, code = character())
+impose_filter(data, replicate = 0, fraction = 0)
 }
 \arguments{
 \item{data}{\code{Phylosip}-class object to pull feature taxa table from.}
@@ -14,9 +14,6 @@ Keeping the default value of \code{0} will apply no frequency threshold at the r
 
 \item{fraction}{Numeric vector specifying the minimum frequency of occurrence of microbial taxa across fractions within a sample.
 Keeping the default value of \code{0} will apply no frequency threshold at the fraction level}
-
-\item{code}{Optional character vector specifying a particular combination of replicate and fraction frequency to test.
-Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})}
 }
 \value{
 Returns a
@@ -25,7 +22,7 @@ Returns a
 Returns binary vector specifying whether taxa from a phylosip object satisfy minimum frequency specifications
 }
 \details{
-\code{impose_filter} is primarily utilized within other functions.
+\code{impose_filter} is primarily utilized within other functions and imposes a hard filter on the data.
 }
 \examples{
 # Filter a tax table

@@ -4,7 +4,8 @@
 \alias{create_filters}
 \title{Specify multiple taxa filting options for qSIP calculations}
 \usage{
-create_filters(replicate = 0, fraction = 0, rm_combn = character())
+create_filters(replicate = 0, fraction = 0, rm_combn = character(),
+  hard = 0, soft = 0)
 }
 \arguments{
 \item{replicate}{Numeric vector specifying the minimum frequency of occurrence of microbial taxa across replicates.
@@ -15,10 +16,17 @@ Keeping the default value of \code{0} will apply no frequency threshold at the f
 
 \item{rm_combn}{Optional character vector specifying any particular combinations of replicate and fraction frequency to remove.
 Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})}
+
+\item{hard}{Single-length numeric value indicating which filtering option is to be made a hard filtering criteria.
+Valid values are \code{1:nrow(data)}}
+
+\item{soft}{Single-length numeric value indicating which filtering option is to be made a soft filtering criteria.
+Valid values are \code{1:nrow(data)}}
 }
 \value{
 \code{create_filters} produces a data frane of replicate frequencies and within-replicate-fraction frequencies to be
-  investigated in downstream analyses.
+  investigated in downstream analyses. In addition the logical columns \code{hard} and \code{soft} indicate which frequencies to
+  be utilized for hard or soft cut-offs.
 }
 \description{
 Creates a data frame of per-replicate and per-fraction minimum incidence frequencies to retain microbial taxa in the dataset
@@ -29,6 +37,13 @@ Creates a data frame of per-replicate and per-fraction minimum incidence frequen
   Because \code{create_filters} uses \code{\link[base]{expand.grid}}, all possible combinations of the first two arguments will
   be used to construct the resulting data frame If certain combinations are not desirable, the \code{rm_combn} argument can be
   supplied to remove them.
+
+  hard and soft filtering parameters indicate whether taxa should be removed completely if they fail to satisfy the minimum
+  frequency threshold across all cases (hard) or if they should be removed only from invdividual comparisons if they fail to
+  meet the frequency threshold in that comparison. For example, in a data set with two replicate groups (representing some two
+  distinct biological or ecological units), a taxon meets the minimum frequency requirment in group one (meaning it occurs in both
+  the unlabeled and labeled treatments of group one) but not group two (it is not frequent enough in the labeled treatment).
+  A hard filter would remove it from both group one and two while a soft filter would remove it only from the group two comparisons.
 }
 \examples{
 # Only filter on samples

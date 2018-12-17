@@ -4,18 +4,53 @@
 \alias{calc_pop}
 \title{Calculation of population dynamics}
 \usage{
-calc_pop(data)
+calc_pop(data, ci_method = c("", "bootstrap", "bayesian"), ci = 0.95,
+  iters = 999, filter = FALSE, growth_model = c("exponential",
+  "linear"), mu = 0.6, correction = FALSE, offset_taxa = 0.1,
+  separate_light = FALSE, separate_label = TRUE)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
+
+\item{ci_method}{Character value indicating how to calculate confidence intervals of stable isotope atom excess.
+Options are \code{bootstrap} or \code{bayesian} (see \code{details} below for discussion on their differences).
+The default is blank indicating that no confidence intervals will be calculated.}
+
+\item{ci}{Numeric value from 0 to 1 indicating the width of the confidence interval for bootsrapped atom excess values.}
+
+\item{iters}{Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.}
+
+\item{filter}{Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.}
+
+\item{growth_model}{Character vector specifying whether growth rates should be calculated using exponential or linear growth.
+Default is \code{exponential}.}
+
+\item{mu}{Numeric value from 0 to 1 indicating the expected incorporation of labeled O into DNA during replication.
+Default is \code{0.60}.}
+
+\item{correction}{Logical value indicating whether or not to apply tube-level correction to labeled WAD values.}
+
+\item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+Taxa are ordered by lowest difference in WAD values.
+Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.}
+
+\item{separate_light}{Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
+If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
+representing it's genetic molecular weight in the absence of isotope addition.}
+
+\item{separate_label}{Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
+If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
+representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.}
 }
 \value{
 \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot
   of population birth rates for each taxon at each group of replicates. The row and column specifications will mirror those of the \code{phylosip}'s
   \code{\link{otu_table}}, meaning if taxa are listed on the table rows, they will in the resulting S4 Matrix class.
 
-  Timepoint should be in units of days, so that birth will be new 16S copies d-1 and death will be loss of light 16S copies d-1.
-  Use of different time increments will yield growth rates (e.g. per hour), but must be appropriate for the frequency of sampling.
+  Note that the bootstrap method produces a \emph{single} bootstrapped median (and matching confidence intervals) for groups of replicates,
+  either grouped by isotope treatment alone, or also by some other grouping factor (if \code{data@qsip@rep_group} is specified).
+  Using no bootstrap value allows separate enrichment values to be attained for each replicate, if \code{separate_label=TRUE}.
 }
 \description{
 Calculates population growth and death rates
@@ -23,6 +58,9 @@ Calculates population growth and death rates
 \details{
 Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
   change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
+
+  Timepoint should be in units of days, so that birth will be new 16S copies d-1 and death will be loss of light 16S copies d-1.
+  Use of different time increments will yield growth rates (e.g. per hour), but must be appropriate for the frequency of sampling.
 }
 \examples{
  # Load in example data

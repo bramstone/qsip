@@ -4,10 +4,19 @@
 \alias{calc_wad}
 \title{Calculation of weighted average densities}
 \usage{
-calc_wad(data)
+calc_wad(data, filter = FALSE, pool_unlabeled = TRUE)
 }
 \arguments{
-\item{data}{Data as a \code{phyloseq} object}
+\item{data}{Data as a \code{phylosip} object}
+
+\item{filter}{Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+A hard filter is applied for \code{calc_wad} (meaning taxa are removed from all replicates/groups if they don't meet threshold).
+Note, however, that this will have different outcomes depending on whether or not \code{filter_qsip} has been called
+before calculations or not (see \code{details})}
+
+\item{pool_unlabeled}{Logical vector specifying if unlabeled replicates should be pooled together across any grouping factor prior
+to filtering. If \code{TRUE} (the default), unlabeled replicates will be pooled, and any soft filtering threshold will be applied to
+\emph{all} unlabeled replicates together.}
 }
 \value{
 \code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
@@ -22,10 +31,17 @@ Calculates weighted average densities for each microbial taxa in each sample rep
 Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
   that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
   of \code{NA} for every taxa in a sample with missing density data.
+
+  Filtering for \code{calc_wad} utilized \code{filter_qsip} and employs a hard filter. If filtering is specified using
+  \code{filter=TRUE}, then filtering is employed on fractions \emph{only} (\emph{i.e.}, \code{filter_qsip} is implemented with
+  \code{replicate=1}). In order to set more stringent hard filters, \code{filter_qsip} must be employed before calculating WAD values.
 }
 \examples{
  # Load in example data
 
  # Calculate weighted average densities
 
+}
+\seealso{
+\code{\link{filter_qsip}}
 }

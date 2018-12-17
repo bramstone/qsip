@@ -7,7 +7,7 @@
 specify_qsip(data, density = "character", abund = "character",
   rep_id = "character", rep_group = "character", iso = "character",
   iso_trt = "character", timepoint = "character",
-  filter = "data.frame", ...)
+  filter_levels = "data.frame", filter = "character", ...)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}

@@ -2,9 +2,10 @@
 % Please edit documentation in R/filtering.R
 \name{filter_qsip}
 \alias{filter_qsip}
-\title{Filter taxa}
+\title{Filter taxa from phylosip}
 \usage{
-filter_qsip(data, replicate = 0, fraction = 0, code = character())
+filter_qsip(data, replicate = 0, fraction = 0,
+  filter_phyloseq = FALSE)
 }
 \arguments{
 \item{data}{\code{Phylosip}-class object to pull feature taxa table from.}
@@ -15,17 +16,21 @@ Keeping the default value of \code{0} will apply no frequency threshold at the r
 \item{fraction}{Numeric vector specifying the minimum frequency of occurrence of microbial taxa across fractions within a sample.
 Keeping the default value of \code{0} will apply no frequency threshold at the fraction level}
 
-\item{code}{Optional character vector specifying a particular combination of replicate and fraction frequency to test.
-Replicate and frequency combinations should be specified by separation with \code{:} (\emph{e.g.}, \code{'3:12'})}
+\item{filter_phyloseq}{Logical value indicating whether or not to filter taxa from \code{data@otu_table} and \code{data@tax_table}.}
 }
 \value{
-Returns a
+Returns a character vector in \code{data@qsip@filter} of taxa names that have passed the specified filtering threshold.
 }
 \description{
 Filters taxa from qSIP portion of phyloseq object
 }
 \details{
-\code{impose_filter} is primarily utilized within other functions.
+\code{filter_qsip} Has twofold actions. First, it produces a character vector of taxa names that have passed the specified
+  filtering threshold and which are stored in \code{data@qsip@filter}. Additionally, any qsip-related data that have been previously
+  generated and stored in \code{data@qsip@.Data} will be filtered to only retain those taxa.
+
+  It is not recommended to filter taxa from the \code{phyloseq}-inhereted portions of the data (\emph{e.g.}, from \code{data@otu_table},
+  and \code{data@tax_table}), simply because it will be difficult to call this information again if needed.
 }
 \examples{
 # Filter a phyloseq object

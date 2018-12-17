@@ -8,7 +8,8 @@
 \S4method{initialize}{qsip}(.Object, density = character(0),
   abund = character(0), rep_id = character(0),
   rep_group = character(0), iso = character(0),
-  iso_trt = character(0), timepoint = character(0), filter = NULL)
+  iso_trt = character(0), timepoint = character(0),
+  filter_levels = NULL, filter = character(0))
 }
 \description{
 The S4 method for initializing a qsip object
