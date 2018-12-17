@@ -81,7 +81,6 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     # calculate per-taxon average 16S copy abundance for each group:time interaction point
     # it should be average in case time 0 data weren't fractioned
-    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE)
     ft <- lapply(ft, colMeans, na.rm=TRUE)
     ft <- do.call(cbind, ft)
     ft[ft==0] <- NA
