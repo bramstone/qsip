@@ -72,7 +72,13 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # separate samples based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
-    sam_names <- rownames(ft)
+    # remove light samples from abundance calcs
+    # Maybe make user option for this action
+    iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    light_group <- iso_group[as.numeric(iso_group$iso)==1,]
+    ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    time_group <- time_group[match(rownames(ft), time_group$replicate),]
+    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     # calculate per-taxon average 16S copy abundance for each group:time interaction point
     # it should be average in case time 0 data weren't fractioned
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
@@ -159,9 +165,9 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       d <- get(d_names[2])
     }
     # organize and add new data as S4 matrices
-    data <- collate_results(data, b, tax_names=tax_names, 'birth_rate', sparse=T)
-    data <- collate_results(data, d, tax_names=tax_names, 'death_rate', sparse=T)
-    data <- collate_results(data, b + d, tax_names=tax_names, 'growth_rate', sparse=T)
+    data <- collate_results(data, t(b), tax_names=tax_names, 'birth_rate', sparse=T)
+    data <- collate_results(data, t(d), tax_names=tax_names, 'death_rate', sparse=T)
+    data <- collate_results(data, t(b) + d, tax_names=tax_names, 'growth_rate', sparse=T)
     return(data)
   #
   # -------------------------------------------------------------
@@ -199,7 +205,12 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # separate abundances based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
-    sam_names <- time_group$replicate
+    # remove light samples from abundance calcs
+    # Maybe make user option for this action
+    iso_group_ft <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
+    ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    time_group <- time_group[match(rownames(ft), time_group$replicate),]
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
     # how many samples in each group to subsample with?
     subsample_n <- base::lapply(ft, nrow)
