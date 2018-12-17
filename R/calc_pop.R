@@ -205,6 +205,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     # separate abundances based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
+    sam_names <- time_group$replicate
     # remove light samples from abundance calcs
     # Maybe make user option for this action
     iso_group_ft <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
