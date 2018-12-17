@@ -67,7 +67,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     tax_names <- colnames(ft)
     # calculate per-taxon total 16S copy abundance for each sample
     ft <- split_data(data, ft, data@qsip@rep_id)
-    ft <- lapply(ft, colSums, na.rm=TRUE)
+    ft <- lapply(ft, colSums, na.rm=T)
     ft <- do.call(rbind, ft)
     # separate samples based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
@@ -78,7 +78,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     light_group <- iso_group[as.numeric(iso_group$iso)==1,]
     ft <- ft[!rownames(ft) %in% light_group$replicate,]
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
-    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE)
+    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     # calculate per-taxon average 16S copy abundance for each group:time interaction point
     # it should be average in case time 0 data weren't fractioned
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE)
@@ -200,7 +200,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     if(filter) ft <- ft[,colnames(ft) %in% tax_names]
     # calculate per-taxon 16S copy abundance for each sample
     ft <- split_data(data, ft, data@qsip@rep_id)
-    ft <- lapply(ft, colSums, na.rm=T)
+    ft <- lapply(ft, colSums, na.rm=TRUE)
     ft <- do.call(rbind, ft)
     # separate abundances based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
@@ -220,7 +220,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     subsample <- base::mapply(matrix,
                               subsample,
                               nrow=subsample_n,
-                              byrow=F, SIMPLIFY=FALSE)
+                              byrow=FALSE, SIMPLIFY=FALSE)
     # collect output in matrices (each column is a pop matrix from that iterations' subsampling)
     if(length(data@qsip@rep_group)==0) {
       n_groups <- 1
