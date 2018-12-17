@@ -67,7 +67,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     tax_names <- colnames(ft)
     # calculate per-taxon total 16S copy abundance for each sample
     ft <- split_data(data, ft, data@qsip@rep_id)
-    ft <- lapply(ft, colSums, na.rm=T)
+    ft <- lapply(ft, colSums, na.rm=TRUE)
     ft <- do.call(rbind, ft)
     # separate samples based on timepoint, keeping only valid samples
     ft <- valid_samples(data, ft, 'time')
@@ -78,11 +78,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     light_group <- iso_group[as.numeric(iso_group$iso)==1,]
     ft <- ft[!rownames(ft) %in% light_group$replicate,]
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
-    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
+    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE)
     # calculate per-taxon average 16S copy abundance for each group:time interaction point
     # it should be average in case time 0 data weren't fractioned
-    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
-    ft <- lapply(ft, colMeans, na.rm=T)
+    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE)
+    ft <- lapply(ft, colMeans, na.rm=TRUE)
     ft <- do.call(cbind, ft)
     ft[ft==0] <- NA
     # get 16S copy numbers for different timepoints
@@ -212,7 +212,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
     ft <- ft[!rownames(ft) %in% light_group$replicate,]
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
-    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
+    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE)
     # how many samples in each group to subsample with?
     subsample_n <- base::lapply(ft, nrow)
     subsample <- base::lapply(subsample_n,
