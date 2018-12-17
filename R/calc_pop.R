@@ -250,8 +250,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     sam_names <- time_group$replicate
     # remove light samples from abundance calcs
     # Maybe make user option for this action
-    iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-    light_group <- iso_group[as.numeric(iso_group$iso)==1,]
+    iso_group_ft <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
     ft <- ft[!rownames(ft) %in% light_group$replicate,]
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
