@@ -272,8 +272,10 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- base::mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
       ft_i <- base::lapply(ft_i, colMeans, na.rm=TRUE)
-      ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa, condensed_grouping=TRUE))
-      colnames(ft_i) <- time_group$interaction[!duplicated(time_group$interaction)]
+      ft_i <- do.call(cbind, ft_i)
+      ft_i <- ft_i[,match(time_group$interaction[!duplicated(time_group$interaction)], colnames(ft_i))]
+      #ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa, condensed_grouping=TRUE))
+      #colnames(ft_i) <- time_group$interaction[!duplicated(time_group$interaction)]
       ft_i[ft_i==0] <- NA
       # get per-taxon 16S copy numbers for different timepoints
       time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
