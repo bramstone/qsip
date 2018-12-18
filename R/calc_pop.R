@@ -184,7 +184,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     iso_group <- wads[[2]]; wads <- wads[[1]]
     # split by replicate groups
     sam_names_wads <- rownames(wads)
-    wads <- split_data(data, wads, iso_group$interaction, grouping_w_phylosip=FALSE)
+    wads <- split_data(data, wads, iso_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     # how many samples in each group to subsample WADS with?
     subsample_n <- base::lapply(wads, nrow)
     subsample_wads <- base::lapply(subsample_n,
@@ -211,7 +211,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
     ft <- ft[!rownames(ft) %in% light_group$replicate,]
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
-    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE)
+    ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     # how many samples in each group to subsample with?
     subsample_n <- base::lapply(ft, nrow)
     subsample <- base::lapply(subsample_n,
@@ -251,9 +251,12 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     for(i in 1:iters) {
       # subsample WADs
       subsample_i_wads <- lapply(subsample_wads, function(x) x[,i])
-      wads_i <- mapply(function(x, y) x[y,,drop=FALSE], wads, subsample_i_wads, SIMPLIFY=FALSE)
-      wads_i <- recombine_in_order(wads_i, iso_group, n_taxa)
-      rownames(wads_i) <- sam_names_wads
+      wads_i <- base::mapply(function(x, y) x[y,,drop=FALSE], wads, subsample_i_wads, SIMPLIFY=FALSE)
+      wads_i <- base::mapply(function(x, y) {rownames(x) <- y; x}, wads_i, lapply(wads, rownames))
+      wads_i <- do.call(rbind, wads_i)
+      wads_i <- wads_i[match(sam_names_wads, rownames(wads_i)),]
+      #wads_i <- recombine_in_order(wads_i, iso_group, n_taxa)
+      #rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
       data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa, separate_light=TRUE))
@@ -268,7 +271,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # calculate per-taxon average 16S copy abundance for each group:time interaction point
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
-      ft_i <- lapply(ft_i, colMeans, na.rm=T)
+      ft_i <- lapply(ft_i, colMeans, na.rm=TRUE)
       ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa, condensed_grouping=TRUE))
       colnames(ft_i) <- time_group$interaction[!duplicated(time_group$interaction)]
       ft_i[ft_i==0] <- NA
