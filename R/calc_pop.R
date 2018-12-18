@@ -220,6 +220,13 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
                               subsample,
                               nrow=subsample_n,
                               byrow=FALSE, SIMPLIFY=FALSE)
+    # for boostrapping, the WAD-heavy values must match their equivalent 16S abundances
+    time_iso_group <- merge(time_group, iso_group_ft, by='replicate', all.x=T)
+    time_iso_group <- time_iso_group[as.numeric(time_iso_group$time)==2,]
+    time_iso_group <- unique(time_iso_group[,c('interaction.x', 'interaction.y')])
+    for(i in 1:nrow(time_iso_group)) {
+      subsample[time_iso_group[i,1]] <- subsample_wads[time_iso_group[i,2]]
+    }
     # collect output in matrices (each column is a pop matrix from that iterations' subsampling)
     if(length(data@qsip@rep_group)==0) {
       n_groups <- 1
