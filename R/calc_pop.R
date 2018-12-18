@@ -249,7 +249,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     rm(boot_rnames)
     #
     for(i in 1:iters) {
-      # subsample WADs
+      # subsample WADs, match to order of initial WAD matrix
       subsample_i_wads <- lapply(subsample_wads, function(x) x[,i])
       wads_i <- base::mapply(function(x, y) x[y,,drop=FALSE], wads, subsample_i_wads, SIMPLIFY=FALSE)
       wads_i <- base::mapply(function(x, y) {rownames(x) <- y; x}, wads_i, lapply(wads, rownames))
@@ -270,8 +270,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       # subsample abundances
       # calculate per-taxon average 16S copy abundance for each group:time interaction point
       subsample_i <- lapply(subsample, function(x) x[,i])
-      ft_i <- mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
-      ft_i <- lapply(ft_i, colMeans, na.rm=TRUE)
+      ft_i <- base::mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
+      ft_i <- base::lapply(ft_i, colMeans, na.rm=TRUE)
       ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa, condensed_grouping=TRUE))
       colnames(ft_i) <- time_group$interaction[!duplicated(time_group$interaction)]
       ft_i[ft_i==0] <- NA
