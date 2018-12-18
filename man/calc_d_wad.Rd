@@ -4,10 +4,27 @@
 \alias{calc_d_wad}
 \title{Calculation of weighted average density differences}
 \usage{
-calc_d_wad(data)
+calc_d_wad(data, filter = FALSE, return_diffs = FALSE,
+  correction = FALSE, offset_taxa = 0.1, separate_light = FALSE)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
+
+\item{filter}{Logical value specifying whether or not to filter taxa from the weighted average density calculation.
+This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.}
+
+\item{return_diffs}{Logical value specifying whether to return difference in mean WADs between light and heavy samples
+or to return mean heavy WADs and mean light WADs (the default).}
+
+\item{correction}{Logical value indicating whether or not to apply tube-level correction to labeled WAD values.}
+
+\item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+Taxa are ordered by lowest difference in WAD values.
+Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.}
+
+\item{separate_light}{Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
+If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
+representing it's genetic molecular weight in the absence of isotope addition.}
 }
 \value{
 \code{calc_d_wad} adds two S4 Matrix objects to the \code{data@qsip@.Data} slot, one for differences
@@ -21,6 +38,12 @@ Calculates differences in weighted average densities across replicates due to is
 \details{
 Some details about proper isotope control-treatment factoring. If weighted average densities have not been calculated
   beforehand, \code{calc_d_wad} will compute those first.
+
+  More details about tube-level corrections.
+
+  Unless a particular site is known to have significantly higher levels of naturally occurring isotopes, it is recommended to
+  combine unlabeled (light) WAD scores in order to produce an average unlabeled WAD value that more accurately represents a
+  taxon's natural WAD value.
 }
 \examples{
  # Load in example data

@@ -4,14 +4,19 @@
 \alias{calc_mw}
 \title{Calculation of molecular weights}
 \usage{
-calc_mw(data, separate_wad_light = TRUE)
+calc_mw(data, filter = FALSE, correction = FALSE, offset_taxa = 0.1)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
 
-\item{separate_wad_light}{Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
-If \code{FALSE}, WAD scores across all replicate groups will be averaged, creating a single WAD score per taxon representing it's weighted
-average density in the absence of isotope addition.}
+\item{filter}{Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.}
+
+\item{correction}{Logical value indicating whether or not to apply tube-level correction to labeled WAD values.}
+
+\item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+Taxa are ordered by lowest difference in WAD values.
+Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.}
 }
 \value{
 \code{calc_mw} adds three S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot

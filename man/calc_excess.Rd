@@ -4,8 +4,9 @@
 \alias{calc_excess}
 \title{Calculation of atom excess}
 \usage{
-calc_excess(data, percent = FALSE, ci_method = "", ci = 0.95,
-  iters = 999)
+calc_excess(data, percent = FALSE, ci_method = c("", "bootstrap",
+  "bayesian"), ci = 0.95, iters = 999, filter = FALSE,
+  correction = FALSE, offset_taxa = 0.1)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
@@ -19,6 +20,15 @@ The default is blank indicating that no confidence intervals will be calculated.
 \item{ci}{Numeric value from 0 to 1 indicating the width of the confidence interval for bootsrapped atom excess values.}
 
 \item{iters}{Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.}
+
+\item{filter}{Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.}
+
+\item{correction}{Logical value indicating whether or not to apply tube-level correction to labeled WAD values.}
+
+\item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+Taxa are ordered by lowest difference in WAD values.
+Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.}
 }
 \value{
 \code{calc_excess} adds an S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot

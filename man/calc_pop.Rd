@@ -4,10 +4,35 @@
 \alias{calc_pop}
 \title{Calculation of population dynamics}
 \usage{
-calc_pop(data)
+calc_pop(data, ci_method = c("", "bootstrap", "bayesian"), ci = 0.95,
+  iters = 999, filter = FALSE, growth_model = c("exponential",
+  "linear"), mu = 0.6, correction = FALSE, offset_taxa = 0.1)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
+
+\item{ci_method}{Character value indicating how to calculate confidence intervals of stable isotope atom excess.
+Options are \code{bootstrap} or \code{bayesian} (see \code{details} below for discussion on their differences).
+The default is blank indicating that no confidence intervals will be calculated.}
+
+\item{ci}{Numeric value from 0 to 1 indicating the width of the confidence interval for bootsrapped atom excess values.}
+
+\item{iters}{Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.}
+
+\item{filter}{Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
+This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.}
+
+\item{growth_model}{Character vector specifying whether growth rates should be calculated using exponential or linear growth.
+Default is \code{exponential}.}
+
+\item{mu}{Numeric value from 0 to 1 indicating the expected incorporation of labeled O into DNA during replication.
+Default is \code{0.60}.}
+
+\item{correction}{Logical value indicating whether or not to apply tube-level correction to labeled WAD values.}
+
+\item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
+Taxa are ordered by lowest difference in WAD values.
+Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.}
 }
 \value{
 \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot
