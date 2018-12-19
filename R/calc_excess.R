@@ -174,7 +174,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     data <- collate_results(data, ci_data$ci_u, tax_names=tax_names, 'atom_excess_ci_u', sparse=TRUE)
     # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
     data <- suppressWarnings(calc_wad(data, filter=filter))
-    data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa))
+    data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa, separate_light=separate_light))
     data <- suppressWarnings(calc_mw(data))
     return(data)
     #

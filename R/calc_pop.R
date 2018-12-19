@@ -385,7 +385,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     }
     # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
     data <- suppressWarnings(calc_wad(data, filter=filter))
-    data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa))
+    data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa, separate_light=separate_light))
     data <- suppressWarnings(calc_mw(data))
     return(data)
   #
