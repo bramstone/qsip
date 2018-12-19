@@ -6,7 +6,8 @@
 \usage{
 calc_pop(data, ci_method = c("", "bootstrap", "bayesian"), ci = 0.95,
   iters = 999, filter = FALSE, growth_model = c("exponential",
-  "linear"), mu = 0.6, correction = FALSE, offset_taxa = 0.1)
+  "linear"), mu = 0.6, correction = FALSE, offset_taxa = 0.1,
+  separate_light = FALSE)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
@@ -33,6 +34,10 @@ Default is \code{0.60}.}
 \item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
 Taxa are ordered by lowest difference in WAD values.
 Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.}
+
+\item{separate_light}{Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
+If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
+representing it's genetic molecular weight in the absence of isotope addition.}
 }
 \value{
 \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot
