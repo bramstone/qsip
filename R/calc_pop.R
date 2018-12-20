@@ -77,10 +77,9 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- valid_samples(data, ft, 'time')
     time_group <- ft[[2]]; ft <- ft[[1]]
     # remove light samples from abundance calcs
-    # Maybe make user option for this action
-    iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-    light_group <- iso_group[as.numeric(iso_group$iso)==1,]
-    ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    #iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    #light_group <- iso_group[as.numeric(iso_group$iso)==1,]
+    #ft <- ft[!rownames(ft) %in% light_group$replicate,]
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     # calculate per-taxon average 16S copy abundance for each group:time interaction point
@@ -210,10 +209,9 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     time_group <- ft[[2]]; ft <- ft[[1]]
     sam_names <- time_group$replicate
     # remove light samples from abundance calcs
-    # Maybe make user option for this action
-    iso_group_ft <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-    light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
-    ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    #iso_group_ft <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    #light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
+    #ft <- ft[!rownames(ft) %in% light_group$replicate,]
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     # how many samples in each group to subsample with?
@@ -225,12 +223,12 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
                               nrow=subsample_n,
                               byrow=FALSE, SIMPLIFY=FALSE)
     # for boostrapping, the WAD-heavy values must match their equivalent 16S abundances
-    time_iso_group <- merge(time_group, iso_group_ft, by='replicate', all.x=T)
-    time_iso_group <- time_iso_group[as.numeric(time_iso_group$time)==2,]
-    time_iso_group <- unique(time_iso_group[,c('interaction.x', 'interaction.y')])
-    for(i in 1:nrow(time_iso_group)) {
-      subsample[time_iso_group[i,1]] <- subsample_wads[time_iso_group[i,2]]
-    }
+    #time_iso_group <- merge(time_group, iso_group_ft, by='replicate', all.x=T)
+    #time_iso_group <- time_iso_group[as.numeric(time_iso_group$time)==2,]
+    #time_iso_group <- unique(time_iso_group[,c('interaction.x', 'interaction.y')])
+    #for(i in 1:nrow(time_iso_group)) {
+    #  subsample[time_iso_group[i,1]] <- subsample_wads[time_iso_group[i,2]]
+    #}
     # collect output in matrices (each column is a pop matrix from that iterations' subsampling)
     if(length(data@qsip@rep_group)==0) {
       n_groups <- 1
@@ -276,9 +274,9 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       subsample_i <- lapply(subsample, function(x) x[,i])
       ft_i <- base::mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
       ft_i <- base::lapply(ft_i, colMeans, na.rm=TRUE)
-      ft_i <- do.call(cbind, ft_i)
-      #ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa, condensed_grouping=TRUE))
-      #colnames(ft_i) <- time_group$interaction[!duplicated(time_group$interaction)]
+      #ft_i <- do.call(cbind, ft_i)
+      ft_i <- t(recombine_in_order(ft_i, time_group, n_taxa, condensed_grouping=TRUE))
+      colnames(ft_i) <- time_group$interaction[!duplicated(time_group$interaction)]
       ft_i[ft_i==0] <- NA
       # get per-taxon 16S copy numbers for different timepoints
       time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
