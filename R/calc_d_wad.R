@@ -147,16 +147,18 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
           keep_groups[i] <- FALSE
           next
         }
-        # use combined light values (across all samples) if specified
         if(!separate_light) {
+          # use combined light values (across all samples) if specified
           light <- grouped_light
-        } else { # average light values, used grouped values if 16O data is missing
+        } else {
+          # average light values
           light <- ft[[which_light]]
           light <- colMeans(light, na.rm=TRUE)
           light[is.nan(light)] <- NA
         }
         heavy <- ft[[which_heavy]]
-        d_ft[[i]] <- heavy - light
+        # heavy - light
+        d_ft[[i]] <- sweep(heavy, 2, light)
       }
       d_ft <- d_ft[keep_groups]
     }
