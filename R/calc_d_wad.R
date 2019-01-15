@@ -108,9 +108,8 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
           keep_groups[i] <- FALSE
           next
         }
-        light <- ft[[which_light]]
         # use combined light values (across all samples) if specified
-        if(!separate_light) light <- grouped_light
+        if(!separate_light) light <- grouped_light else light <- ft[[which_light]]
         heavy <- ft[[which_heavy]]
         d_ft[[i]] <- heavy - light
       }
