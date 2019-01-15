@@ -49,5 +49,5 @@ Callahan, B.J., P.J. McMurdie, S.P. Holmes. 2017. Exact sequence variants should
   taxonomic units in marker-gene data analysis. \emph{ISME Journal} 11: 2639-2643.
 }
 \seealso{
-\code{\link{read_qiime2_table}}, \code{\link{specify_unclassifieds}}
+\code{\link{read_qiime2_table}}
 }

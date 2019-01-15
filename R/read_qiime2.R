@@ -75,7 +75,7 @@ read_qiime2_table <- function(file, quiet=FALSE) {
 #' @return \code{read_qiime2_tax} returns a character matrix of taxonomic assignments from Kingdom to Species, identified to each
 #'   microbial taxa by the row names of the matrix.
 #'
-#' @seealso \code{\link{read_qiime2_table}}, \code{\link{specify_unclassifieds}}
+#' @seealso \code{\link{read_qiime2_table}}
 #'
 #' @examples
 #' data(example_data)
