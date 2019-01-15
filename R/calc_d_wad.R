@@ -62,7 +62,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   # split by replicate groups, but keep track of light and heavy fractions
   ft <- valid_samples(data, ft, 'iso')
   iso_group <- ft[[2]]; ft <- ft[[1]]
-  ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F)
+  ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=F, keep_names=1)
   # If there is no replicate grouping (i.e., all replicates in a treatment are grouped)...
   iso_group2 <- unique(iso_group[,!names(iso_group) %in% 'replicate']) # only get unique elements to match levels in ft
   iso_group2 <- iso_group2[match(names(ft), iso_group2$interaction),]
@@ -168,7 +168,10 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   iso_group2 <- iso_group2[iso_group2$grouping %in% levels(iso_group2$grouping)[keep_groups],] # remove unpaired & dropped groups
   wl <- ft[which(as.numeric(iso_group2$iso)==1)]
   wh <- ft[which(as.numeric(iso_group2$iso)==2)]
-  if(length(data@qsip@rep_group)!=0) names(wl) <- names(wh) <- unique(iso_group2$grouping)
+  if(length(data@qsip@rep_group)!=0) {
+    names(wl) <- sub('\\w{3}\\.', '', names(wl))
+    names(wh) <- sub('\\w{3}\\.', '', names(wh))
+  }
   # Apply tube-level correction?
   if(correction) {
     if(length(data@qsip@rep_group)!=0) light <- grouped_light else light <- do.call(rbind, wl)
@@ -188,10 +191,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   }
   wh <- base::lapply(wh, function(x) {x[is.nan(x)] <- NA; x})
   if(separate_label) {
-    sam_names <- iso_group[as.numeric(iso_group$iso)==2,]
-    sam_names <- sam_names[order(sam_names$grouping),]
     wh <- do.call(rbind, wh)
-    rownames(wh) <- sam_names$replicate
   }
   if(!separate_light) wl <- grouped_light
   data <- collate_results(data, wh, tax_names=tax_names, 'wad_label', sparse=TRUE)
