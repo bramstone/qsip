@@ -67,6 +67,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     if(filter) {
       tax_names <- data@qsip@filter
       ft <- ft[,colnames(ft) %in% tax_names]
+      n_taxa <- ncol(ft)
     }
     tax_names <- colnames(ft)
     # calculate per-taxon total 16S copy abundance for each sample
@@ -125,6 +126,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         mw_l_t <- t(mw_l_t[[t - 1]])
       }
       # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
+      mw_max <- sweep(mw_l_t, 1, (12.07747 * mu), '+')
       mw_max <- (12.07747 * mu) + mw_l_t
       if(all(dim(mw_max)==dim(mw_lab_t))) {
         n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
@@ -304,7 +306,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
           mw_l_t <- t(mw_l_t[[t - 1]])
         }
         # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-        mw_max <- (12.07747 * mu) + mw_l_t
+        mw_max <- sweep(mw_l_t, 1, (12.07747 * mu), '+')
         if(all(dim(mw_max)==dim(mw_lab_t))) {
           n <- ((mw_max - mw_lab_t)/(mw_max - mw_l_t)) * get(n_t_names[t])
         } else {
