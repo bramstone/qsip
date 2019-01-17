@@ -66,8 +66,14 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     n_taxa <- ncol(ft)
     if(filter) {
       tax_names <- data@qsip@filter
+      if(length(mu) == n_taxa) mu[colnames(ft) %in% tax_names]
       ft <- ft[,colnames(ft) %in% tax_names]
       n_taxa <- ncol(ft)
+    }
+    # Mu must either be a single estimate, or same length as no. of taxa
+    if(length(mu) != 1 || length(mu) != n_taxa) {
+      warning('Mu estimates not equal in length to number of taxa, using 0.6')
+      mu <- 0.6
     }
     tax_names <- colnames(ft)
     # calculate per-taxon total 16S copy abundance for each sample
@@ -184,6 +190,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     if(phyloseq::taxa_are_rows(data)) wads <- t(wads)
     n_taxa <- ncol(wads)
     tax_names <- colnames(wads)
+    # Mu must either be a single estimate, or same length as no. of taxa
+    if(length(mu) != 1 || length(mu) != n_taxa) {
+      warning('Mu estimates not equal in length to number of taxa, using 0.6')
+      mu <- 0.6
+    }
     # keep only valid samples
     wads <- valid_samples(data, wads, 'iso', quiet=TRUE)
     iso_group <- wads[[2]]; wads <- wads[[1]]
