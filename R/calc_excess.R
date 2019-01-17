@@ -48,7 +48,6 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
   # no CI and resampling
   #
   if(ci_method=='') {
-    # if MW values don't exist, calculate those first
     # Calc MW first, this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
     data <- calc_mw(data, filter=filter, separate_light=separate_light,
                     correction=correction, offset_taxa=offset_taxa)
