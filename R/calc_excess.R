@@ -49,9 +49,9 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
   #
   if(ci_method=='') {
     # if MW values don't exist, calculate those first
-    # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) data <- calc_mw(data, filter=filter, separate_light=separate_light,
-                                                                                             correction=correction, offset_taxa=offset_taxa)
+    # Calc MW first, this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
+    data <- calc_mw(data, filter=filter, separate_light=separate_light,
+                    correction=correction, offset_taxa=offset_taxa)
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
     mw_h <- data@qsip[['mw_label']]
     mw_h <- as(mw_h, 'matrix')

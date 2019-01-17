@@ -40,8 +40,8 @@
 
 calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE, offset_taxa=0.1, separate_light=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
-  # if WAD values don't exist, calculate those first, this will also handle rep_id validity
-  if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
+  # calculate WAD values first, this will also handle rep_id validity
+  data <- calc_wad(data, filter=filter)
   #if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso_trt)==0) stop('Must specify treatment and controls with iso_trt')
   trt_levels <- unique(data@sam_data[[data@qsip@iso_trt]])
