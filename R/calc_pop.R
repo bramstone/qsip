@@ -70,7 +70,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       n_taxa <- ncol(ft)
     }
     # Mu must either be a single estimate, or same length as no. of taxa
-    if(length(mu) != 1 || length(mu) != n_taxa) {
+    if(length(mu) != 1 && length(mu) != n_taxa) {
       warning('Mu estimates not equal in length to number of taxa, using 0.6')
       mu <- 0.6
     }
@@ -190,7 +190,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     n_taxa <- ncol(wads)
     tax_names <- colnames(wads)
     # Mu must either be a single estimate, or same length as no. of taxa
-    if(length(mu) != 1 || length(mu) != n_taxa) {
+    if(length(mu) != 1 && length(mu) != n_taxa) {
       warning('Mu estimates not equal in length to number of taxa, using 0.6')
       mu <- 0.6
     }
