@@ -44,7 +44,7 @@
 #' @export
 
 calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'),
-                     mu=0.6, correction=FALSE, offset_taxa=0.1, separate_light=FALSE) {
+                     mu=0.6, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
@@ -59,11 +59,14 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
   #
   if(ci_method=='') {
     # Calc MW first, this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    data <- suppressWarnings(calc_mw(data,
-                                     filter=filter,
-                                     correction=correction,
-                                     offset_taxa=offset_taxa,
-                                     separate_light=separate_light))
+    if(recalc | is.null(data@qsip[['mw_label']])) {
+      data <- suppressWarnings(calc_mw(data,
+                                       filter=filter,
+                                       correction=correction,
+                                       offset_taxa=offset_taxa,
+                                       separate_light=separate_light,
+                                       recalc=recalc))
+    }
     # transform sequencing abundances to 16S copy numbers
     # returns feature table (as matrix) with taxa as columns, samples as rows
     ft <- copy_no(data)
@@ -278,8 +281,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       #rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
-      data <- suppressWarnings(calc_d_wad(data, correction=correction,
-                                          offset_taxa=offset_taxa, separate_light=separate_light, recalc=FALSE))
+      data <- suppressWarnings(calc_d_wad(data,
+                                          correction=correction,
+                                          offset_taxa=offset_taxa,
+                                          separate_light=separate_light,
+                                          recalc=FALSE))
       data <- suppressWarnings(calc_mw(data, recalc=FALSE))
       mw_lab <- data@qsip[['mw_label']]
       mw_lab <- as(mw_lab, 'matrix')
@@ -404,7 +410,8 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
                                      filter=filter,
                                      correction=correction,
                                      offset_taxa=offset_taxa,
-                                     separate_light=separate_light))
+                                     separate_light=separate_light,
+                                     recalc=TRUE))
     return(data)
   #
   # -------------------------------------------------------------

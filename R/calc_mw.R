@@ -31,12 +31,12 @@
 #'
 #' @export
 
-calc_mw <- function(data, filter=FALSE, correction=FALSE, offset_taxa=0.1, separate_light=FALSE) {
+calc_mw <- function(data, filter=FALSE, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # calc diff-WAD values first, this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-  if(recalc) {
+  if(recalc | is.null(data@qsip[['wad_label']])) {
     data <- calc_d_wad(data, filter=filter, separate_light=separate_light,
-                       correction=correction, offset_taxa=offset_taxa)
+                       correction=correction, offset_taxa=offset_taxa, recalc=recalc)
   }
   # extract WAD-heavy / WAD-light values and convert to S3 matrices
   wh <- data@qsip[['wad_label']]

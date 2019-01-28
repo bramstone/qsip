@@ -43,7 +43,7 @@
 #' @export
 
 calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, correction=FALSE,
-                        offset_taxa=0.1, separate_light=FALSE) {
+                        offset_taxa=0.1, separate_light=FALSE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   #
@@ -54,7 +54,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     # Calc MW first, this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
     if(recalc) {
       data <- calc_mw(data, filter=filter, separate_light=separate_light,
-                      correction=correction, offset_taxa=offset_taxa)
+                      correction=correction, offset_taxa=offset_taxa, recalc=recalc)
     }
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
     mw_h <- data@qsip[['mw_label']]
@@ -135,7 +135,11 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       ft_i <- recombine_in_order(ft_i, iso_group, n_taxa)
       rownames(ft_i) <- sam_names
       data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
-      data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa, recalc=FALSE))
+      data <- suppressWarnings(calc_d_wad(data,
+                                          correction=correction,
+                                          offset_taxa=offset_taxa,
+                                          separate_light=FALSE,
+                                          recalc=FALSE))
       data <- suppressWarnings(calc_mw(data, recalc=FALSE))
       mw_h <- data@qsip[['mw_label']]
       mw_h <- as(mw_h, 'matrix')
@@ -181,7 +185,8 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
                                      filter=filter,
                                      correction=correction,
                                      offset_taxa=offset_taxa,
-                                     separate_light=separate_light))
+                                     separate_light=separate_light,
+                                     recalc=TRUE))
     return(data)
     #
     # -------------------------------------------------------------
