@@ -7,7 +7,7 @@
 calc_excess(data, percent = FALSE, ci_method = c("", "bootstrap",
   "bayesian"), ci = 0.95, iters = 999, filter = FALSE,
   correction = FALSE, offset_taxa = 0.1, separate_light = FALSE,
-  separate_label = TRUE)
+  separate_label = TRUE, recalc = TRUE)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
@@ -38,6 +38,9 @@ representing it's genetic molecular weight in the absence of isotope addition.}
 \item{separate_label}{Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
 If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.}
+
+\item{recalc}{Logical value indicating whether or not to recalculate WAD and molecular weight values or use existing values. Default is \code{TRUE}.
+Using bootstrapped calculations will automatically recalculate all values.}
 }
 \value{
 \code{calc_excess} adds an S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot
