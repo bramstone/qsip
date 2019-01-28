@@ -12,6 +12,7 @@
 #' @param separate_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 #'   representing it's genetic molecular weight in the absence of isotope addition.
+#' @param recalc Logical value indicating whether or not to recalculate WAD, heavy WAD, and light WAD values or use existing values. Default is \code{TRUE}.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
@@ -33,8 +34,10 @@
 calc_mw <- function(data, filter=FALSE, correction=FALSE, offset_taxa=0.1, separate_light=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # calc diff-WAD values first, this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-  data <- calc_d_wad(data, filter=filter, separate_light=separate_light,
-                     correction=correction, offset_taxa=offset_taxa)
+  if(recalc) {
+    data <- calc_d_wad(data, filter=filter, separate_light=separate_light,
+                       correction=correction, offset_taxa=offset_taxa)
+  }
   # extract WAD-heavy / WAD-light values and convert to S3 matrices
   wh <- data@qsip[['wad_label']]
   wh <- as(wh, 'matrix')

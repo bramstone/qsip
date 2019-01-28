@@ -14,6 +14,7 @@
 #' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
 #'   Taxa are ordered by lowest difference in WAD values.
 #'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
+#' @param recalc Logical value indicating whether or not to recalculate WAD values or use existing WAD values. Default is \code{TRUE}.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities have not been calculated
 #'   beforehand, \code{calc_d_wad} will compute those first.
@@ -41,7 +42,7 @@
 calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE, offset_taxa=0.1, separate_light=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   # calculate WAD values first, this will also handle rep_id validity
-  data <- calc_wad(data, filter=filter)
+  if(recalc) data <- calc_wad(data, filter=filter)
   #if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso_trt)==0) stop('Must specify treatment and controls with iso_trt')
   trt_levels <- unique(data@sam_data[[data@qsip@iso_trt]])

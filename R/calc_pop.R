@@ -21,6 +21,8 @@
 #' @param separate_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 #'   representing it's genetic molecular weight in the absence of isotope addition.
+#' @param recalc Logical value indicating whether or not to recalculate WAD and molecular weight values or use existing values. Default is \code{TRUE}.
+#'   Using bootstrapped calculations will automatically recalculate all values.
 #'
 #' @details Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
 #'   change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
@@ -57,8 +59,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
   #
   if(ci_method=='') {
     # Calc MW first, this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    data <- suppressWarnings(calc_mw(data, filter=filter, separate_light=separate_light,
-                                     correction=correction, offset_taxa=offset_taxa))
+    data <- suppressWarnings(calc_mw(data,
+                                     filter=filter,
+                                     correction=correction,
+                                     offset_taxa=offset_taxa,
+                                     separate_light=separate_light))
     # transform sequencing abundances to 16S copy numbers
     # returns feature table (as matrix) with taxa as columns, samples as rows
     ft <- copy_no(data)
@@ -184,7 +189,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
   #
   } else if(ci_method=='bootstrap') {
     # calculate and create subsampling criteria for WADs......................................
-    if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
+    data <- suppressWarnings(calc_wad(data, filter=filter))
     wads <- as(data@qsip[['wad']], 'matrix')
     if(phyloseq::taxa_are_rows(data)) wads <- t(wads)
     n_taxa <- ncol(wads)
@@ -273,8 +278,9 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       #rownames(wads_i) <- sam_names_wads
       # calc diff_WADs, MWs, and N values
       data <- suppressWarnings(collate_results(data, wads_i, tax_names=tax_names, 'wad', sparse=TRUE))
-      data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa, separate_light=separate_light))
-      data <- suppressWarnings(calc_mw(data))
+      data <- suppressWarnings(calc_d_wad(data, correction=correction,
+                                          offset_taxa=offset_taxa, separate_light=separate_light, recalc=FALSE))
+      data <- suppressWarnings(calc_mw(data, recalc=FALSE))
       mw_lab <- data@qsip[['mw_label']]
       mw_lab <- as(mw_lab, 'matrix')
       mw_l <- data@qsip[['mw_light']]
@@ -394,9 +400,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       }
     }
     # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
-    data <- suppressWarnings(calc_wad(data, filter=filter))
-    data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa, separate_light=separate_light))
-    data <- suppressWarnings(calc_mw(data))
+    data <- suppressWarnings(calc_mw(data,
+                                     filter=filter,
+                                     correction=correction,
+                                     offset_taxa=offset_taxa,
+                                     separate_light=separate_light))
     return(data)
   #
   # -------------------------------------------------------------
