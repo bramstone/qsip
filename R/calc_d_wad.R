@@ -17,6 +17,7 @@
 #' @param separate_label Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 #'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.
+#' @param recalc Logical value indicating whether or not to recalculate WAD values or use existing values. Default is \code{TRUE}.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities have not been calculated
 #'   beforehand, \code{calc_d_wad} will compute those first.
@@ -41,10 +42,10 @@
 #'
 #' @export
 
-calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE) {
+calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
-  # if WAD values don't exist, calculate those first, this will also handle rep_id validity
-  if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
+  # if recalculation wanted, or if WAD values don't exist, calculate those first, this will also handle rep_id validity
+  if(recalc | is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
   #if(length(data@qsip@rep_group)==0) stop('Must specify replicate groupings with rep_group')
   if(length(data@qsip@iso_trt)==0) stop('Must specify treatment and controls with iso_trt')
   trt_levels <- unique(data@sam_data[[data@qsip@iso_trt]])

@@ -21,6 +21,8 @@
 #' @param separate_label Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 #'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.
+#' @param recalc Logical value indicating whether or not to recalculate WAD and molecular weight values or use existing values. Default is \code{TRUE}.
+#'   Using bootstrapped calculations will automatically recalculate all values.
 #'
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
@@ -47,7 +49,7 @@
 #' @export
 
 calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE,
-                        correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE) {
+                        correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   #
@@ -55,11 +57,11 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
   # no CI and resampling
   #
   if(ci_method=='') {
-    # if MW values don't exist, calculate those first
+    # if recalculation wanted, do that first
     # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    if(is.null(data@qsip[['mw_label']]) || is.null(data@qsip[['mw_light']])) {
+    if(recalc | is.null(data@qsip[['mw_label']])) {
       data <- calc_mw(data, filter=filter, correction=correction, offset_taxa=offset_taxa,
-                      separate_light=separate_light, separate_label=separate_label)
+                      separate_light=separate_light, separate_label=separate_label, recalc=TRUE)
     }
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
     mw_h <- data@qsip[['mw_label']]
@@ -101,7 +103,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     #
   } else if(ci_method=='bootstrap') {
     # Calc WADs
-    if(is.null(data@qsip[['wad']])) data <- calc_wad(data, filter=filter)
+    data <- suppressWarnings(calc_wad(data, filter=filter))
     ft <- as(data@qsip[['wad']], 'matrix')
     if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
     n_taxa <- ncol(ft)
@@ -143,8 +145,12 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       data <- suppressWarnings(calc_d_wad(data, correction=correction,
                                           offset_taxa=offset_taxa,
                                           separate_light=FALSE,
-                                          separate_label=FALSE))
-      data <- suppressWarnings(calc_mw(data))
+                                          separate_label=FALSE,
+                                          recalc=FALSE))
+      data <- suppressWarnings(calc_mw(data,
+                                       separate_light=FALSE,
+                                       separate_label=FALSE,
+                                       recalc=FALSE))
       mw_h <- data@qsip[['mw_label']]
       mw_h <- as(mw_h, 'matrix')
       mw_l <- data@qsip[['mw_light']]
@@ -185,9 +191,13 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     data <- collate_results(data, ci_data$med, tax_names=tax_names, 'atom_excess', sparse=TRUE)
     data <- collate_results(data, ci_data$ci_u, tax_names=tax_names, 'atom_excess_ci_u', sparse=TRUE)
     # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
-    data <- suppressWarnings(calc_wad(data, filter=filter))
-    data <- suppressWarnings(calc_d_wad(data, correction=correction, offset_taxa=offset_taxa))
-    data <- suppressWarnings(calc_mw(data))
+    data <- suppressWarnings(calc_mw(data,
+                                     filter=filter,
+                                     correction=correction,
+                                     offset_taxa=offset_taxa,
+                                     separate_light=separate_light,
+                                     separate_label=separate_label,
+                                     recalc=TRUE))
     return(data)
     #
     # -------------------------------------------------------------
