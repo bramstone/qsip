@@ -25,6 +25,8 @@ Default is \code{0.1} indicating 10 percent of taxa with the lowest difference i
 \item{separate_light}{Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
 If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 representing it's genetic molecular weight in the absence of isotope addition.}
+
+\item{recalc}{Logical value indicating whether or not to recalculate WAD values or use existing WAD values. Default is \code{TRUE}.}
 }
 \value{
 \code{calc_d_wad} adds two S4 Matrix objects to the \code{data@qsip@.Data} slot, one for differences
