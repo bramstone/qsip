@@ -43,7 +43,7 @@
 setGeneric('specify_qsip',
            valueClass=c('phyloseq', 'phylosip'),
            function(data,
-                    density='character', abund='character', rep_id='character',
+                    density='character', abund='character', rep_id='character', rep_num='character',
                     rep_group='character', iso='character', iso_trt='character',
                     timepoint='character', filter_levels='data.frame', filter='character', ...) {
              standardGeneric('specify_qsip')
