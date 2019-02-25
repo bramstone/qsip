@@ -55,7 +55,6 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   if(offset_taxa <= 0 && correction) stop('Must specify non-negative proportion of taxa generate offset values for WAD correction')
   # extract WAD values and convert to S3 matrix
   ft <- data@qsip[['wad']]
-  ft <- as(ft, 'matrix')
   if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
   n_taxa <- ncol(ft)
   tax_names <- colnames(ft)

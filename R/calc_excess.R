@@ -65,9 +65,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     }
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
     mw_h <- data@qsip[['mw_label']]
-    mw_h <- as(mw_h, 'matrix')
     mw_l <- data@qsip[['mw_light']]
-    if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
     if(!phyloseq::taxa_are_rows(data)) {
       mw_h <- t(mw_h)
       if(is.matrix(mw_l)) mw_l <- t(mw_l)
@@ -79,7 +77,6 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       nat_abund <- 0.002000429
     } else if(data@qsip@iso=='13C') {
       wl <- data@qsip[['wad_light']]
-      wl <- as(wl, 'matrix')
       gc <- (wl - 1.646057) / 0.083506
       adjust <- (-0.4987282 * gc) + 9.974564
       nat_abund <- 0.01111233
@@ -104,7 +101,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
   } else if(ci_method=='bootstrap') {
     # Calc WADs
     data <- suppressWarnings(calc_wad(data, filter=filter))
-    ft <- as(data@qsip[['wad']], 'matrix')
+    ft <- data@qsip[['wad']]
     if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
     n_taxa <- ncol(ft)
     tax_names <- colnames(ft)
@@ -152,9 +149,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
                                        separate_label=FALSE,
                                        recalc=FALSE))
       mw_h <- data@qsip[['mw_label']]
-      mw_h <- as(mw_h, 'matrix')
       mw_l <- data@qsip[['mw_light']]
-      if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix
       if(!phyloseq::taxa_are_rows(data)) {
         mw_h <- t(mw_h)
         if(is.matrix(mw_l)) mw_l <- t(mw_l)
@@ -165,7 +160,6 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
         nat_abund <- 0.002000429
       } else if(data@qsip@iso=='13C') {
         wl <- data@qsip[['wad_light']]
-        wl <- as(wl, 'matrix')
         gc <- (wl - 1.646057) / 0.083506
         adjust <- (-0.4987282 * gc) + 9.974564
         nat_abund <- 0.01111233
