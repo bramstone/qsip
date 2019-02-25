@@ -6,7 +6,8 @@
 #' @exportClass qsip
 setClass('qsip',
          slots=c(density='character', abund='character',
-                 rep_id='character', rep_group='character',
+                 rep_id='character', rep_num='character',
+                 rep_group='character',
                  iso='character', iso_trt='character',
                  timepoint='character', filter_levels='data.frameOrNULL',
                  filter='character'),

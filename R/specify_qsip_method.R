@@ -8,6 +8,10 @@
 #' @param abund Single length character matching to variable in \code{data} describing sample 16S gene abundance
 #' @param rep_id Single length character matching to variable in \code{data} describing sample/replicate names to summarize across fractions.
 #'   Required for calcualtion of weighted average DNA densities (\emph{per sample})
+#' @param rep_num Single length character matching to variable in \code{data} matching replicates from the same sample origin across treatments
+#'   and any possible replicate groupings specified by \code{rep_group}.
+#'   Required if calculating \emph{per-capita} population rates of change where differences in abundance are only considered between sample from
+#'   the same origin
 #' @param rep_group Single length character matching to variable in \code{data} used to summarize values across groups of replicates.
 #'   Required for calculation of atom excess fraction
 #' @param iso Single length character vector describing which isotope was used, choices of \code{18O} or \code{13C} describing either
@@ -47,7 +51,7 @@ setGeneric('specify_qsip',
 
 setMethod('specify_qsip',
           signature(data='phyloseq'),
-          function(data, density=character(), abund=character(), rep_id=character(), rep_group=character(),
+          function(data, density=character(), abund=character(), rep_id=character(), rep_num=character(), rep_group=character(),
                    iso=c('18O', '13C'), iso_trt=character(), timepoint=character(), filter_levels=NULL, filter=character()) {
             if(missing(data)) stop('Must supply data as phyloseq object', call.=F)
             #            if(is.null(formula)) { # User input good (w/o formula)?
@@ -84,6 +88,7 @@ setMethod('specify_qsip',
             if(!missing(density)) data@qsip@density <- density
             if(!missing(abund)) data@qsip@abund <-  abund
             if(!missing(rep_id)) data@qsip@rep_id <- rep_id
+            if(!missing(rep_num)) data@qsip@rep_num <- rep_num
             if(!missing(rep_group)) data@qsip@rep_group <- rep_group
             if(!missing(timepoint)) data@qsip@timepoint <- timepoint
             if(!missing(iso)) data@qsip@iso <- iso
@@ -101,6 +106,7 @@ setMethod('specify_qsip',
             if(!missing(density)) data@qsip@density <- density
             if(!missing(abund)) data@qsip@abund <-  abund
             if(!missing(rep_id)) data@qsip@rep_id <- rep_id
+            if(!missing(rep_num)) data@qsip@rep_num <- rep_num
             if(!missing(rep_group)) data@qsip@rep_group <- rep_group
             if(!missing(timepoint)) data@qsip@timepoint <- timepoint
             if(!missing(iso)) data@qsip@iso <- iso

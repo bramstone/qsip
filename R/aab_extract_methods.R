@@ -5,5 +5,6 @@
 setMethod("[[", "qsip", function(x, i, ...) {
   match_name <- which(attributes(x)$names==i)
   if(length(match_name)==0) return(NULL)
-  as.list(x@.Data)[[match_name]]
+  y <- as.list(x@.Data)[[match_name]]
+  return(as(y, 'matrix'))
 })
