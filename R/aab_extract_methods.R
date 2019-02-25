@@ -9,6 +9,6 @@ setMethod("[[", "qsip", function(x, i, ...) {
   if(!is.null(dim(y))) {
     y <- (as(y, 'matrix'))
   }
-  y[0] <- NA
+  y[y==0] <- NA
   return(y)
 })
