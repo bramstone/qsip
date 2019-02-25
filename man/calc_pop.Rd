@@ -7,7 +7,8 @@
 calc_pop(data, ci_method = c("", "bootstrap", "bayesian"), ci = 0.95,
   iters = 999, filter = FALSE, growth_model = c("exponential",
   "linear"), mu = 0.6, correction = FALSE, offset_taxa = 0.1,
-  separate_light = FALSE, separate_label = TRUE, recalc = TRUE)
+  separate_light = FALSE, separate_label = TRUE,
+  match_replicate = FALSE, recalc = TRUE)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
@@ -41,7 +42,11 @@ representing it's genetic molecular weight in the absence of isotope addition.}
 
 \item{separate_label}{Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
 If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
-representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.}
+representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}, resulting in no averaging across replicates.}
+
+\item{match_replicate}{Logical value indicating whether or not per-capita rates for individual replicates should be calculated using
+abundances at time zero that match in sample origin (\code{TRUE}) or using abundances at time zero that have been averaged across
+each group of replicates (\code{FALSE}, the default). Requires that replicate matches have been recorded and specified in the \code{@rep_num} slot}
 
 \item{recalc}{Logical value indicating whether or not to recalculate WAD and molecular weight values or use existing values. Default is \code{TRUE}.
 Using bootstrapped calculations will automatically recalculate all values.}
@@ -64,6 +69,11 @@ Some details about proper isotope control-treatment factoring and timepoint spec
 
   Timepoint should be in units of days, so that birth will be new 16S copies d-1 and death will be loss of light 16S copies d-1.
   Use of different time increments will yield growth rates (e.g. per hour), but must be appropriate for the frequency of sampling.
+
+  The \code{recalc} argument is necessary to support the bootstrap subsampling implementation, which re-draws from the table of WAD
+  values to create a bootstrap resampled WAD table. As such, automatic recalculation of WAD values is inappropriate within each
+  bootstrap iteration. Typically, users should not set \code{recalc} to \code{FALSE}. Note that the true, observed WAD and
+  molecular weight values will be returned following completion of bootstrapping.
 }
 \examples{
  # Load in example data

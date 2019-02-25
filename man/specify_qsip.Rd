@@ -36,6 +36,11 @@ Required for calculation of population birth and death rates}
 \item{filter}{Optional data frame of filtering options to apply to taxa based on sample and fraction-level frequency}
 
 \item{...}{Arguments to change variables of existing \code{phylosip} object}
+
+\item{rep_num}{Single length character matching to variable in \code{data} matching replicates from the same sample origin across treatments
+and any possible replicate groupings specified by \code{rep_group}.
+Required if calculating \emph{per-capita} population rates of change where differences in abundance are only considered between sample from
+the same origin}
 }
 \value{
 \code{specify_qsip} returns a \code{phyloseq}-like object of class \code{phylosip}.
