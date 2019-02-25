@@ -23,7 +23,10 @@
 #'   representing it's genetic molecular weight in the absence of isotope addition.
 #' @param separate_label Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
-#'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.
+#'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}, resulting in no averaging across replicates.
+#' @param match_replicate Logical value indicating whether or not per-capita rates for individual replicates should be calculated using
+#'   abundances at time zero that match in sample origin (\code{TRUE}) or using abundances at time zero that have been averaged across
+#'   each group of replicates (\code{FALSE}, the default). Requires that replicate matches have been recorded and specified in the \code{@@rep_num} slot
 #' @param recalc Logical value indicating whether or not to recalculate WAD and molecular weight values or use existing values. Default is \code{TRUE}.
 #'   Using bootstrapped calculations will automatically recalculate all values.
 #'
@@ -33,6 +36,11 @@
 #'   Timepoint should be in units of days, so that birth will be new 16S copies d-1 and death will be loss of light 16S copies d-1.
 #'   Use of different time increments will yield growth rates (e.g. per hour), but must be appropriate for the frequency of sampling.
 #'
+#'   The \code{recalc} argument is necessary to support the bootstrap subsampling implementation, which re-draws from the table of WAD
+#'   values to create a bootstrap resampled WAD table. As such, automatic recalculation of WAD values is inappropriate within each
+#'   bootstrap iteration. Typically, users should not set \code{recalc} to \code{FALSE}. Note that the true, observed WAD and
+#'   molecular weight values will be returned following completion of bootstrapping.
+#'
 #' @return \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@@qsip@@.Data} slot
 #'   of population birth rates for each taxon at each group of replicates. The row and column specifications will mirror those of the \code{phylosip}'s
 #'   \code{\link{otu_table}}, meaning if taxa are listed on the table rows, they will in the resulting S4 Matrix class.
@@ -40,6 +48,7 @@
 #'   Note that the bootstrap method produces a \emph{single} bootstrapped median (and matching confidence intervals) for groups of replicates,
 #'   either grouped by isotope treatment alone, or also by some other grouping factor (if \code{data@@qsip@@rep_group} is specified).
 #'   Using no bootstrap value allows separate enrichment values to be attained for each replicate, if \code{separate_label=TRUE}.
+#'
 #'
 #' @seealso \code{\link{calc_mw}}
 #'
@@ -51,7 +60,7 @@
 #' @export
 
 calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'),
-                     mu=0.6, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE, recalc=TRUE) {
+                     mu=0.6, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE, match_replicate=FALSE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
