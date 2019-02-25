@@ -60,7 +60,8 @@ setMethod('specify_qsip',
             matching_args <- as.list(environment()) # return function arguments supplied by user
             matching_args <- matching_args[!names(matching_args) %in% c('data', 'filter')]
             input_length <- sapply(matching_args, length)
-            if(any(input_length > 1)) {
+            multiple_input <- input_length > 1
+            if(any(multiple_input)) {
               culprits <- names(matching_args)[which(multiple_input)]
               stop('Arguments ', paste0(culprits, collapse=', '), 'are not of length 1', call.=F)
             }
@@ -70,7 +71,7 @@ setMethod('specify_qsip',
             matching_args <- sapply(matching_args, match, data@sam_data@names)
             if(anyNA(matching_args)) {
               culprits <- names(matching_args)[which(is.na(matching_args))] # who doesn't match
-              stop('Arguments ', paste0(culprits, collapse=', '), ' do not mach those in @sam_data object', call.=F)
+              stop('Arguments ', paste0(culprits, collapse=', '), ' do not mach those in object @sam_data slot', call.=F)
             }
             #            } else {  # User input good (w formula)?
             #              formula_terms <- eval_formula(formula)
