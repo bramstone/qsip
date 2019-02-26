@@ -178,8 +178,8 @@ valid_samples <- function(data, feature_table, grouping=c('iso', 'time'), quiet=
     matching <- split(matching, interaction(matching$grouping, matching$replicate_num))
     matching <- lapply(matching, function(x) {if(nrow(x)==1) x$replicate_num <- NA; x})
     matching <- do.call(rbind, matching)
-    matching <- merge(matching, rep_nums, all=TRUE)
-    group_data <- merge(group_data, matching[,c('replicate', 'replicate_num')], all=TRUE)
+    matching <- merge(matching, rep_nums[!rep_nums$replicate %in% matching$replicate,], all=TRUE)
+    group_data <- merge(group_data, matching[,c('replicate', 'replicate_num')], all.x=TRUE)
     group_data <- group_data[order(group_data$interaction, group_data$replicate_num),]
   }
   # identify any NAs that occur across iso/timepoint column, replicate IDs, or grouping variable
