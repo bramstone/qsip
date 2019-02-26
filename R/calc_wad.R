@@ -43,6 +43,14 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
   storage.mode(pa) <- 'integer'
   tax_names <- colnames(ft)
   n_taxa <- ncol(ft)
+  # manipulate data matrix and calculate
+  ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
+  dv <- split(data@sam_data[[data@qsip@density]],
+              data@sam_data[[data@qsip@rep_id]]) # split densities by replicate IDs
+  # ft <- base::Map(function(y, x) apply(y, 2, wad, x, na.rm=TRUE), ft, dv)
+  ft <- base::lapply(ft, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x}) # create relative abundances
+  ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ft, dv)
+  ft <- base::lapply(ft, colSums, na.rm=T)
   # apply filtering first if desired.
   # 1. Soft filter
   # Here, taxa who do not meet the threshold(s) have their group-specific WAD values converted to 0
@@ -108,14 +116,6 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
     ft <- ft[, colSums(labeled) > 0] # or colSums(sf)
     data@qsip@filter <- colnames(ft)
   }
-  # manipulate data matrix and calculate
-  ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
-  dv <- split(data@sam_data[[data@qsip@density]],
-              data@sam_data[[data@qsip@rep_id]]) # split densities by replicate IDs
-  # ft <- base::Map(function(y, x) apply(y, 2, wad, x, na.rm=TRUE), ft, dv)
-  ft <- base::lapply(ft, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x}) # create relative abundances
-  ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ft, dv)
-  ft <- base::lapply(ft, colSums, na.rm=T)
   # WAD values of 0 indicate no taxa present
   # if(class(ft)=='list') {
   #   ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
