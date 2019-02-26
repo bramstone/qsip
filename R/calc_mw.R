@@ -45,14 +45,19 @@ calc_mw <- function(data, filter=FALSE, correction=FALSE, offset_taxa=0.1, separ
   # extract WAD-heavy / WAD-light values and convert to S3 matrices
   wh <- data@qsip[['wad_label']]
   wl <- data@qsip[['wad_light']]
-  if(phyloseq::taxa_are_rows(data)) {wh <- t(wh); wl <- t(wl)}
+  if(phyloseq::taxa_are_rows(data)) {
+    wh <- t(wh)
+    if(!is.null(dim(wl))) {
+      wl <- t(wl)
+    }
+  }
   tax_names <- colnames(wh)
   # calculate GC content of each taxa (averaged across all groups of samples or not)
   gc <- (1 / 0.083506) * (wl - 1.646057)
   # calculate mol. weight of taxa without isotope
   mw_l <- (0.496 * gc) + 307.691
   # calculate mol. weight of taxa in labeled treatments
-  if(all(dim(wh)==dim(wl))) {
+  if(isTRUE(all.equal(dim(wh), dim(wl)))) {
     mw_h <- (((wh - wl)/wl) + 1) * mw_l
   } else {
     mw_h <- sweep(wh, 2, wl, function(x, y) (((x - y)/y) + 1))
