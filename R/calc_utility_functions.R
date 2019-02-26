@@ -170,9 +170,15 @@ valid_samples <- function(data, feature_table, grouping=c('iso', 'time'), quiet=
     rep_nums <- unique(as(data@sam_data[,c(data@qsip@rep_id, data@qsip@rep_num)], 'data.frame'))
     names(rep_nums) <- c('replicate', 'replicate_num')
     matching <- merge(group_data, rep_nums, all.x=TRUE)
+    # remove light samples from abundance calcs, before determining un-matched replicates
+    light_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+    light_group <- light_group[as.numeric(light_group$iso)==1,]
+    matching <- matching[!matching$replicate %in% light_group$replicate,]
+    # split, sum up number of rows for each replicate, discard if only 1
     matching <- split(matching, interaction(matching$grouping, matching$replicate_num))
     matching <- lapply(matching, function(x) {if(nrow(x)==1) x$replicate_num <- NA; x})
     matching <- do.call(rbind, matching)
+    matching <- merge(matching, rep_nums, all=TRUE)
     group_data <- merge(group_data, matching[,c('replicate', 'replicate_num')], all=TRUE)
     group_data <- group_data[order(group_data$interaction, group_data$replicate_num),]
   }
