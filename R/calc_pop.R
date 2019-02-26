@@ -61,14 +61,15 @@
 
 calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'),
                      mu=0.6, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE, match_replicate=FALSE, recalc=TRUE) {
-  if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
+  if(is(data)[1]!='phylosip') stop('Must provide phylosip object', call.=FALSE)
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
-  if(data@qsip@iso!='18O') stop('Must use 18O-labeled treatment to calculate population change')
-  if(length(data@qsip@timepoint)==0) stop('Must specify different sample times with timepoint')
+  if(data@qsip@iso!='18O') stop('Must use 18O-labeled treatment to calculate population change', call.=FALSE)
+  if(length(data@qsip@timepoint)==0) stop('Must specify different sample times with timepoint', call.=FALSE)
   times <- data@sam_data[[data@qsip@timepoint]]
-  if(nlevels(times)==1 || length(unique(times))==1) stop('Only one timepoint present in the data - cannot calculate population change')
+  if(nlevels(times)==1 || length(unique(times))==1) stop('Only one timepoint present in the data - cannot calculate population change', call.=FALSE)
   rm(times)
+  if(match_replicate && length(data@qsip@rep_num)==0) stop('Must specify replicate (sample origin) matches with rep_num', call.=FALSE)
   #
   # -------------------------------------------------------------
   # no CI and resampling
@@ -99,8 +100,14 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- lapply(ft, colSums, na.rm=T)
     ft <- do.call(rbind, ft)
     # separate samples based on timepoint, keeping only valid samples
-    ft <- valid_samples(data, ft, 'time')
-    time_group <- ft[[2]]; ft <- ft[[1]]
+    # if matching replicates, re-order and match according to replicate number
+    if(match_replicate && length(data@qsip@rep_num)==1) {
+      ft <- valid_samples(data, ft, 'time', match_replicate=TRUE)
+      time_group <- ft[[2]]; ft <- ft[[1]]
+    } else{
+      ft <- valid_samples(data, ft, 'time')
+      time_group <- ft[[2]]; ft <- ft[[1]]
+    }
     # remove light samples from abundance calcs
     # Maybe make user option for this action
     iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
@@ -108,12 +115,15 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     ft <- ft[!rownames(ft) %in% light_group$replicate,]
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
-    time_group2 <- unique(time_group[,!names(time_group) %in% 'replicate']) # only get unique elements to match levels in ft
+    time_group2 <- unique(time_group[,!names(time_group) %in% c('replicate', 'replicate_num')]) # only get unique elements to match levels in ft
     # if keeping labeled 16S abundances and MWs separate ft will be in a list
     if(separate_label) {
       ft <- ft[match(time_group2$interaction, names(ft))]
       ft_0 <- ft[as.numeric(time_group2$time)==1]
-      ft_0 <- base::lapply(ft_0, colMeans, na.rm=TRUE)
+      # average time 0 only if not matching abundances to each replicate across incubation
+      if(!match_replicate) {
+        ft_0 <- base::lapply(ft_0, colMeans, na.rm=TRUE)
+      }
       ft[as.numeric(time_group2$time)==1] <- ft_0
       ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
     # if averaging labeled 16S abundances and MWs ft will be in matrix
@@ -143,9 +153,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     }
     # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
     mw_h <- data@qsip[['mw_label']]
-    mw_h <- as(mw_h, 'matrix')
     mw_l <- data@qsip[['mw_light']]
-    if(!is.null(dim(mw_l))) mw_l <- as(mw_l, 'matrix')   # if mw_l is matrix, convert to S3 matrix, then to vector
     if(!phyloseq::taxa_are_rows(data)) mw_h <- t(mw_h)
     if(!phyloseq::taxa_are_rows(data) && is.matrix(mw_l)) mw_l <- t(mw_l)
     # calculate proportion in light fraction (N_light) at any time after 0
@@ -172,9 +180,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       mw_max <- (12.07747 * mu) + mw_l_t
       if(separate_label)  mw_h_t <- mw_h_t[,match(colnames(get(n_t_names[time])), colnames(mw_h_t))]
       # calculate abundances
-      if(all(dim(mw_max)==dim(mw_h_t))) {
+      if(isTRUE(all.equal(dim(mw_max), dim(mw_h_t)))) {
         n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[time])
       } else {
+        if(is.null(dim(mw_h_t))) mw_h_t <- as.matrix(mw_h_t)
+        if(is.null(dim(mw_l_t))) mw_l_t <- as.matrix(mw_l_t)
         num <- sweep(mw_h_t, 1, mw_max) * -1 # mw_max - mw_h
         denom <- sweep(mw_l_t, 1, mw_max) * -1 # mw_max - mw_l
         n <- sweep(num, 1, denom, '/') * get(n_t_names[time]) # MW_proportion * N_t
@@ -189,10 +199,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     d_names <- paste0('d_', levels(time_group2$time))
     for(time in 2:nlevels(time_group2$time)) {
       incubate_time <- as.numeric(levels(time_group2$time)[time])
-      n_col_t <- ncol(get(n_t_names[time]))
-      n_col_0 <- ncol(get(n_t_names[1]))
-      # separate labeled samples which will likely have different dimensions than unlabeled
-      if(n_col_t > n_col_0) {
+      # n_col_t <- ncol(get(n_t_names[time]))
+      # n_col_0 <- ncol(get(n_t_names[1]))
+      # if match_replicate=F, separate labeled samples which will have different dimensions than unlabeled
+      if(!match_replicate) {
+      # if(n_col_t > n_col_0) {
         sam_names_t <- colnames(get(n_t_names[time]))
         group_repeat <- time_group[match(sam_names_t, time_group$replicate), 'grouping']
         time_group_0 <- time_group2[time_group2$time==levels(time_group2$time)[1],]
