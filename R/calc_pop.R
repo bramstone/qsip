@@ -165,7 +165,13 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         if(is.null(dim(mw_l))) mw_l_t <- mw_l else mw_l_t <- as.matrix(mw_l)[,time - 1]
         # else break mw_label and mw_light into list separated by timepoint
       } else {
-        time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
+        if(separate_label) {
+          time_group_t <- time_group[as.numeric(time_group$time) > 1,]
+          time_group_t <- time_group_t[match(colnames(mw_h), time_group_t$replicate),]
+        }
+        else if(!separate_label){
+          time_group_t <- time_group2[as.numeric(time_group2$time) > 1,]
+        }
         time_group_t$time <- factor(time_group_t$time)
         mw_h_t <- split_data(data, t(mw_h), time_group_t$time, grouping_w_phylosip=FALSE, keep_names=1)
         mw_h_t <- t(mw_h_t[[time - 1]])
