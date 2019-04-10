@@ -47,7 +47,10 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
   ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
   dv <- split(data@sam_data[[data@qsip@density]],
               data@sam_data[[data@qsip@rep_id]]) # split densities by replicate IDs
-  # ft <- base::Map(function(y, x) apply(y, 2, wad, x, na.rm=TRUE), ft, dv)
+  # identify NA densities and make the corresponding abundance calcs NA for those fractions
+  dv_nas <- lapply(dv, function(x) which(is.na(x)))
+  ft <- base::Map(function(x, y) {x[y,] <- NA; x}, ft, dv_nas)
+  # calculate relative abundances and WADs
   ft <- base::lapply(ft, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x}) # create relative abundances
   ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ft, dv)
   ft <- base::lapply(ft, colSums, na.rm=T)
