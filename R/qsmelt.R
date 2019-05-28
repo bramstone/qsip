@@ -164,7 +164,7 @@ qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, excl
         names(ft) <- c(data@qsip@tax_id, data@qsip@rep_group, data@qsip@timepoint, 'abund')
       }
     }
-    comb_qsip <- merge(comb_qsip, abund, all=TRUE)
+    comb_qsip <- merge(comb_qsip, ft, all=TRUE)
   }
   # return final data frame
   return(comb_qsip)
