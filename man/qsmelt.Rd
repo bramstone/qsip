@@ -4,13 +4,13 @@
 \alias{qsmelt}
 \title{Melt qSIP data to long form}
 \usage{
-qsmelt(data, tax = FALSE, abundances = FALSE, relativize = FALSE,
-  exclude = c())
+qsmelt(data, taxonomy = FALSE, abundances = FALSE,
+  relativize = FALSE, exclude = c())
 }
 \arguments{
 \item{data}{Data as a \code{phylosip} object}
 
-\item{tax}{Logical tag specifying whether or not to include taxonomic information of each feature. Default is \code{TRUE}.}
+\item{taxonomy}{Logical tag specifying whether or not to include taxonomic information of each feature. Default is \code{TRUE}.}
 
 \item{abundances}{Logical tage specifying whether or not to include sequencing abundance of each feature. Default is \code{TRUE}.}
 

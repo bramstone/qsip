@@ -3,7 +3,7 @@
 #' Converts data in phylosip object's qsip slot from several matrices to single, long-form data.frame
 #'
 #' @param data Data as a \code{phylosip} object
-#' @param tax Logical tag specifying whether or not to include taxonomic information of each feature. Default is \code{TRUE}.
+#' @param taxonomy Logical tag specifying whether or not to include taxonomic information of each feature. Default is \code{TRUE}.
 #' @param abundances Logical tage specifying whether or not to include sequencing abundance of each feature. Default is \code{TRUE}.
 #' @param relativize Logical tag specifying whether or not to present feature abundances as relative from 0 to 1 or to use those in @@otu_table slot as is.
 #' @param exclude Character vector specifying any qSIP measures to exclude from the returned data frame.
@@ -26,7 +26,7 @@
 #'
 #' @export
 
-qsmelt <- function(data, tax=FALSE, abundances=FALSE, relativize=FALSE, exclude=c()) {
+qsmelt <- function(data, taxonomy=FALSE, abundances=FALSE, relativize=FALSE, exclude=c()) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   if(length(data@qsip@.Data)==0) stop('No values to combine')
   qsip <- as.list(data@qsip@.Data)
@@ -58,7 +58,6 @@ qsmelt <- function(data, tax=FALSE, abundances=FALSE, relativize=FALSE, exclude=
     }
     # change "value" column name
     names(qsip[[val]])[which(names(qsip[[val]])=='value')] <- val
-    # change "rep_id" to replicate ID name
   }
   # accommodate grouped values
   if(length(data@qsip@rep_group)!=0 | length(data@qsip@timepoint)!=0) {
@@ -106,5 +105,13 @@ qsmelt <- function(data, tax=FALSE, abundances=FALSE, relativize=FALSE, exclude=
   all_nas <- apply(comb_qsip[,sapply(comb_qsip, is.numeric)], 1, function(x) all(is.na(x)))
   comb_qsip <- comb_qsip[!all_nas,]
   rownames(comb_qsip) <- NULL
+  # include taxonomy
+  if(taxonomy) {
+    tax <- as(data@tax_table, 'matrix')
+    tax <- data.frame(tax_id=rownames(tax), tax)
+    rownames(tax) <- NULL
+    for(i in 1:ncol(tax)) attr(tax[,i], 'names') <- NULL
+    comb_qsip <- merge(comb_qsip, tax, all.x=TRUE)
+  }
   return(comb_qsip)
 }
