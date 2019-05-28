@@ -4,7 +4,7 @@
 #'
 #' @param data Data as a \code{phylosip} object
 #' @param taxonomy Logical tag specifying whether or not to include taxonomic information of each feature. Default is \code{TRUE}.
-#' @param abundances Logical tage specifying whether or not to include sequencing abundance of each feature. Default is \code{TRUE}.
+#' @param abundance Logical tage specifying whether or not to include sequencing abundance of each feature. Default is \code{TRUE}.
 #' @param relativize Logical tag specifying whether or not to present feature abundances as relative from 0 to 1 or to use those in @@otu_table slot as is.
 #' @param exclude Character vector specifying any qSIP measures to exclude from the returned data frame.
 #'
@@ -26,7 +26,7 @@
 #'
 #' @export
 
-qsmelt <- function(data, taxonomy=FALSE, abundances=FALSE, relativize=FALSE, exclude=c()) {
+qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, exclude=c()) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   if(length(data@qsip@.Data)==0) stop('No values to combine')
   qsip <- as.list(data@qsip@.Data)

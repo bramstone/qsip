@@ -4,15 +4,15 @@
 \alias{qsmelt}
 \title{Melt qSIP data to long form}
 \usage{
-qsmelt(data, taxonomy = FALSE, abundances = FALSE,
-  relativize = FALSE, exclude = c())
+qsmelt(data, taxonomy = FALSE, abundance = FALSE, relativize = FALSE,
+  exclude = c())
 }
 \arguments{
 \item{data}{Data as a \code{phylosip} object}
 
 \item{taxonomy}{Logical tag specifying whether or not to include taxonomic information of each feature. Default is \code{TRUE}.}
 
-\item{abundances}{Logical tage specifying whether or not to include sequencing abundance of each feature. Default is \code{TRUE}.}
+\item{abundance}{Logical tage specifying whether or not to include sequencing abundance of each feature. Default is \code{TRUE}.}
 
 \item{relativize}{Logical tag specifying whether or not to present feature abundances as relative from 0 to 1 or to use those in @otu_table slot as is.}
 
