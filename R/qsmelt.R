@@ -84,10 +84,10 @@ qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, excl
         }
         if(length(data@qsip@timepoint)!=0) {
           #
-          rep_group_levels <- paste(unique(rep_map[,data@qsip@timepoint]), collapse='|')
-          rep_group_ids <- regexpr(rep_group_levels, qsip[[val]]$group_id)
+          timepoint_levels <- paste(unique(rep_map[,data@qsip@timepoint]), collapse='|')
+          timepoint_ids <- regexpr(timepoint_levels, qsip[[val]]$group_id)
           #
-          qsip[[val]]$timepoint <- substr(qsip[[val]]$group_id, rep_group_ids, attributes(rep_group_ids)$match.length)
+          qsip[[val]]$timepoint <- substr(qsip[[val]]$group_id, timepoint_ids, attributes(timepoint_ids)$match.length)
           qsip[[val]]$timepoint[nchar(qsip[[val]]$timepoint)==0] <- NA
           names(qsip[[val]])[which(names(qsip[[val]])=='timepoint')] <- data@qsip@timepoint
         }
@@ -113,5 +113,59 @@ qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, excl
     for(i in 1:ncol(tax)) attr(tax[,i], 'names') <- NULL
     comb_qsip <- merge(comb_qsip, tax, all.x=TRUE)
   }
+  if(abundance) {
+    # get 16S abundances
+    ft <- copy_no(data)
+    tax_names <- colnames(ft)
+    # split by replicate IDs
+    ft <- split_data(data, ft, data@qsip@rep_id)
+    # limit to samples in qSIP data
+    if(!is.null(comb_qsip[,data@qsip@rep_id])) ft <- ft[match(unique(comb_qsip[,data@qsip@rep_id]), names(ft))]
+    # calculate totals
+    if(relativize) {
+      ft <- lapply(ft, function(x) colSums(x) / sum(x))
+    } else {
+      ft <- lapply(ft, colSums)
+    }
+    # recombine and remove taxa
+    ft <- do.call(rbind, ft)
+    ft <- ft[,match(unique(comb_qsip$tax_id), tax_names)]
+    colnames(ft) <- unique(comb_qsip$tax_id)
+    # convert to data frame
+    ft <- Matrix::Matrix(ft, sparse=TRUE)
+    ft <- as(ft, 'dgTMatrix')
+    ft <- data.frame(rep_id=ft@Dimnames[[1]][ft@i + 1],
+                     tax_id=ft@Dimnames[[2]][ft@j + 1],
+                     abund=ft@x,
+                     stringsAsFactors=TRUE)
+    # rename
+    names(ft)[which(names(ft)=='rep_id')] <- data@qsip@rep_id
+    # if comb_qsip doesn't have a rep_id column (i.e., all groups), need to aggregate
+    if(is.null(comb_qsip[,data@qsip@rep_id])) {
+      ft <- merge(ft, rep_map, all.x=TRUE)
+      # if you only have data at different replicate groups (no timepoints)
+      if(is.null(ft[,data@qsip@timepoint])) {
+        ft <- aggregate(ft, list(ft$tax_id,
+                                 ft[,data@qsip@rep_group]),
+                        mean)
+        names(ft) <- c(data@qsip@tax_id, data@qsip@rep_id, 'abund')
+        # or if you only have data at different timepoints (no replicate groups)
+      } else if(is.null(ft[,data@qsip@rep_group])) {
+        ft <- aggregate(ft, list(ft$tax_id,
+                                 ft[,data@qsip@timepoint]),
+                        mean)
+        names(ft) <- c(data@qsip@tax_id, data@qsip@timepoint, 'abund')
+        # or if you have data for both
+      } else if(!is.null(ft[,data@qsip@rep_group]) & is.null(!ft[,data@qsip@timepoint])) {
+        ft <- aggregate(ft, list(ft$tax_id,
+                                 ft[,data@qsip@rep_group],
+                                 ft[,data@qsip@timepoint]),
+                        mean)
+        names(ft) <- c(data@qsip@tax_id, data@qsip@rep_group, data@qsip@timepoint, 'abund')
+      }
+    }
+    comb_qsip <- merge(comb_qsip, abund, all=TRUE)
+  }
+  # return final data frame
   return(comb_qsip)
 }
