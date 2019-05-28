@@ -5,9 +5,10 @@
 \title{Specify qSIP-related data to phylosip object}
 \usage{
 specify_qsip(data, density = "character", abund = "character",
-  rep_id = "character", rep_group = "character", iso = "character",
-  iso_trt = "character", timepoint = "character",
-  filter_levels = "data.frame", filter = "character", ...)
+  rep_id = "character", rep_num = "character",
+  rep_group = "character", iso = "character", iso_trt = "character",
+  timepoint = "character", filter_levels = "data.frame",
+  filter = "character", ...)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
@@ -18,6 +19,11 @@ specify_qsip(data, density = "character", abund = "character",
 
 \item{rep_id}{Single length character matching to variable in \code{data} describing sample/replicate names to summarize across fractions.
 Required for calcualtion of weighted average DNA densities (\emph{per sample})}
+
+\item{rep_num}{Single length character matching to variable in \code{data} matching replicates from the same sample origin across treatments
+and any possible replicate groupings specified by \code{rep_group}.
+Required if calculating \emph{per-capita} population rates of change where differences in abundance are only considered between sample from
+the same origin}
 
 \item{rep_group}{Single length character matching to variable in \code{data} used to summarize values across groups of replicates.
 Required for calculation of atom excess fraction}
@@ -36,11 +42,6 @@ Required for calculation of population birth and death rates}
 \item{filter}{Optional data frame of filtering options to apply to taxa based on sample and fraction-level frequency}
 
 \item{...}{Arguments to change variables of existing \code{phylosip} object}
-
-\item{rep_num}{Single length character matching to variable in \code{data} matching replicates from the same sample origin across treatments
-and any possible replicate groupings specified by \code{rep_group}.
-Required if calculating \emph{per-capita} population rates of change where differences in abundance are only considered between sample from
-the same origin}
 }
 \value{
 \code{specify_qsip} returns a \code{phyloseq}-like object of class \code{phylosip}.
