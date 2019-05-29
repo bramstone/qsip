@@ -8,7 +8,7 @@
 #'
 #' @inheritParams methods::show
 #' @export
-#' @rdname show-methods
+#' @rdname show_method
 setMethod("show", "phylosip", function(object){
   cat("phylosip-class experiment-level object", fill=TRUE)
   # print qsip data (always there).
