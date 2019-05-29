@@ -27,7 +27,7 @@ setMethod("show", "qsip", function(object){
 setMethod("show", "phylosip", function(object){
   cat("phylosip-class experiment-level object", fill=TRUE)
   # print qsip data (always there).
-  cat(paste("specify_qsip() qSIP Data:         [ ", nrep(object), " true replicate(s) and ",
+  cat(paste("specify_qsip() qSIP Data:         [ ", nrep(object), " true replicates and ",
             nmeasure(object), " qSIP measures ]", sep = ""), fill = TRUE)
 
   # print otu_table (always there).
