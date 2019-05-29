@@ -4,11 +4,11 @@ setMethod("show", "qsip", function(object){
   cat(paste("qSIP data:          [ list of ",
             length(object), " qSIP measures ]", sep = ""), fill = TRUE)
   if( length(object@rep_group) == 1 ){
-    cat(paste("    ", length(unique(sample_data(object)[,object@rep_group])), " replicate groups are specified", sep=""), fill=TRUE)
+    cat("    replicate groups are specified", fill=TRUE)
   } else if( length(object@rep_num) == 1 ){
     cat("    replicate matching is specified", fill=TRUE)
   } else if( length(object@timepoint) == 1 ){
-    cat(paste("    ", length(unique(sample_data(object)[,object@timepoint])), " different timepoints are specified", sep=""), fill=TRUE)
+    cat("    different timepoints are specified", fill=TRUE)
   }
   show(as(object, "list"))
 })
