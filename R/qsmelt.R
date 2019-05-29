@@ -7,6 +7,8 @@
 #' @param abundance Logical tage specifying whether or not to include sequencing abundance of each feature. Default is \code{TRUE}.
 #' @param relativize Logical tag specifying whether or not to present feature abundances as relative from 0 to 1 or to use those in @@otu_table slot as is.
 #' @param exclude Character vector specifying any qSIP measures to exclude from the returned data frame.
+#' @param include Character vector specifying any qSIP measures to include in the returned data frame.
+#' @param regex Logical vector specifying if \code{exclude} or \code{include} arguments should be evaluated by regular expressions
 #'
 #' @details Details here on different specifications
 #'
@@ -16,6 +18,10 @@
 #' @return \code{qsmelt} returns a single data frame with all qSIP related values for each taxon in each replicate, or group of replicates.
 #'   Any replicate grouping (specified by \code{data@@qsip@@rep_group}) or distinct timepoints (specified by \code{data@@qsip@@timepoint}) will
 #'   be represented in separate columns.
+#'
+#'   \code{include} and \code{exclude} may be used for exact matches if \code{regex=FALSE} or utilize regular expression matching if \code{regex=TRUE}.
+#'   If \code{regex=TRUE} and multiple items are provided to include or exclude, then \code{qsmelt} will combine those into a single regular expression
+#'   search term separated by the "|" character which signifies that all patterns are to be matched as best as possible.
 #'
 #' @examples
 #'  # Load in example data
@@ -31,6 +37,7 @@ qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, excl
   if(length(data@qsip@.Data)==0) stop('No values to combine')
   qsip <- as.list(data@qsip@.Data)
   names(qsip) <- names(data@qsip)
+  #
   # transform to long-format data frames
   for(val in names(qsip)) {
     # make sure taxa are rows
@@ -59,6 +66,7 @@ qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, excl
     # change "value" column name
     names(qsip[[val]])[which(names(qsip[[val]])=='value')] <- val
   }
+  #
   # accommodate grouped values
   if(length(data@qsip@rep_group)!=0 | length(data@qsip@timepoint)!=0) {
     # get data frame of replicate IDs mapped to replicate groups
@@ -98,13 +106,33 @@ qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, excl
       }
     }
   }
+  #
+  # exclude certain terms
+  if(length(exclude) > 0) {
+    if(regex) {
+      exclude <- paste(exclude, collapse='|')
+      qsip <- qsip[grep(exclude, names(qsip), invert=TRUE)]
+    } else {
+      qsip <- qsip[!names(qsip) %in% exclude]
+    }
+    if(length(qsip) == 0) stop('No measures left with specified exclude arguments')
+  }
+  #
+  # include certain terms
+  if(length(include) > 0) {
+    if(regex) {
+      include <- paste(include, collapse='|')
+      qsip <- qsip[grep(include, names(qsip))]
+    } else {
+      qsip <- qsip[names(qsip) %in% include]}
+  }
   # combine into single data frame
-  if(length(exclude) > 0) qsip <- qsip[!names(qsip) %in% exclude]
   comb_qsip <- Reduce(function(x, y) merge(x, y, all=TRUE), qsip)
   # identify if all numeric values are NA, remove those rows
   all_nas <- apply(comb_qsip[,sapply(comb_qsip, is.numeric)], 1, function(x) all(is.na(x)))
   comb_qsip <- comb_qsip[!all_nas,]
   rownames(comb_qsip) <- NULL
+  #
   # include taxonomy
   if(taxonomy) {
     tax <- as(data@tax_table, 'matrix')
@@ -113,6 +141,8 @@ qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, excl
     for(i in 1:ncol(tax)) attr(tax[,i], 'names') <- NULL
     comb_qsip <- merge(comb_qsip, tax, all.x=TRUE)
   }
+  #
+  # include abundances or relative abundances
   if(abundance) {
     # get 16S abundances
     ft <- copy_no(data)
