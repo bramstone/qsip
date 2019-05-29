@@ -1,5 +1,7 @@
 # Accessor and subset methods for phylosip and qsip data
-
+########################################################
+# nrep
+#
 #' @rdname nrep-methods
 #' @export
 setGeneric('nrep', function(data) standardGeneric('nrep'))
@@ -7,7 +9,9 @@ setGeneric('nrep', function(data) standardGeneric('nrep'))
 setMethod('nrep', 'phylosip', function(data) {
   length(unique(sample_data(data)[,data@qsip@rep_id]))
 })
-
+########################################################
+# nmeasure
+#
 #' @rdname nmeasure-methods
 #' @export
 setGeneric('nmeasure', function(data) standardGeneric('nmeasure'))
