@@ -1,14 +1,14 @@
 #' @rdname show-methods
 setMethod("show", "qsip", function(object){
   # print qsip list (always there).
-  cat(paste("qSIP data:          [", length(unique(sample_data(object)[,object@qsip@rep_id])), " true replicates and ",
-            length(object@qsip), " qSIP measures ]", sep = ""), fill = TRUE)
-  if( length(object@qsip@rep_group) == 1 ){
-    cat(paste("    ", length(unique(sample_data(object)[,object@qsip@rep_group])), " replicate groups are specified", sep=""), fill=TRUE)
-  } else if( length(object@qsip@rep_num) == 1 ){
+  cat(paste("qSIP data:          [ list of ",
+            length(object), " qSIP measures ]", sep = ""), fill = TRUE)
+  if( length(object@rep_group) == 1 ){
+    cat(paste("    ", length(unique(sample_data(object)[,object@rep_group])), " replicate groups are specified", sep=""), fill=TRUE)
+  } else if( length(object@rep_num) == 1 ){
     cat("    replicate matching is specified", fill=TRUE)
-  } else if( length(object@qsip@timepoint) == 1 ){
-    cat(paste("    ", length(unique(sample_data(object)[,object@qsip@timepoint])), " different timepoints are specified", sep=""), fill=TRUE)
+  } else if( length(object@timepoint) == 1 ){
+    cat(paste("    ", length(unique(sample_data(object)[,object@timepoint])), " different timepoints are specified", sep=""), fill=TRUE)
   }
   show(as(object, "list"))
 })
@@ -27,8 +27,8 @@ setMethod("show", "qsip", function(object){
 setMethod("show", "phylosip", function(object){
   cat("phylosip-class experiment-level object", fill=TRUE)
   # print qsip data (always there).
-  cat(paste("specify_qsip() qSIP Data:         [ ", length(unique(sample_data(object)[,object@qsip@rep_id])), " true replicates and ",
-            length(object@qsip), " qSIP measures ]", sep = ""), fill = TRUE)
+  cat(paste("specify_qsip() qSIP Data:         [ ", nrep(object), " true replicate(s) and ",
+            nmeasure(object), " qSIP measures ]", sep = ""), fill = TRUE)
 
   # print otu_table (always there).
   cat(paste("otu_table()    OTU Table:         [ ", ntaxa(otu_table(object)), " taxa and ",
