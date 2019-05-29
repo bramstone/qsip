@@ -32,7 +32,7 @@
 #'
 #' @export
 
-qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, exclude=c()) {
+qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, exclude=c(), include=c(), regex=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   if(length(data@qsip@.Data)==0) stop('No values to combine')
   qsip <- as.list(data@qsip@.Data)
