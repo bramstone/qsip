@@ -10,7 +10,7 @@ setMethod('nrep', 'phylosip', function(data) {
 
 #' @rdname nmeasure-methods
 #' @export
-setGeneric('nmeasure', function(data) standardGeneric('nrep'))
+setGeneric('nmeasure', function(data) standardGeneric('nmeasure'))
 #' @rdname nmeasure-methods
 setMethod('nmeasure', 'phylosip', function(data) {
   length(data@qsip)
