@@ -7,7 +7,9 @@
 setGeneric('nrep', function(data) standardGeneric('nrep'))
 #' @rdname nrep-methods
 setMethod('nrep', 'phylosip', function(data) {
-  length(unique(sample_data(data)[,data@qsip@rep_id]))
+  samples <- unique(sample_data(data)[,data@qsip@rep_id])
+  samples <- unlist(samples)
+  length(samples[!is.na(samples)])
 })
 ########################################################
 # nmeasure
