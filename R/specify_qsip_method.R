@@ -4,10 +4,10 @@
 #'
 # @param formula Formula specifying density, abundance, and sample ID data in the following order: \code{density + abund ~ rep_id + rep_group + timepoint}
 #' @param data Data as a \code{phyloseq} object
-#' @param density Single length character matching to variable in \code{data} describing sample densities in UNITS
+#' @param density Single length character matching to variable in \code{data} describing sample densities
 #' @param abund Single length character matching to variable in \code{data} describing sample 16S gene abundance
 #' @param rep_id Single length character matching to variable in \code{data} describing sample/replicate names to summarize across fractions.
-#'   Required for calcualtion of weighted average DNA densities (\emph{per sample})
+#'   Required for calcualtion of weighted average DNA densities (\emph{per replicate})
 #' @param rep_num Single length character matching to variable in \code{data} matching replicates from the same sample origin across treatments
 #'   and any possible replicate groupings specified by \code{rep_group}.
 #'   Required if calculating \emph{per-capita} population rates of change where differences in abundance are only considered between sample from
@@ -18,7 +18,7 @@
 #'   \eqn{^18^O}-labeled water or \eqn{^13^C}-labeled carbon inputs, respectively.
 #'   Required for calculation of molecular weights and atom excess fraction
 #' @param iso_trt Single length character matching to variable in \code{data} used to distinguish between samples with and without isotope added.
-#'   The data this value references should be a facotr with "light" treatments as the first level.
+#'   The data this value references should be a factor with "light" treatments as the first level.
 #' @param timepoint Single length character matching to variable in \code{data} used to distinguish between samples after certain incubation
 #'   timepoints. The data that this value references should be a factor with time 0 values as the first level.
 #'   Required for calculation of population birth and death rates
@@ -71,7 +71,7 @@ setMethod('specify_qsip',
             matching_args <- sapply(matching_args, match, data@sam_data@names)
             if(anyNA(matching_args)) {
               culprits <- names(matching_args)[which(is.na(matching_args))] # who doesn't match
-              stop('Arguments ', paste0(culprits, collapse=', '), ' do not mach those in object @sam_data slot', call.=F)
+              stop('Arguments ', paste0(culprits, collapse=', '), ' do not match those in object @sam_data slot', call.=F)
             }
             #            } else {  # User input good (w formula)?
             #              formula_terms <- eval_formula(formula)
