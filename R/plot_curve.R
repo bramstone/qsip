@@ -55,7 +55,7 @@ setMethod('plot_curve',
             # omit NA rows
             plot_data <- plot_data[complete.cases(plot_data),]
             # create basic plot of abundance by density
-            basic_plot <- ggplot(plot_data, aes_string(x=data@qsip@density, y=data@qsip@abund)) +
+            basic_plot <- ggplot(plot_data, aes_string(x=data@qsip@density, y=data@qsip@abund, color=data@qsip@iso_trt)) +
               ylab('Abundance') +
               xlab('Density')
             if(vertical) basic_plot + coord_flip() + scale_x_reverse()
@@ -92,7 +92,7 @@ setMethod('plot_curve',
             # omit NA rows
             plot_data <- plot_data[complete.cases(plot_data),]
             # create basic plot of abundance by density
-            basic_plot <- ggplot(plot_data, aes_string(x=data@qsip@density, y=data@qsip@abund)) +
+            basic_plot <- ggplot(plot_data, aes_string(x=density, y=abund, color=iso_trt)) +
               ylab('Abundance') +
               xlab('Density')
             if(vertical) basic_plot + coord_flip() + scale_x_reverse()
@@ -129,7 +129,7 @@ setMethod('plot_curve',
             # omit NA rows
             plot_data <- plot_data[complete.cases(plot_data),]
             # create basic plot of abundance by density
-            basic_plot <- ggplot(plot_data, aes_string(x=data@qsip@density, y=data@qsip@abund)) +
+            basic_plot <- ggplot(plot_data, aes_string(x=density, y=abund, color=iso_trt)) +
               ylab('Abundance') +
               xlab('Density')
             if(vertical) basic_plot + coord_flip() + scale_x_reverse()
