@@ -5,7 +5,7 @@
 \title{Melt qSIP data to long form}
 \usage{
 qsmelt(data, taxonomy = FALSE, abundance = FALSE, relativize = FALSE,
-  exclude = c())
+  exclude = c(), include = c(), regex = FALSE)
 }
 \arguments{
 \item{data}{Data as a \code{phylosip} object}
@@ -17,11 +17,19 @@ qsmelt(data, taxonomy = FALSE, abundance = FALSE, relativize = FALSE,
 \item{relativize}{Logical tag specifying whether or not to present feature abundances as relative from 0 to 1 or to use those in @otu_table slot as is.}
 
 \item{exclude}{Character vector specifying any qSIP measures to exclude from the returned data frame.}
+
+\item{include}{Character vector specifying any qSIP measures to include in the returned data frame.}
+
+\item{regex}{Logical vector specifying if \code{exclude} or \code{include} arguments should be evaluated by regular expressions}
 }
 \value{
 \code{qsmelt} returns a single data frame with all qSIP related values for each taxon in each replicate, or group of replicates.
   Any replicate grouping (specified by \code{data@qsip@rep_group}) or distinct timepoints (specified by \code{data@qsip@timepoint}) will
   be represented in separate columns.
+
+  \code{include} and \code{exclude} may be used for exact matches if \code{regex=FALSE} or utilize regular expression matching if \code{regex=TRUE}.
+  If \code{regex=TRUE} and multiple items are provided to include or exclude, then \code{qsmelt} will combine those into a single regular expression
+  search term separated by the "|" character which signifies that all patterns are to be matched as best as possible.
 }
 \description{
 Converts data in phylosip object's qsip slot from several matrices to single, long-form data.frame

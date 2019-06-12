@@ -13,12 +13,12 @@ specify_qsip(data, density = "character", abund = "character",
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
 
-\item{density}{Single length character matching to variable in \code{data} describing sample densities in UNITS}
+\item{density}{Single length character matching to variable in \code{data} describing sample densities}
 
 \item{abund}{Single length character matching to variable in \code{data} describing sample 16S gene abundance}
 
 \item{rep_id}{Single length character matching to variable in \code{data} describing sample/replicate names to summarize across fractions.
-Required for calcualtion of weighted average DNA densities (\emph{per sample})}
+Required for calcualtion of weighted average DNA densities (\emph{per replicate})}
 
 \item{rep_num}{Single length character matching to variable in \code{data} matching replicates from the same sample origin across treatments
 and any possible replicate groupings specified by \code{rep_group}.
@@ -33,7 +33,7 @@ Required for calculation of atom excess fraction}
 Required for calculation of molecular weights and atom excess fraction}
 
 \item{iso_trt}{Single length character matching to variable in \code{data} used to distinguish between samples with and without isotope added.
-The data this value references should be a facotr with "light" treatments as the first level.}
+The data this value references should be a factor with "light" treatments as the first level.}
 
 \item{timepoint}{Single length character matching to variable in \code{data} used to distinguish between samples after certain incubation
 timepoints. The data that this value references should be a factor with time 0 values as the first level.
