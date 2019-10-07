@@ -1,3 +1,8 @@
-# qsip
+qSIP Package
+================
+Bram Stone
 
-A package used for the calculation of isotope incorporation in microbial community surveys
+Background
+----------
+
+Quantitative stable isotope probing (qSIP) is the combination of stable isotope probing -- a foundational technique in the study of ecosystems -- with microbial targeted amplicon sequencing data.

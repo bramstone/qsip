@@ -1,0 +1,13 @@
+---
+title: "qSIP Package"
+author: "Bram Stone"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+Quantitative stable isotope probing (qSIP) is the combination of stable isotope probing -- a foundational technique in the study of ecosystems -- with microbial targeted amplicon sequencing data. 
