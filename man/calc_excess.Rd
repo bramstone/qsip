@@ -6,8 +6,8 @@
 \usage{
 calc_excess(data, percent = FALSE, ci_method = c("", "bootstrap",
   "bayesian"), ci = 0.95, iters = 999, filter = FALSE,
-  correction = FALSE, offset_taxa = 0.1, separate_light = FALSE,
-  separate_label = TRUE, recalc = TRUE)
+  correction = FALSE, offset_taxa = 0.1, max_label = 1,
+  separate_light = FALSE, separate_label = TRUE, recalc = TRUE)
 }
 \arguments{
 \item{data}{Data as a \code{phyloseq} object}
@@ -30,6 +30,10 @@ This will require \code{data} to have a filter applied with \code{\link{filter_q
 \item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
 Taxa are ordered by lowest difference in WAD values.
 Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.}
+
+\item{max_label}{Numeric value indicating the maximum possible isotope labeling in an experiment.
+Keeping the value at \code{1} will ensure that the maximum possible atom excess value of 1 corresponds to complete updake of the isotope.
+Recommended for experiments with lower atom percent enrichment treatments (see Details).}
 
 \item{separate_light}{Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
 If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
@@ -58,6 +62,14 @@ Calculates isotope incorporation in excess of natural abundances
 \details{
 Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
   have not been calculated beforehand, \code{calc_mw} will compute those first.
+
+  Setting \code{max_label < 1} will return an atom excess value higher than would otherwise be returned. A \code{max_label} value of 1 indicates
+  that atom excess fraction ranges from 0 to 1 where 0 indicates no isotope incorporation and 1 indicates complete, or 100%, isotope incorporation.
+  For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate atom excess
+  fraction where 0 indicates no isotope incorporation and 1 indicates the highest possible incorporation, as constrained by atom percent enrichment
+  provided in the experiment. For example, an experiment enriching soil with ^13^C at 50% atom enrichment will want to specify \code{max_label=0.5}
+  and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating ^13^C into it's nucleic acids
+  at 50%.
 }
 \examples{
  # Load in example data
