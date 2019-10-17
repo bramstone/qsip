@@ -18,6 +18,9 @@
 #' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
 #'   Taxa are ordered by lowest difference in WAD values.
 #'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
+#' @param max_label Numeric value indicating the maximum possible isotope labeling in an experiment.
+#'   Keeping the value at \code{1} will ensure that the maximum possible atom excess value of 1 corresponds to complete updake of the isotope.
+#'   Recommended for experiments with lower atom percent enrichment treatments (see Details).
 #' @param separate_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
 #'   If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
 #'   representing it's genetic molecular weight in the absence of isotope addition.
@@ -41,6 +44,14 @@
 #'   bootstrap iteration. Typically, users should not set \code{recalc} to \code{FALSE}. Note that the true, observed WAD and
 #'   molecular weight values will be returned following completion of bootstrapping.
 #'
+#'   Setting \code{max_label < 1} will return birth and death values higher than would otherwise be returned. A \code{max_label} value of 1 indicates
+#'   that the maximum molecular weight of an organism respresents its molecular weight under the assumption of complete, or 100%, isotope incorporation.
+#'   For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate molecular weight
+#'   where 0 indicates no isotope incorporation and 1 indicates the highest possible incorporation, as constrained by atom percent enrichment
+#'   provided in the experiment. For example, an experiment enriching soil with ^18^O at 50% atom enrichment will want to specify \code{max_label=0.5}
+#'   and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating ^18^O into it's nucleic acids
+#'   at 50%.
+#'
 #' @return \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@@qsip@@.Data} slot
 #'   of population birth rates for each taxon at each group of replicates. The row and column specifications will mirror those of the \code{phylosip}'s
 #'   \code{\link{otu_table}}, meaning if taxa are listed on the table rows, they will in the resulting S4 Matrix class.
@@ -60,7 +71,7 @@
 #' @export
 
 calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'),
-                     mu=0.6, correction=FALSE, offset_taxa=0.1, separate_light=FALSE, separate_label=TRUE, match_replicate=FALSE, recalc=TRUE) {
+                     mu=0.6, correction=FALSE, offset_taxa=0.1, max_label=1, separate_light=FALSE, separate_label=TRUE, match_replicate=FALSE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object', call.=FALSE)
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
@@ -183,7 +194,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         }
       }
       # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-      mw_max <- (12.07747 * mu) + mw_l_t
+      mw_max <- (12.07747 * mu * max_label) + mw_l_t
       if(separate_label)  mw_h_t <- mw_h_t[,match(colnames(get(n_t_names[time])), colnames(mw_h_t))]
       # calculate abundances
       if(isTRUE(all.equal(dim(mw_max), dim(mw_h_t)))) {
@@ -374,7 +385,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
           mw_l_t <- t(mw_l_t[[time - 1]])
         }
         # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-        mw_max <- (12.07747 * mu) + mw_l_t
+        mw_max <- (12.07747 * mu * max_label) + mw_l_t
         if(all(dim(mw_max)==dim(mw_h_t))) {
           n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[time])
         } else {
