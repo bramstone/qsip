@@ -45,7 +45,7 @@
 #'   molecular weight values will be returned following completion of bootstrapping.
 #'
 #'   Setting \code{max_label < 1} will return birth and death values higher than would otherwise be returned. A \code{max_label} value of 1 indicates
-#'   that the maximum molecular weight of an organism respresents its molecular weight under the assumption of complete, or 100%, isotope incorporation.
+#'   that the maximum molecular weight of an organism respresents its molecular weight under the assumption of complete, or 100\%, isotope incorporation.
 #'   For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate molecular weight
 #'   where 0 indicates no isotope incorporation and 1 indicates the highest possible incorporation, as constrained by atom percent enrichment
 #'   provided in the experiment. For example, an experiment enriching soil with 18-O at 50\% atom enrichment will want to specify \code{max_label=0.5}

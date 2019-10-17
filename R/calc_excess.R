@@ -31,7 +31,7 @@
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
 #'
 #'   Setting \code{max_label < 1} will return an atom excess value higher than would otherwise be returned. A \code{max_label} value of 1 indicates
-#'   that atom excess fraction ranges from 0 to 1 where 0 indicates no isotope incorporation and 1 indicates complete, or 100%, isotope incorporation.
+#'   that atom excess fraction ranges from 0 to 1 where 0 indicates no isotope incorporation and 1 indicates complete, or 100\%, isotope incorporation.
 #'   For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate atom excess
 #'   fraction where 0 indicates no isotope incorporation and 1 indicates the highest possible incorporation, as constrained by atom percent enrichment
 #'   provided in the experiment. For example, an experiment enriching soil with 13-C at 50\% atom enrichment will want to specify \code{max_label=0.5}
