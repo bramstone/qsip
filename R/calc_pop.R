@@ -48,9 +48,9 @@
 #'   that the maximum molecular weight of an organism respresents its molecular weight under the assumption of complete, or 100%, isotope incorporation.
 #'   For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate molecular weight
 #'   where 0 indicates no isotope incorporation and 1 indicates the highest possible incorporation, as constrained by atom percent enrichment
-#'   provided in the experiment. For example, an experiment enriching soil with ^18^O at 50% atom enrichment will want to specify \code{max_label=0.5}
-#'   and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating ^18^O into it's nucleic acids
-#'   at 50%.
+#'   provided in the experiment. For example, an experiment enriching soil with 18-O at 50\% atom enrichment will want to specify \code{max_label=0.5}
+#'   and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating 18-O into it's nucleic acids
+#'   at 50\%.
 #'
 #' @return \code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@@qsip@@.Data} slot
 #'   of population birth rates for each taxon at each group of replicates. The row and column specifications will mirror those of the \code{phylosip}'s

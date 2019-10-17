@@ -83,9 +83,9 @@ Some details about proper isotope control-treatment factoring and timepoint spec
   that the maximum molecular weight of an organism respresents its molecular weight under the assumption of complete, or 100%, isotope incorporation.
   For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate molecular weight
   where 0 indicates no isotope incorporation and 1 indicates the highest possible incorporation, as constrained by atom percent enrichment
-  provided in the experiment. For example, an experiment enriching soil with ^18^O at 50% atom enrichment will want to specify \code{max_label=0.5}
-  and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating ^18^O into it's nucleic acids
-  at 50%.
+  provided in the experiment. For example, an experiment enriching soil with 18-O at 50\% atom enrichment will want to specify \code{max_label=0.5}
+  and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating 18-O into it's nucleic acids
+  at 50\%.
 }
 \examples{
  # Load in example data
