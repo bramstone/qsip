@@ -135,7 +135,7 @@ head(qsip_growth)
 References
 ----------
 
-Hungate BA, Mau RL, Schwartz E *et al.* Quantitative Microbial Ecology through Stable Isotope Probing. *Soil Biology and Biochemistry* 2015;**81**, DOI: [10.1128/AEM.02280-15](https://doi.org/10.1128/AEM.02280-15).
+Hungate BA, Mau RL, Schwartz E *et al.* Quantitative Microbial Ecology through Stable Isotope Probing. *Applied and Environmental Microbiology* 2015;**81**, DOI: [10.1128/AEM.02280-15](https://doi.org/10.1128/AEM.02280-15).
 
 Koch BJ, McHugh TA, Hayer M *et al.* Estimating taxon-specific population dynamics in diverse microbial communities. *Ecosphere* 2018;**9**, DOI: [10.1002/ecs2.2090](https://doi.org/10.1002/ecs2.2090).
 
