@@ -4,7 +4,8 @@
 \alias{calc_wad}
 \title{Calculation of weighted average densities}
 \usage{
-calc_wad(data, filter = FALSE, pool_unlabeled = TRUE)
+calc_wad(data, filter = FALSE, pool_unlabeled = TRUE,
+  calc_wvd = FALSE)
 }
 \arguments{
 \item{data}{Data as a \code{phylosip} object}
@@ -17,6 +18,12 @@ before calculations or not (see \code{details})}
 \item{pool_unlabeled}{Logical vector specifying if unlabeled replicates should be pooled together across any grouping factor prior
 to filtering. If \code{TRUE} (the default), unlabeled replicates will be pooled, and any soft filtering threshold will be applied to
 \emph{all} unlabeled replicates together.}
+
+\item{calc_wvd}{Logical vector specifying whether or not to calculate weighted variance of densities (WVD).
+The weighted variance of densities of a taxon within a replicate is the complement to its weighted average.
+It describes how much variance exists around every given weighted average density.
+If \code{TRUE}, another output matrix (\code{wvd}) will be returned with identical dimensions to the weighted average
+density output.}
 }
 \value{
 \code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
