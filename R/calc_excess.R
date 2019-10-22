@@ -91,6 +91,11 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       gc <- (wl - 1.646057) / 0.083506
       adjust <- (-0.4987282 * gc) + 9.974564
       nat_abund <- 0.01111233
+    } else if(data@qsip@iso=='15N') {
+      wl <- data@qsip[['wad_light']]
+      gc <- (wl - 1.646057) / 0.083506
+      adjust <- (0.5024851 * gc) + 3.517396
+      nat_abund <- 0.003663004
     }
     # create MW heavy max, adjust for differences maximum possible labeling
     mw_max <- (adjust + mw_l) * max_label
@@ -175,8 +180,13 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
         gc <- (wl - 1.646057) / 0.083506
         adjust <- (-0.4987282 * gc) + 9.974564
         nat_abund <- 0.01111233
+      } else if(data@qsip@iso=='15N') {
+        wl <- data@qsip[['wad_light']]
+        gc <- (wl - 1.646057) / 0.083506
+        adjust <- (0.5024851 * gc) + 3.517396
+        nat_abund <- 0.003663004
       }
-      mw_max <- adjust + mw_l
+      mw_max <- (adjust + mw_l) * max_label
       # atom excess
       if(all(dim(mw_max)==dim(mw_h))) {
         excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
