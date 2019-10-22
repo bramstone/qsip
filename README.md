@@ -21,7 +21,7 @@ Background
 
 The **qsip** package is built on the data structures of the **phyloseq** [package](http://joey711.github.io/phyloseq/index.html). **Phyloseq** uses S4 object classification to organize different aspects of microbial sequencing data into a single object (see Data Preparation, below). The purpose of **phyloseq** is to minimize the code necessary to perform common operations on microbial community datasets such as filtering out, or retaining, certain taxonomic lineages or groups of samples.
 
-The **qsip** package supports stable isotope experiments using <sup>18</sup>O, <sup>13</sup>C, and <sup>15</sup>N. It is also agnostic towards the amplicon being sequenced. It will support 16S, 18S, ITS, or other amplicon sequencing data.
+The **qsip** package supports stable isotope experiments using <sup>18</sup>O, <sup>13</sup>C, and <sup>15</sup>N (Morrissey *et al.* 2018). It is also agnostic towards the amplicon being sequenced. It will support 16S, 18S, ITS, or other amplicon sequencing data.
 
 ### Terminology
 
@@ -74,6 +74,7 @@ dat <- specify_qsip(dat,
                     iso_trt='isotope',
                     timepoint='timepoint')
 
+# high-level qSIP-related data will display upon printing
 dat
 ```
 
@@ -117,6 +118,10 @@ dat <- calc_pop(dat,
                 filter=T,
                 correction=T,
                 growth_model='exponential')
+
+# show new data has been added
+dat
+names(dat@qsip)
 ```
 
 Extract data frames from phylosip object
@@ -138,5 +143,7 @@ References
 Hungate BA, Mau RL, Schwartz E *et al.* Quantitative Microbial Ecology through Stable Isotope Probing. *Applied and Environmental Microbiology* 2015;**81**, DOI: [10.1128/AEM.02280-15](https://doi.org/10.1128/AEM.02280-15).
 
 Koch BJ, McHugh TA, Hayer M *et al.* Estimating taxon-specific population dynamics in diverse microbial communities. *Ecosphere* 2018;**9**, DOI: [10.1002/ecs2.2090](https://doi.org/10.1002/ecs2.2090).
+
+Morrissey EM, Mau RL, Schwartz E *et al.* Taxonomic patterns in the nitrogen assimilation of soil prokaryotes. *Environmental Microbiology* 2018;**20**, DOI: [10.1111/1462-2920.14051](https://doi.org/10.1111/1462-2920.14051).
 
 Purcell AM, Dijkstra P, Finley B *et al.* Quantitative Stable Isotope Probing with H218O to Measure Taxon-Specific Microbial Growth. *Methods of Soil Analysis* 2019;**4**, DOI: [10.2136/msa2018.0083](https://doi.org/10.2136/msa2018.0083).

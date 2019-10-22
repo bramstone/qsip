@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The **qsip** package is built on the data structures of the **phyloseq** [package](http://joey711.github.io/phyloseq/index.html). **Phyloseq** uses S4 object classification to organize different aspects of microbial sequencing data into a single object (see Data Preparation, below). The purpose of **phyloseq** is to minimize the code necessary to perform common operations on microbial community datasets such as filtering out, or retaining, certain taxonomic lineages or groups of samples.
 
-The **qsip** package supports stable isotope experiments using ^18^O, ^13^C, and ^15^N. It is also agnostic towards the amplicon being sequenced. It will support 16S, 18S, ITS, or other amplicon sequencing data.
+The **qsip** package supports stable isotope experiments using ^18^O, ^13^C, and ^15^N [@Morrissey2018]. It is also agnostic towards the amplicon being sequenced. It will support 16S, 18S, ITS, or other amplicon sequencing data.
 
 ### Terminology
 
@@ -71,6 +71,7 @@ dat <- specify_qsip(dat,
                     iso_trt='isotope',
                     timepoint='timepoint')
 
+# high-level qSIP-related data will display upon printing
 dat
 ```
 
@@ -113,6 +114,10 @@ dat <- calc_pop(dat,
                 filter=T,
                 correction=T,
                 growth_model='exponential')
+
+# show new data has been added
+dat
+names(dat@qsip)
 ```
 
 
