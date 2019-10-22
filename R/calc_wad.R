@@ -148,7 +148,7 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
       wvd <- do.call(rbind, wvd)
       rownames(wvd) <- sam_names
       colnames(wvd) <- phyloseq::taxa_names(data)
-      wvd <- wvd[, colSums(labeled) > 0] # or colSums(sf)
+      wvd <- wvd[, colnames(ft)] # or colSums(sf)
     }
   }
   # WAD values of 0 indicate no taxa present
