@@ -10,6 +10,11 @@
 #' @param pool_unlabeled Logical vector specifying if unlabeled replicates should be pooled together across any grouping factor prior
 #'   to filtering. If \code{TRUE} (the default), unlabeled replicates will be pooled, and any soft filtering threshold will be applied to
 #'   \emph{all} unlabeled replicates together.
+#' @param calc_wvd Logical vector specifying whether or not to calculate weighted variance of densities (WVD).
+#'   The weighted variance of densities of a taxon within a replicate is the complement to its weighted average.
+#'   It describes how much variance exists around every given weighted average density.
+#'   If \code{TRUE}, another output matrix (\code{wvd}) will be returned with identical dimensions to the weighted average
+#'   density output.
 #'
 #' @details Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
 #'   that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
@@ -33,7 +38,7 @@
 #'
 #' @export
 
-calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
+calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
   if(length(data@qsip@rep_id)==0) stop('Must specify replicate IDs with rep_id')
   # transform sequencing abundances to 16S copy numbers
@@ -54,6 +59,12 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
   ft <- base::lapply(ft, function(x) {x <- t(x); x <- t(x / rowSums(x, na.rm=T)); x[is.nan(x)] <- 0; x}) # create relative abundances
   ft <- base::Map(function(y, x) sweep(y, 1, x, '*'), ft, dv)
   ft <- base::lapply(ft, colSums, na.rm=T)
+  # if specified, calculate weighted variance of densities
+  if(calc_wvd) {
+    wvd <- Map(function(x, y) outer(x, y, '-')^2, dv, ft)
+    wvd <- Map(function(y, x) y * x, wvd, ft)
+    wvd <- lapply(wvd, colSums, na.rm=T)
+  }
   # apply filtering first if desired.
   # 1. Soft filter
   # Here, taxa who do not meet the threshold(s) have their group-specific WAD values converted to 0
@@ -96,6 +107,9 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
     sf <- lapply(sf, c)
     # apply filter to WAD values
     ft <- base::Map('*', ft, sf) # or sf <- Map('*', ft, sf)
+    if(calc_wvd) {
+      wvd <- base::Map('*', wvd, sf)
+    }
   }
   # 2. Hard filter
   # Unless taxa are removed beforehand, filtering here is hard filter on fractions only (i.e., replicate threshold is 1)
@@ -103,11 +117,23 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
     ft <- do.call(rbind, ft)
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
+    #
+    if(calc_wvd) {
+      wvd <- do.call(rbind, wvd)
+      colnames(wvd) <- phyloseq::taxa_names(data)
+      wvd <- wvd[,colnames(wvd) %in% data@qsip@filter]
+    }
   } else if(filter && length(data@qsip@filter)==0 && any(data@qsip@filter_levels$hard)) {
     data <- filter_qsip(data, replicate=1)
     ft <- do.call(rbind, ft)
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[,colnames(ft) %in% data@qsip@filter]
+    #
+    if(calc_wvd) {
+      wvd <- do.call(rbind, wvd)
+      colnames(wvd) <- phyloseq::taxa_names(data)
+      wvd <- wvd[,colnames(wvd) %in% data@qsip@filter]
+    }
   }
   # Regardless of hard filter, remove taxa that don't occur at all (all WADs=0) after applying soft filter
   if(filter && any(data@qsip@filter_levels$soft)) {
@@ -118,6 +144,12 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
     colnames(ft) <- phyloseq::taxa_names(data)
     ft <- ft[, colSums(labeled) > 0] # or colSums(sf)
     data@qsip@filter <- colnames(ft)
+    if(calc_wvd) {
+      wvd <- do.call(rbind, wvd)
+      rownames(wvd) <- sam_names
+      colnames(wvd) <- phyloseq::taxa_names(data)
+      wvd <- wvd[, colSums(labeled) > 0] # or colSums(sf)
+    }
   }
   # WAD values of 0 indicate no taxa present
   # if(class(ft)=='list') {
@@ -125,6 +157,9 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE) {
   # } else ft[ft==0] <- NA
   # organize and add new data as S4 matrix
   data <- collate_results(data, ft, tax_names=tax_names, 'wad', sparse=TRUE)
+  if(calc_wvd) {
+    data <- collate_results(data, wvd, tax_names=tax_names, 'wvd', sparse=TRUE)
+  }
   return(data)
 }
 
