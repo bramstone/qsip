@@ -129,7 +129,7 @@ qsmelt <- function(data, taxonomy=FALSE, abundance=FALSE, relativize=FALSE, excl
   # combine into single data frame
   comb_qsip <- Reduce(function(x, y) merge(x, y, all=TRUE), qsip)
   # identify if all numeric values are NA, remove those rows
-  all_nas <- apply(comb_qsip[,sapply(comb_qsip, is.numeric)], 1, function(x) all(is.na(x)))
+  all_nas <- apply(comb_qsip[,sapply(comb_qsip, is.numeric),drop=FALSE], 1, function(x) all(is.na(x)))
   comb_qsip <- comb_qsip[!all_nas,]
   rownames(comb_qsip) <- NULL
   #
