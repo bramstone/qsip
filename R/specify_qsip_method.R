@@ -52,7 +52,7 @@ setGeneric('specify_qsip',
 setMethod('specify_qsip',
           signature(data='phyloseq'),
           function(data, density=character(), abund=character(), rep_id=character(), rep_num=character(), rep_group=character(),
-                   iso=c('18O', '13C'), iso_trt=character(), timepoint=character(), filter_levels=NULL, filter=character()) {
+                   iso=c('18O', '13C', '15N'), iso_trt=character(), timepoint=character(), filter_levels=NULL, filter=character()) {
             if(missing(data)) stop('Must supply data as phyloseq object', call.=F)
             #            if(is.null(formula)) { # User input good (w/o formula)?
             if(missing(density) || missing(abund)) stop('Must supply both sample densities and abundances', call.=F)
@@ -84,7 +84,7 @@ setMethod('specify_qsip',
             #              if(length(formula_terms$grouping)>=1) rep_id <- formula_terms$response[1]
             #              if(length(formula_terms$grouping)>=2) rep_group <- formula_terms$response[2]
             #              if(length(formula_terms$grouping)>=3) timepoint <- formula_terms$response[3]
-            iso <- match.arg(toupper(iso), c('18O', '13C'))
+            iso <- match.arg(toupper(iso), c('18O', '13C', '15N'))
             data <- as(data, 'phylosip')
             if(!missing(density)) data@qsip@density <- density
             if(!missing(abund)) data@qsip@abund <-  abund
