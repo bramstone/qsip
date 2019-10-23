@@ -156,9 +156,9 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
   #   ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
   # } else ft[ft==0] <- NA
   # organize and add new data as S4 matrix
-  data <- collate_results(data, ft, tax_names=tax_names, 'wad', sparse=TRUE)
+  data <- collate_results(data, ft, tax_names=NULL, 'wad', sparse=TRUE)
   if(calc_wvd) {
-    data <- collate_results(data, wvd, tax_names=tax_names, 'wvd', sparse=TRUE)
+    data <- collate_results(data, wvd, tax_names=NULL, 'wvd', sparse=TRUE)
   }
   return(data)
 }
