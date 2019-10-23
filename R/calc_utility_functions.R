@@ -84,9 +84,8 @@ collate_results <- function(data, new_data, tax_names=NULL, metric, ...) {
     # can't rely on phyloseq::taxa_names(data)
     if(phyloseq::taxa_are_rows(data)) {
       full_tax <- rownames(data@otu_table)
-      else {
-        full_tax <- colnames(data@otu_table)
-      }
+    } else {
+      full_tax <- colnames(data@otu_table)
     }
     # compare columns of new matrix to full tax list
     if(ncol(new_data)==full_tax) {
