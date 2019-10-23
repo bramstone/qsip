@@ -125,8 +125,7 @@ collate_results <- function(data, new_data, tax_names=NULL, metric, ...) {
     warning('Overwriting existing ', metric, ' values', call.=FALSE)
     replace_num <- which(attributes(data@qsip)$names %in% metric)
     data@qsip@.Data[[replace_num]] <- new_data
-  }
-  else { # else append it to the list and update the list names
+  } else { # else append it to the list and update the list names
     data@qsip@.Data[[length(data@qsip@.Data) + 1]] <- new_data
     attributes(data@qsip)$names[length(data@qsip@.Data)] <- metric
   }
