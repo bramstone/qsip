@@ -81,8 +81,16 @@ split_data <- function(data, new_data, grouping, grouping_w_phylosip=T, keep_nam
 # parameter ... Indicates options to pass to Matrix, for specifying whether it should be sparse or not
 collate_results <- function(data, new_data, tax_names=NULL, metric, ...) {
   if(is.null(tax_names)) {
-    if(ncol(new_data)==length(phyloseq::taxa_names(data))) {
-      tax_names <- phyloseq::taxa_names(data)
+    # can't rely on phyloseq::taxa_names(data)
+    if(phyloseq::taxa_are_rows(data)) {
+      full_tax <- rownames(data@otu_table)
+      else {
+        full_tax <- colnames(data@otu_table)
+      }
+    }
+    # compare columns of new matrix to full tax list
+    if(ncol(new_data)==full_tax) {
+      tax_names <- full_tax
     } else if(length(data@qsip@filter) > 0) {
       tax_names <- data@qsip@filter
     }
