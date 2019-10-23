@@ -46,7 +46,6 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
   ft <- pa <- copy_no(data)
   pa <- ceiling(pa/max(pa, na.rm=T))
   storage.mode(pa) <- 'integer'
-  tax_names <- colnames(ft)
   n_taxa <- ncol(ft)
   # manipulate data matrix and calculate
   ft <- split_data(data, ft, data@qsip@rep_id) # split by replicate IDs
@@ -150,15 +149,21 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
       colnames(wvd) <- phyloseq::taxa_names(data)
       wvd <- wvd[, colnames(ft)] # or colSums(sf)
     }
+  # if filtering, use reduced tax name list
+    tax_names <- data@qsip@filter
+  # if not filtering, use full tax name list
+  } else if(!filter) {
+    tax_names <- phyloseq::taxa_names(data)
   }
+  # return tax names
   # WAD values of 0 indicate no taxa present
   # if(class(ft)=='list') {
   #   ft <- base::lapply(ft, function(x) {x[x==0] <- NA; x})
   # } else ft[ft==0] <- NA
   # organize and add new data as S4 matrix
-  data <- collate_results(data, ft, tax_names=NULL, 'wad', sparse=TRUE)
+  data <- collate_results(data, ft, tax_names=tax_names, 'wad', sparse=TRUE)
   if(calc_wvd) {
-    data <- collate_results(data, wvd, tax_names=NULL, 'wvd', sparse=TRUE)
+    data <- collate_results(data, wvd, tax_names=tax_names, 'wvd', sparse=TRUE)
   }
   return(data)
 }
