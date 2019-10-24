@@ -41,6 +41,11 @@ Calculates molecular weights of microbial taxa due to isotope incorporation
 \details{
 Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
   have not been calculated beforehand, \code{calc_mw} will compute those first.
+
+  The equations for calculating the molecular weights of taxon \emph{i}, designated \eqn{M_{Lab,i}} for labeled and \eqn{M_{Light,i}}, are
+
+  \deqn{M_{Light,i} = 0.496 \cdot G_{i} + 307.691}
+  \deqn{M_{Lab,i} = \left( \frac{\Delta W}{W_{Light,i}} + 1 \right) \cdot M_{Light,i}}
 }
 \examples{
  # Load in example data

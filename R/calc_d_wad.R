@@ -30,7 +30,10 @@
 #'
 #'   The equation for the difference in weighted average density of taxon \emph{i}, \eqn{\Delta W_{i}}, is given by:
 #'
-#'   \deqn{\Delta W_{i} = W_{Lab,i} - W_{Light,i})}
+#'   \deqn{\Delta W_{i} = W_{Lab,i} - W_{Light,i}}
+#'
+#'   Where \eqn{W_{Lab,i}} indicates the weighted average density of taxon \emph{i} in heavy isotope-labeled treatment(s)
+#'   and \eqn{W_{Light,i}} indicates that taxon's corresponding weighted average density in light, or unlabeled treatment(s)
 #'
 #' @return \code{calc_d_wad} adds two S4 Matrix objects to the \code{data@@qsip@@.Data} slot, one for differences
 #'   in weighted average density, and the other for weighted average density values of light treatments only (to be used in
@@ -42,7 +45,12 @@
 #' @examples
 #'  # Load in example data
 #'
+#'
 #'  # Calculate weighted average density differences
+#'
+#'  @references
+#'  Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
+#'  \emph{Applied and Environmental Microbiology} \strong{81}: 7570 - 7581.
 #'
 #' @export
 
