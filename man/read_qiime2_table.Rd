@@ -11,7 +11,7 @@ read_qiime2_table(file, quiet = FALSE)
   If it does not contain an absolute path, the file name is relative to the current working directory, \code{getwd()}.
   Tilde-expansion is performed where supported.
 
-  This can be a compressed file (see \code{\link{file}}).}
+  This can be a compressed file (see \code{\link[base]{file}}).}
 
 \item{quiet}{Whether or not to produce messages notifying the user about file loading progress. Recommended for large tables
 (larger than 300 Mb, uncompressed).}
@@ -41,7 +41,8 @@ dat <- read_qiime2_table(data_name)
 dim(dat)
 dat[1:10,1:10]
 
-#' @references Callahan, B.J., P.J. McMurdie, S.P. Holmes. 2017. Exact sequence variants should replace operational
+#' @references
+Callahan, B.J., P.J. McMurdie, S.P. Holmes. 2017. Exact sequence variants should replace operational
   taxonomic units in marker-gene data analysis. \\emph{ISME Journal} 11: 2639-2643.
 
 }

@@ -14,8 +14,8 @@
 #'   the same origin
 #' @param rep_group Single length character matching to variable in \code{data} used to summarize values across groups of replicates.
 #'   Required for calculation of atom excess fraction
-#' @param iso Single length character vector describing which isotope was used, choices of \code{18O} or \code{13C} describing either
-#'   \eqn{^18^O}-labeled water or \eqn{^13^C}-labeled carbon inputs, respectively.
+#' @param iso Single length character vector describing which isotope was used, choices of \code{18O}, \code{13C}, or \code{15N} describing either
+#'   \eqn{^18^O}-labeled water, \eqn{^13^C}-labeled carbon inputs, or \eqn{^15^N}-labeled inputs respectively.
 #'   Required for calculation of molecular weights and atom excess fraction
 #' @param iso_trt Single length character matching to variable in \code{data} used to distinguish between samples with and without isotope added.
 #'   The data this value references should be a factor with "light" treatments as the first level.
