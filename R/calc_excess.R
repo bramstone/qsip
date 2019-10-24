@@ -79,6 +79,7 @@
 #' @references
 #'  Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
 #'  \emph{Applied and Environmental Microbiology} \strong{81}: 7570 - 7581.
+#'
 #'  Morrissey, Ember, \emph{et al.} 2018. Taxonomic patterns in nitrogen assimilation of soil prokaryotes.
 #'  \emph{Environmental Microbiology} \strong{20}: 1112 - 1119.
 #'
