@@ -51,6 +51,10 @@ Some details about proper isotope control-treatment factoring. If weighted avera
   Unless a particular site is known to have significantly higher levels of naturally occurring isotopes, it is recommended to
   combine unlabeled (light) WAD scores in order to produce an average unlabeled WAD value that more accurately represents a
   taxon's natural WAD value.
+
+  The equation for the difference in weighted average density of taxon \emph{i}, \eqn{\Delta W_{i}}, is given by:
+
+  \deqn{\Delta W_{i} = W_{Lab,i} - W_{Light,i})}
 }
 \examples{
  # Load in example data

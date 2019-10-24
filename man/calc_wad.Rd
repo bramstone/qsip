@@ -43,7 +43,7 @@ Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted av
   \code{filter=TRUE}, then filtering is employed on fractions \emph{only} (\emph{i.e.}, \code{filter_qsip} is implemented with
   \code{replicate=1}). In order to set more stringent hard filters, \code{filter_qsip} must be employed before calculating WAD values.
 
-  The Weighted average density for taxon \emph{i} in replicate \emph{j}, \eqn{W_{ij}}, is:
+  The weighted average density for taxon \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
 
   \deqn{W_{ij} = \sum_{k=1}^{K} x_{jk} \cdot \left( \frac{y_{ijk}}{y_{ij}} \right)}
 

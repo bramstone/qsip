@@ -28,6 +28,10 @@
 #'   combine unlabeled (light) WAD scores in order to produce an average unlabeled WAD value that more accurately represents a
 #'   taxon's natural WAD value.
 #'
+#'   The equation for the difference in weighted average density of taxon \emph{i}, \eqn{\Delta W_{i}}, is given by:
+#'
+#'   \deqn{\Delta W_{i} = W_{Lab,i} - W_{Light,i})}
+#'
 #' @return \code{calc_d_wad} adds two S4 Matrix objects to the \code{data@@qsip@@.Data} slot, one for differences
 #'   in weighted average density, and the other for weighted average density values of light treatments only (to be used in
 #'   future calculations). The row and column specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}},
