@@ -73,19 +73,22 @@ Some details about proper isotope control-treatment factoring. If weighted avera
 
   The calculation for the proportion of enrichment of taxon \emph{i}, eqn{A_{i}} is:
 
-  \deqn{A_{i} = \frac{M_{Lab,i} - M_{Light,i}}{M_{Heavymax,i} - M_{Light,i}}} \cdot (1 - N_{x})
+  \deqn{A_{i} = \frac{M_{Lab,i} - M_{Light,i}}{M_{Heavymax,i} - M_{Light,i}} \cdot (1 - N_{x})}
 
   Where
 
   \eqn{N_{x}}: The natural abundance of heavy isotope. \eqn{N_{18O} = 0.002000429}, \eqn{N_{13C} = 0.01111233},
   and \eqn{N_{15N} = 0.003663004}
+
   \eqn{N_{Heavymax,i}}: The highest theoretical molecular weight of taxon \emph{i} assuming maximum labeling by the heavy isotope
 
   \eqn{N_{O,Heavymax,i} = (12.07747 + M_{Light,i}) \cdot L}
+
   \eqn{N_{C,Heavymax,i} = (-0.4987282 \cdot G_{i} + 9.974564 + M_{Light,i}) \cdot L}
+
   \eqn{N_{N,Heavymax,i} =( 0.5024851 \cdot G_{i} + 3.517396 + M_{Light,i}) \cdot L}
 
-  L: The maximum label possible based off the percent of heavy isotope making up the atoms of that element in the labeled treatment
+  \emph{L}: The maximum label possible based off the percent of heavy isotope making up the atoms of that element in the labeled treatment
 }
 \examples{
  # Load in example data
