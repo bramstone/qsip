@@ -41,10 +41,10 @@ dat <- read_qiime2_table(data_name)
 dim(dat)
 dat[1:10,1:10]
 
-#' @references
+}
+\references{
 Callahan, B.J., P.J. McMurdie, S.P. Holmes. 2017. Exact sequence variants should replace operational
-  taxonomic units in marker-gene data analysis. \\emph{ISME Journal} 11: 2639-2643.
-
+  taxonomic units in marker-gene data analysis. \emph{ISME Journal} \strong{11}: 2639-2643.
 }
 \seealso{
 \code{\link{read_qiime2_tax}}

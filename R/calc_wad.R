@@ -24,18 +24,18 @@
 #'   \code{filter=TRUE}, then filtering is employed on fractions \emph{only} (\emph{i.e.}, \code{filter_qsip} is implemented with
 #'   \code{replicate=1}). In order to set more stringent hard filters, \code{filter_qsip} must be employed before calculating WAD values.
 #'
-#'   The Weighted average density for taxon \emph{i} in replicate \emph{j}, \eqn{W_{ij}}, is:
+#'   The Weighted average density for taxon \emph{i} in replicate \emph{j}, \eqn{latex}{W_{ij}}, is:
 #'
-#'   \deqn{W_{ij} = \sum_{k=1}^{K} x_{jk} \cdot \left( \frac{y_{ijk}}{y_{ij}} \right)}
+#'   \deqn{latex}{W_{ij} = \sum_{k=1}^{K} x_{jk} \cdot \left( \frac{y_{ijk}}{y_{ij}} \right)}
 #'
 #'   Where
-#'   \eqn{y_{ij} = \sum_{k=1}^{K} y_{ijk}}: Total abundance of taxon \emph{i} in replicate \emph{j}, by summing across all fractions (\emph{K})
+#'   \eqn{latex}{y_{ij} = \sum_{k=1}^{K} y_{ijk}}: Total abundance of taxon \emph{i} in replicate \emph{j}, by summing across all fractions (\emph{K})
 #'
-#'   \eqn{y_{ijk} = P_{ijk} \cdot f_{jk}}: The total abundance per \eqn{\mu}L for taxon \emph{i} in density fraction
-#'   \emph{k} of replicate \emph{i} as calculated by it's relative abundance, \eqn{P_{ijk}} in that fraction multiplied by the
-#'   total abundance of DNA or specific amplicons in that fraction, \eqn{f_{jk}}
+#'   \eqn{latex}{y_{ijk} = P_{ijk} \cdot f_{jk}}: The total abundance per \eqn{latex}{\mu}L for taxon \emph{i} in density fraction
+#'   \emph{k} of replicate \emph{i} as calculated by it's relative abundance, \eqn{latex}{P_{ijk}} in that fraction multiplied by the
+#'   total abundance of DNA or specific amplicons in that fraction, \eqn{latex}{f_{jk}}
 #'
-#'   \eqn{x_{jk}}: Density of fraction \emph{k} of replicate \emph{j} in (g cm\eqn{^-3})
+#'   \eqn{latex}{x_{jk}}: Density of fraction \emph{k} of replicate \emph{j} in (g cm\eqn{latex}{^-3})
 #'
 #'
 #' @return \code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
@@ -49,6 +49,10 @@
 #'  # Load in example data
 #'
 #'  # Calculate weighted average densities
+#'
+#'  @references
+#'  Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
+#'  \emph{Applied and Environmental Microbiology} \strong{81}: 7570 - 7581.
 #'
 #' @export
 
