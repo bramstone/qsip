@@ -61,10 +61,10 @@ Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted av
 
  # Calculate weighted average densities
 
- @references
- Hungate, Bruce, \\emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
- \\emph{Applied and Environmental Microbiology} \\strong{81}: 7570 - 7581.
-
+}
+\references{
+Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
+ \emph{Applied and Environmental Microbiology} \strong{81}: 7570 - 7581.
 }
 \seealso{
 \code{\link{filter_qsip}}

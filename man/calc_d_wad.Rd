@@ -65,10 +65,10 @@ Some details about proper isotope control-treatment factoring. If weighted avera
 
  # Calculate weighted average density differences
 
- @references
- Hungate, Bruce, \\emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
- \\emph{Applied and Environmental Microbiology} \\strong{81}: 7570 - 7581.
-
+}
+\references{
+Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
+ \emph{Applied and Environmental Microbiology} \strong{81}: 7570 - 7581.
 }
 \seealso{
 \code{\link{calc_wad}}
