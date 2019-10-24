@@ -38,7 +38,7 @@
 #'   and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating 13-C into it's nucleic acids
 #'   at 50\%.
 #'
-#'   The calculation for the proportion of enrichment of taxon \emph{i}, eqn{A_{i}} is:
+#'   The calculation for the proportion of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
 #'
 #'   \deqn{A_{i} = \frac{M_{Lab,i} - M_{Light,i}}{M_{Heavymax,i} - M_{Light,i}} \cdot (1 - N_{x})}
 #'
