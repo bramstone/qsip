@@ -35,7 +35,7 @@
 #'   \emph{k} of replicate \emph{i} as calculated by it's relative abundance, \eqn{P_{ijk}} in that fraction multiplied by the
 #'   total abundance of DNA or specific amplicons in that fraction, \eqn{f_{jk}}
 #'
-#'   \eqn{x_{jk}}: Density of fraction \emph{k} of replicate \emph{j} in (g cm\textsuperscript{-3})
+#'   \eqn{x_{jk}}: Density of fraction \emph{k} of replicate \emph{j} in (g cm\eqn{^-3})
 #'
 #'
 #' @return \code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within

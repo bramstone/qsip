@@ -54,7 +54,7 @@ Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted av
   \emph{k} of replicate \emph{i} as calculated by it's relative abundance, \eqn{P_{ijk}} in that fraction multiplied by the
   total abundance of DNA or specific amplicons in that fraction, \eqn{f_{jk}}
 
-  \eqn{x_{jk}}: Density of fraction \emph{k} of replicate \emph{j} in (g cm\textsuperscript{-3})
+  \eqn{x_{jk}}: Density of fraction \emph{k} of replicate \emph{j} in (g cm\eqn{^-3})
 }
 \examples{
  # Load in example data
