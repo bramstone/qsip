@@ -70,6 +70,7 @@
 #'
 #' @export
 
+# NOTE: MAX_LABEL IS NOT CURRENTLY IMPLEMENTED IN THE CALCULATIONS. NEED TO LOOK AT BEST WAY TO DO THIS.
 calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'),
                      mu=0.6, correction=FALSE, offset_taxa=0.1, max_label=1, separate_light=FALSE, separate_label=TRUE, match_replicate=FALSE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object', call.=FALSE)
@@ -194,7 +195,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         }
       }
       # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-      mw_max <- (12.07747 * mu * max_label) + mw_l_t
+      mw_max <- (12.07747 * mu) + mw_l_t
       if(separate_label)  mw_h_t <- mw_h_t[,match(colnames(get(n_t_names[time])), colnames(mw_h_t))]
       # calculate abundances
       if(isTRUE(all.equal(dim(mw_max), dim(mw_h_t)))) {
@@ -385,7 +386,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
           mw_l_t <- t(mw_l_t[[time - 1]])
         }
         # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-        mw_max <- (12.07747 * mu * max_label) + mw_l_t
+        mw_max <- (12.07747 * mu) + mw_l_t
         if(all(dim(mw_max)==dim(mw_h_t))) {
           n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[time])
         } else {
