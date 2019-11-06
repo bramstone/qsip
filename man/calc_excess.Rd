@@ -63,6 +63,7 @@ Calculates isotope incorporation in excess of natural abundances
 Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
   have not been calculated beforehand, \code{calc_mw} will compute those first.
 
+  Atom excess values calculated when \code{max_label < 1} are \strong{not} atom percent excess values but rather \emph{percent maximum enrichment}.
   Setting \code{max_label < 1} will return an atom excess value higher than would otherwise be returned. A \code{max_label} value of 1 indicates
   that atom excess fraction ranges from 0 to 1 where 0 indicates no isotope incorporation and 1 indicates complete, or 100\%, isotope incorporation.
   For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate atom excess
