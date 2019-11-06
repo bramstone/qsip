@@ -30,6 +30,7 @@
 #' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
 #'   have not been calculated beforehand, \code{calc_mw} will compute those first.
 #'
+#'   Atom excess values calculated when \code{max_label < 1} are \strong{not} atom percent excess values but rather \emph{percent maximum enrichment}.
 #'   Setting \code{max_label < 1} will return an atom excess value higher than would otherwise be returned. A \code{max_label} value of 1 indicates
 #'   that atom excess fraction ranges from 0 to 1 where 0 indicates no isotope incorporation and 1 indicates complete, or 100\%, isotope incorporation.
 #'   For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate atom excess
@@ -123,8 +124,8 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       adjust <- (0.5024851 * gc) + 3.517396
       nat_abund <- 0.003663004
     }
-    # create MW heavy max, adjust for differences maximum possible labeling
-    mw_max <- (adjust + mw_l) * max_label
+    # create MW heavy max
+    mw_max <- (adjust + mw_l)
     # calculate atom excess
     if(all(dim(mw_max)==dim(mw_h))) {
       excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
@@ -132,6 +133,8 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
       num <- sweep(mw_h, 1, mw_l)
       denom <- mw_max - mw_l
       excess <- sweep(num, 1, denom, '/') * (1 - nat_abund)
+      # adjust for differences maximum possible labeling
+      excess <- excess / max_label
     }
     # organize and add new data as S4 matrix
     if(percent) excess <- excess * 100
@@ -212,7 +215,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
         adjust <- (0.5024851 * gc) + 3.517396
         nat_abund <- 0.003663004
       }
-      mw_max <- (adjust + mw_l) * max_label
+      mw_max <- (adjust + mw_l)
       # atom excess
       if(all(dim(mw_max)==dim(mw_h))) {
         excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
@@ -220,6 +223,8 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
         num <- sweep(mw_h, 1, mw_l)
         denom <- mw_max - mw_l
         excess <- sweep(num, 1, denom, '/') * (1 - nat_abund)
+        # adjust for differences maximum possible labeling
+        excess <- excess / max_label
       }
       # organize and add data as single column in bootstrap output matrix
       boot_collect[,i] <- c(excess)
