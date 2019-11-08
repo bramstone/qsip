@@ -127,7 +127,7 @@ calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayes
     # create MW heavy max
     mw_max <- (adjust + mw_l)
     # calculate atom excess
-    if(all(dim(mw_max)==dim(mw_h))) {
+    if(isTRUE(all.equal(dim(mw_l), dim(mw_h)))) {
       excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
     } else {
       num <- sweep(mw_h, 1, mw_l)
