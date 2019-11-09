@@ -78,12 +78,6 @@ calc_mw <- function(data, filter=FALSE, correction=FALSE, offset_taxa=0.1, separ
     mw_h <- sweep(wh, 2, wl, function(x, y) (((x - y)/y) + 1))
     mw_h <- sweep(mw_h, 2, mw_l, '*')
   }
-  if(phyloseq::taxa_are_rows(data)) {
-    mw_h <- t(mw_h)
-    if(!is.null(dim(mw_l))) {
-      mw_l <- t(mw_l)
-    }
-  }
   # if(is.null(dim(data@qsip[['wad_light']]))) mw_l <- c(mw_l)
   # organize and add new data as S4 matrices
   data <- collate_results(data, mw_h, tax_names=tax_names, 'mw_label', sparse=TRUE)
