@@ -98,10 +98,10 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
     # fraction filtering
     pa <- ifelse(pa >= fraction, 1, 0)
     # Apply Alicia's filtering criteria (between-replicate fraction filtering):
-    # remove taxa only in the replicates where they fail to meet fraction thresholds
+    # remove taxa WAD/WVD values only in the replicates where they fail to meet fraction thresholds
     rm_low_freq <- filter_levels$rm_low_freq[which(filter_levels$soft)[1]]
     if(rm_low_freq) {
-      pa <- split(pa, names(pa))
+      pa <- split(pa, sam_names)
       pa <- pa[names(ft)]
       ft <- base::Map(function(x,y) {x[y==0] <- 0; x}, ft, pa)
       if(calc_wvd) {
