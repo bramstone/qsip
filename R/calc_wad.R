@@ -23,6 +23,8 @@
 #'   Filtering for \code{calc_wad} utilized \code{filter_qsip} and employs a hard filter. If filtering is specified using
 #'   \code{filter=TRUE}, then filtering is employed on fractions \emph{only} (\emph{i.e.}, \code{filter_qsip} is implemented with
 #'   \code{replicate=1}). In order to set more stringent hard filters, \code{filter_qsip} must be employed before calculating WAD values.
+#'   We \emph{strongly} recommend that \code{rm_low_freq} be set as \code{TRUE}, as this should reduce the occurrence of
+#'   negative shifts in density.
 #'
 #'   The weighted average density for taxon \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
 #'
@@ -78,9 +80,9 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
   ft <- base::lapply(ft, colSums, na.rm=T)
   # if specified, calculate weighted variance of densities
   if(calc_wvd) {
-    wvd <- Map(function(x, y) outer(x, y, '-')^2, dv, ft)
-    wvd <- Map(function(y, x) y * x, wvd, ft)
-    wvd <- lapply(wvd, colSums, na.rm=T)
+    wvd <- base::Map(function(x, y) outer(x, y, '-')^2, dv, ft)
+    wvd <- base::Map(function(y, x) y * x, wvd, ft)
+    wvd <- base::lapply(wvd, colSums, na.rm=T)
   }
   # apply filtering first if desired.
   # 1. Soft filter
@@ -95,6 +97,17 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
     sam_names <- rownames(pa)
     # fraction filtering
     pa <- ifelse(pa >= fraction, 1, 0)
+    # Apply Alicia's filtering criteria (between-replicate fraction filtering):
+    # remove taxa only in the replicates where they fail to meet fraction thresholds
+    rm_low_freq <- filter_levels$rm_low_freq[which(filter_levels$soft)[1]]
+    if(rm_low_freq) {
+      pa <- split(pa, names(pa))
+      pa <- pa[names(ft)]
+      ft <- base::Map(function(x,y) {x[y==0] <- 0; x}, ft, pa)
+      if(calc_wvd) {
+        wvd <- base::Map(function(x,y) {x[y==0] <- 0; x}, wvd, pa)
+      }
+    }
     # replicate-treatment grouping filtering
     iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
     iso_group <- iso_group[match(rownames(pa), iso_group$replicate),]

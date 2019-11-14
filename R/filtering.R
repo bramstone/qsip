@@ -12,6 +12,8 @@
 #'   Valid values are \code{1:nrow(data)}
 #' @param soft Single-length numeric value indicating which filtering option is to be made a soft filtering criteria.
 #'   Valid values are \code{1:nrow(data)}
+#' @param rm_low_freq Logical values indicating whether or not a given filtering specification should trust replicates where a taxon
+#'   fails to meet the minimum filtering threshold, even if that taxon occurs frequently in other replicates in a group
 #'
 #' @details \code{create_filters} should be used to specify the desired frequencies of microbial taxa \emph{prior} to calculation of
 #'   atom excess fraction / atom percent excess. Filters must also be specified so that diagnostic functions can be run as well.
@@ -19,12 +21,17 @@
 #'   be used to construct the resulting data frame If certain combinations are not desirable, the \code{rm_combn} argument can be
 #'   supplied to remove them.
 #'
-#'   hard and soft filtering parameters indicate whether taxa should be removed completely if they fail to satisfy the minimum
+#'   Hard and soft filtering parameters indicate whether taxa should be removed completely if they fail to satisfy the minimum
 #'   frequency threshold across all cases (hard) or if they should be removed only from invdividual comparisons if they fail to
 #'   meet the frequency threshold in that comparison. For example, in a data set with two replicate groups (representing some two
 #'   distinct biological or ecological units), a taxon meets the minimum frequency requirment in group one (meaning it occurs in both
 #'   the unlabeled and labeled treatments of group one) but not group two (it is not frequent enough in the labeled treatment).
 #'   A hard filter would remove it from both group one and two while a soft filter would remove it only from the group two comparisons.
+#'
+#'   Specifying \code{rm_low_freq=TRUE} for one or several options means that a taxon will be kept only in those replicates where
+#'   it meets or exceeds the fraction threshold. It has been observed that in replicates where a taxon is infrequent, those weighted
+#'   average density values are suspect, even if it is frequent in other replicates. We \emph{strongly} recommend that \code{rm_low_freq}
+#'   be \code{TRUE}, as this should reduce the occurrence of negative shifts in density.
 #'
 #' @return \code{create_filters} produces a data frane of replicate frequencies and within-replicate-fraction frequencies to be
 #'   investigated in downstream analyses. In addition the logical columns \code{hard} and \code{soft} indicate which frequencies to
@@ -42,7 +49,7 @@
 #'
 #' @export
 
-create_filters <- function(replicate=0, fraction=0, rm_combn=character(), hard=0, soft=0) {
+create_filters <- function(replicate=0, fraction=0, rm_combn=character(), hard=0, soft=0, rm_low_freq=TRUE) {
   if(length(hard) > 1 || length(soft) > 1) warning('Only one value should be indicated for hard or soft cut-offs. Using first value(s)')
   filters <- expand.grid(replicate, fraction)
   names(filters) <- c('rep_freq', 'frac_freq')
@@ -59,6 +66,7 @@ create_filters <- function(replicate=0, fraction=0, rm_combn=character(), hard=0
   filters$hard <- filters$soft <- logical(nrow(filters))
   filters$hard[hard[1]] <- TRUE
   filters$soft[soft[1]] <- TRUE
+  filters$rm_low_freq <- rm_low_freq
   rownames(filters) <- NULL
   return(filters)
 }
