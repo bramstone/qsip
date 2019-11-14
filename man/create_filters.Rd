@@ -5,7 +5,7 @@
 \title{Specify multiple taxa filting options for qSIP calculations}
 \usage{
 create_filters(replicate = 0, fraction = 0, rm_combn = character(),
-  hard = 0, soft = 0)
+  hard = 0, soft = 0, rm_low_freq = 0)
 }
 \arguments{
 \item{replicate}{Numeric vector specifying the minimum frequency of occurrence of microbial taxa across replicates.
@@ -22,6 +22,9 @@ Valid values are \code{1:nrow(data)}}
 
 \item{soft}{Single-length numeric value indicating which filtering option is to be made a soft filtering criteria.
 Valid values are \code{1:nrow(data)}}
+
+\item{rm_low_freq}{Logical values indicating whether or not a given filtering specification should trust replicates where a taxon
+fails to meet the minimum filtering threshold, even if that taxon occurs frequently in other replicates in a group}
 }
 \value{
 \code{create_filters} produces a data frane of replicate frequencies and within-replicate-fraction frequencies to be
@@ -38,12 +41,17 @@ Creates a data frame of per-replicate and per-fraction minimum incidence frequen
   be used to construct the resulting data frame If certain combinations are not desirable, the \code{rm_combn} argument can be
   supplied to remove them.
 
-  hard and soft filtering parameters indicate whether taxa should be removed completely if they fail to satisfy the minimum
+  Hard and soft filtering parameters indicate whether taxa should be removed completely if they fail to satisfy the minimum
   frequency threshold across all cases (hard) or if they should be removed only from invdividual comparisons if they fail to
   meet the frequency threshold in that comparison. For example, in a data set with two replicate groups (representing some two
   distinct biological or ecological units), a taxon meets the minimum frequency requirment in group one (meaning it occurs in both
   the unlabeled and labeled treatments of group one) but not group two (it is not frequent enough in the labeled treatment).
   A hard filter would remove it from both group one and two while a soft filter would remove it only from the group two comparisons.
+
+  Specifying \code{rm_low_freq=TRUE} for one or several options means that a taxon will be kept only in those replicates where
+  it meets or exceeds the fraction threshold. It has been observed that in replicates where a taxon is infrequent, those weighted
+  average density values are suspect, even if it is frequent in other replicates. We \emph{strongly} recommend that \code{rm_low_freq}
+  be \code{TRUE}, as this should reduce the occurrence of negative shifts in density.
 }
 \examples{
 # Only filter on samples

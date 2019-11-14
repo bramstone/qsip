@@ -42,6 +42,8 @@ Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted av
   Filtering for \code{calc_wad} utilized \code{filter_qsip} and employs a hard filter. If filtering is specified using
   \code{filter=TRUE}, then filtering is employed on fractions \emph{only} (\emph{i.e.}, \code{filter_qsip} is implemented with
   \code{replicate=1}). In order to set more stringent hard filters, \code{filter_qsip} must be employed before calculating WAD values.
+  We \emph{strongly} recommend that \code{rm_low_freq} be set as \code{TRUE}, as this should reduce the occurrence of
+  negative shifts in density.
 
   The weighted average density for taxon \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
 
