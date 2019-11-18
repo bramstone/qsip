@@ -99,6 +99,7 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
     pa <- ifelse(pa >= fraction, 1, 0)
     # Apply Alicia's filtering criteria (between-replicate fraction filtering):
     # remove taxa WAD/WVD values only in the replicates where they fail to meet fraction thresholds
+    # ONE ISSUE: Are taxa in unlabeled replicates likely to occur in fewer fractions? If so, shouldn't remove, or should lower threshold
     rm_low_freq <- filter_levels$rm_low_freq[which(filter_levels$soft)[1]]
     if(rm_low_freq) {
       pa <- split(pa, sam_names)
