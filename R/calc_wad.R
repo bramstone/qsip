@@ -102,7 +102,7 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
     rm_low_freq <- filter_levels$rm_low_freq[which(filter_levels$soft)[1]]
     if(rm_low_freq) {
       pa <- split(pa, sam_names)
-      pa <- pa[names(ft)]
+      pa <- pa[match(names(ft), names(pa))]
       ft <- base::Map(function(x,y) {x[y==0] <- 0; x}, ft, pa)
       if(calc_wvd) {
         wvd <- base::Map(function(x,y) {x[y==0] <- 0; x}, wvd, pa)
