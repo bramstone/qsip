@@ -5,7 +5,7 @@
 \title{Specify multiple taxa filting options for qSIP calculations}
 \usage{
 create_filters(replicate = 0, fraction = 0, rm_combn = character(),
-  hard = 0, soft = 0, rm_low_freq = 0)
+  hard = 0, soft = 0, rm_low_freq = TRUE)
 }
 \arguments{
 \item{replicate}{Numeric vector specifying the minimum frequency of occurrence of microbial taxa across replicates.
