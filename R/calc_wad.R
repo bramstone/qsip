@@ -107,6 +107,7 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
       if(calc_wvd) {
         wvd <- base::Map(function(x,y) {x[y==0] <- 0; x}, wvd, pa)
       }
+      pa <- do.call(rbind, pa)
     }
     # replicate-treatment grouping filtering
     iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
