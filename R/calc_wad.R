@@ -190,7 +190,7 @@ calc_wad <- function(data, filter=FALSE, pool_unlabeled=TRUE, calc_wvd=FALSE) {
   # if filtering, use reduced tax name list
     tax_names <- data@qsip@filter
   # if not filtering, use full tax name list
-  } else if(!filter) {
+  } else {
     tax_names <- phyloseq::taxa_names(data)
   }
   # return tax names
