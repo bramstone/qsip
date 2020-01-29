@@ -29,7 +29,10 @@
 #'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}, resulting in no averaging across replicates.
 #' @param match_replicate Logical value indicating whether or not per-capita rates for individual replicates should be calculated using
 #'   abundances at time zero that match in sample origin (\code{TRUE}) or using abundances at time zero that have been averaged across
-#'   each group of replicates (\code{FALSE}, the default). Requires that replicate matches have been recorded and specified in the \code{@@rep_num} slot
+#'   each group of replicates (\code{FALSE}, the default). Requires that replicate matches have been recorded and specified in the \code{@@rep_num} slot.
+#' @param rm_light_abund Logical value indicating whether to remove the abundance of taxa from light replicates (\code{TRUE}) and average abundances at
+#'   time \emph{t} only from labeled replicates. The alternative (value of \code{FALSE}) is to average abundances at time \emph{t} using all replicates,
+#'   labeled and unlabeled which is the default action.
 #' @param recalc Logical value indicating whether or not to recalculate WAD and molecular weight values or use existing values. Default is \code{TRUE}.
 #'   Using bootstrapped calculations will automatically recalculate all values.
 #'
@@ -72,7 +75,8 @@
 
 # NOTE: MAX_LABEL IS NOT CURRENTLY IMPLEMENTED IN THE CALCULATIONS. NEED TO LOOK AT BEST WAY TO DO THIS.
 calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE, growth_model=c('exponential', 'linear'),
-                     mu=0.6, correction=FALSE, offset_taxa=0.1, max_label=1, separate_light=FALSE, separate_label=TRUE, match_replicate=FALSE, recalc=TRUE) {
+                     mu=0.6, correction=FALSE, offset_taxa=0.1, max_label=1, separate_light=FALSE, separate_label=TRUE, match_replicate=FALSE,
+                     rm_light_abund=FALSE, recalc=TRUE) {
   if(is(data)[1]!='phylosip') stop('Must provide phylosip object', call.=FALSE)
   ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
   growth_model <- match.arg(tolower(growth_model), c('exponential', 'linear'))
@@ -121,10 +125,12 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       time_group <- ft[[2]]; ft <- ft[[1]]
     }
     # remove light samples from abundance calcs
-    # Maybe make user option for this action
-    iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-    light_group <- iso_group[as.numeric(iso_group$iso)==1,]
-    ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    if(rm_light_abund) {
+      iso_group <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+      light_group <- iso_group[as.numeric(iso_group$iso)==1,]
+      ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    }
+    # separate by time or time:group interaction
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=FALSE, keep_names=1)
     time_group2 <- unique(time_group[,!names(time_group) %in% c('replicate', 'replicate_num')]) # only get unique elements to match levels in ft
@@ -294,10 +300,11 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     time_group <- ft[[2]]; ft <- ft[[1]]
     sam_names <- time_group$replicate
     # remove light samples from abundance calcs
-    # Maybe make user option for this action
-    iso_group_ft <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
-    light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
-    ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    if(rm_light_abund) {
+      iso_group_ft <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
+      light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
+      ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    }
     # separate by time or time:group interaction
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
     time_group <- droplevels(time_group)
