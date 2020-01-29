@@ -14,9 +14,6 @@ calc_d_wad(data, filter = FALSE, return_diffs = FALSE,
 \item{filter}{Logical value specifying whether or not to filter taxa from the weighted average density calculation.
 This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.}
 
-\item{return_diffs}{Logical value specifying whether to return difference in mean WADs between light and heavy samples
-or to return mean heavy WADs and mean light WADs (the default).}
-
 \item{correction}{Logical value indicating whether or not to apply tube-level correction to labeled WAD values.}
 
 \item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.

@@ -12,7 +12,7 @@ read_qiime2_tax(file, confidence = TRUE, feature_type = c("OTU",
   If it does not contain an absolute path, the file name is relative to the current working directory, \code{getwd()}.
   Tilde-expansion is performed where supported.
 
-  This can be a compressed file (see \code{\link[base]{file}}).}
+  This can be a compressed file (see \code{\link[base]{connections}}).}
 
 \item{feature_type}{Single character indicating whether the table is composed of ASVs (amplicon sequence variants) or
 OTUs (operational taxonomic units). feature_type accepts only one argument.}

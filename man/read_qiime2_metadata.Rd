@@ -12,7 +12,7 @@ read_qiime2_metadata(file, barcodes = FALSE, stringsAsFactors = TRUE,
   as one line from the file(s). If there is no absolute path, the file name(s) will be relative to the current working directory, \code{getwd()}.
   Tilde-expansion is performed where supported.
 
-  This can be a compressed file or files (see \code{\link[base]{file}}).}
+  This can be a compressed file (see \code{\link[base]{connections}}).}
 
 \item{barcodes}{Logical value indicating whether or not to keep barcodes and linker sequences.}
 

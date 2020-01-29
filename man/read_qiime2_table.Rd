@@ -11,7 +11,7 @@ read_qiime2_table(file, quiet = FALSE)
   If it does not contain an absolute path, the file name is relative to the current working directory, \code{getwd()}.
   Tilde-expansion is performed where supported.
 
-  This can be a compressed file (see \code{\link[base]{file}}).}
+  This can be a compressed file (see \code{\link[base]{connections}}).}
 
 \item{quiet}{Whether or not to produce messages notifying the user about file loading progress. Recommended for large tables
 (larger than 300 Mb, uncompressed).}
