@@ -6,7 +6,7 @@
 #'   If it does not contain an absolute path, the file name is relative to the current working directory, \code{getwd()}.
 #'   Tilde-expansion is performed where supported.
 #'
-#'   This can be a compressed file (see \code{\link{file}}).
+#'   This can be a compressed file (see \code{\link[base]{connections}}).
 #' @param quiet Whether or not to produce messages notifying the user about file loading progress. Recommended for large tables
 #'   (larger than 300 Mb, uncompressed).
 #'
@@ -60,7 +60,7 @@ read_qiime2_table <- function(file, quiet=FALSE) {
 #'   If it does not contain an absolute path, the file name is relative to the current working directory, \code{getwd()}.
 #'   Tilde-expansion is performed where supported.
 #'
-#'   This can be a compressed file (see \code{\link[base]{file}}).
+#'   This can be a compressed file (see \code{\link[base]{connections}}).
 # @param confidence Logical value indicating whether to keep any confidence values created by QIIME 2.
 #' @param feature_type Single character indicating whether the table is composed of ASVs (amplicon sequence variants) or
 #'   OTUs (operational taxonomic units). feature_type accepts only one argument.
@@ -126,7 +126,7 @@ read_qiime2_tax <- function(file, confidence=TRUE, feature_type=c('OTU', 'ASV'),
 #'   as one line from the file(s). If there is no absolute path, the file name(s) will be relative to the current working directory, \code{getwd()}.
 #'   Tilde-expansion is performed where supported.
 #'
-#'   This can be a compressed file or files (see \code{\link[base]{file}}).
+#'   This can be a compressed file (see \code{\link[base]{connections}}).
 #' @param barcodes Logical value indicating whether or not to keep barcodes and linker sequences.
 #' @param stringsAsFactors Logical: should the character vector be converted to a factor? This tag excludes the first column of sample ID names and any possible
 #'   description columns (see details below).
