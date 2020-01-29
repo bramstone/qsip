@@ -298,6 +298,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
     iso_group_ft <- iso_grouping(data, data@qsip@iso_trt, data@qsip@rep_id, data@qsip@rep_group)
     light_group <- iso_group_ft[as.numeric(iso_group_ft$iso)==1,]
     ft <- ft[!rownames(ft) %in% light_group$replicate,]
+    # separate by time or time:group interaction
     time_group <- time_group[match(rownames(ft), time_group$replicate),]
     time_group <- droplevels(time_group)
     ft <- split_data(data, ft, time_group$interaction, grouping_w_phylosip=F)
