@@ -131,7 +131,7 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
       n_reps <- table(n_reps$grouping)
       # For each repliate group: identify which elements of ft are light and which are heavy, then get difference
       keep_groups <- !logical(length(n_reps))
-      for(i in 1:length(d_ft)) {
+      for(i in 1:length(ft)) {
         # use numbers to reference non-labeled additions since they're isotope agnostic
         # any NA values result here when a taxa is completely missing from a heavy or light treatment in a replicate group
         which_light <- which(as.numeric(iso_group2$grouping)==i &
@@ -185,6 +185,5 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
   if(!separate_light) wl <- grouped_light
   data <- collate_results(data, wh, tax_names=tax_names, 'wad_label', sparse=TRUE)
   data <- collate_results(data, wl, tax_names=tax_names, 'wad_light', sparse=TRUE)
-  # if(return_diffs) data <- collate_results(data, d_ft, tax_names=tax_names, 'd_wad', sparse=TRUE)
   return(data)
 }
