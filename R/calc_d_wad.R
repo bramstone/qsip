@@ -108,8 +108,8 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
         # If there's no light OR no heavy treatment for a group of replicates, remove them
         # Only worry about unpaired light groups if separate_light==TRUE
         if((length(which_light)==0 && separate_light) || length(which_heavy)==0) {
-          warning('Labeled or unlabeled isotope treatment missing in replicate group(s): ', names(d_ft)[i],
-                  '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(d_ft)[i], 'replicate']), collapse=', '),
+          warning('Labeled or unlabeled isotope treatment missing in replicate group(s): ', names(ft)[i],
+                  '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(ft)[i], 'replicate']), collapse=', '),
                   ' - from calculation', call.=FALSE)
           keep_groups[i] <- FALSE
           next
@@ -141,8 +141,8 @@ calc_d_wad <- function(data, filter=FALSE, return_diffs=FALSE, correction=FALSE,
         # If there's no light OR no heavy treatment for a group of replicates, remove them
         # Only worry about unpaired light groups if separate_light==TRUE
         if((length(which_light)==0 && separate_light) || length(which_heavy)==0) {
-          warning('Labeled or unlabeled isotope treatment missing in replicate group(s): ', names(d_ft)[i],
-                  '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(d_ft)[i], 'replicate']), collapse=', '),
+          warning('Labeled or unlabeled isotope treatment missing in replicate group(s): ', names(ft)[i],
+                  '\nRemoving sample(s): ', paste(as.character(iso_group[iso_group$grouping==names(ft)[i], 'replicate']), collapse=', '),
                   ' - from calculation', call.=FALSE)
           keep_groups[i] <- FALSE
           next
