@@ -237,7 +237,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       }
       if(growth_model=='exponential') {
         if(!rm_light_abund && match_replicate) {
-          b <- get(n_t_names[time]) / get(n_l_names[time])[,match(colnames(get(n_t_names[time])), colnames(get(n_l_names[time])))]
+          b <- get(n_t_names[time])[,match(colnames(get(n_l_names[time])), colnames(get(n_t_names[time])))] / get(n_l_names[time])
         } else b <- get(n_t_names[time]) / get(n_l_names[time])
         d <- get(n_l_names[time]) / get(n_t_names[1])
         b <- log(b) / incubate_time
@@ -248,7 +248,7 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         b <- (b / get(n_t_names[1])) / incubate_time
         d <- (d / get(n_t_names[1])) / incubate_time
       }
-      colnames(b) <- colnames(d) <- colnames(get(n_t_names[time]))
+      colnames(b) <- colnames(d) <- colnames(mw_h)
       assign(b_names[time], b)
       assign(d_names[time], d)
     }; suppressWarnings(rm(b, d, n_col_t, n_col_0, sam_names_t, group_repeat, time_group_0))
