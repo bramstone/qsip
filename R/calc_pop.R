@@ -202,16 +202,17 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
       }
       # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
       mw_max <- (12.07747 * mu) + mw_l_t
-      if(separate_label)  mw_h_t <- mw_h_t[,match(colnames(get(n_t_names[time])), colnames(mw_h_t))]
+      if(separate_label)  mw_h_t <- mw_h_t[,match(colnames(mw_h), colnames(mw_h_t))]
+      n_t <- get(n_t_names[time])[,match(colnames(mw_h_t), colnames(get(n_t_names[time])))]
       # calculate abundances
       if(isTRUE(all.equal(dim(mw_max), dim(mw_h_t)))) {
-        n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * get(n_t_names[time])
+        n <- ((mw_max - mw_h_t)/(mw_max - mw_l_t)) * n_t
       } else {
         if(is.null(dim(mw_h_t))) mw_h_t <- as.matrix(mw_h_t)
         if(is.null(dim(mw_l_t))) mw_l_t <- as.matrix(mw_l_t)
         num <- sweep(mw_h_t, 1, mw_max) * -1 # mw_max - mw_h
         denom <- sweep(mw_l_t, 1, mw_max) * -1 # mw_max - mw_l
-        n <- sweep(num, 1, denom, '/') * get(n_t_names[time]) # MW_proportion * N_t
+        n <- sweep(num, 1, denom, '/') * n_t  # MW_proportion * N_t
       }
       if(!separate_label) colnames(n) <- colnames(get(n_t_names[time]))
       # remove abundances less than 0 (occurs when labeled MWs are heavier than heavymax)
@@ -235,7 +236,9 @@ calc_pop <- function(data, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, ite
         assign(n_t_names[1], get(n_t_names[1])[,group_repeat])
       }
       if(growth_model=='exponential') {
-        b <- get(n_t_names[time]) / get(n_l_names[time])
+        if(!rm_light_abund && match_replicate) {
+          b <- get(n_t_names[time]) / get(n_l_names[time])[,match(colnames(get(n_t_names[time])), colnames(get(n_l_names[time])))]
+        } else b <- get(n_t_names[time]) / get(n_l_names[time])
         d <- get(n_l_names[time]) / get(n_t_names[1])
         b <- log(b) / incubate_time
         d <- log(d) / incubate_time
