@@ -4,15 +4,20 @@
 #'
 #' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
 #' @param tax_id Unique identifier for each taxonomic feature. Required.
-#' @param sample_id Unique identifier for each replicate.
-#' @param fraction_id Fraction identifier. Does not have to be unique to each replciate because \code{calc_wad} will 
-#'  combine the unique sample ID with the fraction ID to generate a unique sample-fraction code.
+#' @param sample_id Unique identifier for each replicate. Required
+#' @param frac_id Fraction identifier. Does not have to be unique to each replciate because \code{calc_wad} will 
+#'  combine the unique sample ID with the fraction ID to generate a unique sample-fraction code. Required
+#' @param frac_dens Buoyant density value for each fraction. Typically expressed as grams per milliliter from a cesium chloride
+#'  density buffer. Required
+#' @param frac_abund Abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
+#'  (e.g., 16S, ITS such as from qPCR) or DNA concentration (e.g., nanograms per microliter such as from a Qubit). Required
+#' @param rel_abund Relativized abundance of each taxonomic feature, typically calculated after the removal of non-target
+#'  lineages but before frequency filtering has been applied. Required
+# @param grouping_cols Additional columns that should be included as important treatment groups in the output.
+#'  Not strictly necessary for the calculation, but these will be utilized next to calculate fractional isotopic enrichment.
+#'  
 #'
-#' @details Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
-#'   that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
-#'   of \code{NA} for every taxa in a sample with missing density data.
-#'
-#'   The weighted average buoyant density for taxon's DNA \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
+#' @details The weighted average buoyant density for taxon's DNA \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
 #'
 #'   \deqn{W_{ij} = \sum_{k=1}^{K} x_{jk} \cdot \left( \frac{y_{ijk}}{y_{ij}} \right)}
 #'
@@ -47,10 +52,10 @@
 #'
 #' @export
 
-calc_wad <- function(data, tax_id = c(), sample_id = c(), fraction_id = c(), 
-                     density = c(), abund = c(), rel_abund = c(), 
+calc_wad <- function(data, tax_id = c(), sample_id = c(), frac_id = c(), 
+                     frac_dens = c(), frac_abund = c(), rel_abund = c(), 
                      grouping_cols = c()) {
-  vars <- list(tax_id, sample_id, fraction_id, density, abund, rel_abund))
+  vars <- list(tax_id, sample_id, frac_id, frac_dens, frac_abund, rel_abund))
   if(any(sapply(vars, is.null)) {
     null_vars <- which(sapply(vars, is.null))
     null_vars <- paste(c('taxon IDs', 'sample IDs', 'fraction IDs', 'densities', 
@@ -61,12 +66,12 @@ calc_wad <- function(data, tax_id = c(), sample_id = c(), fraction_id = c(),
   # use sample ID and fraction ID to create unique sample-fraction ID
   data[, sample_fraction := paste(sample_id, fraction_id, sep = '_')]
   # calculate WADs
-  data <- data[, frac_abund := rel_abund * abund, by = .(taxon_id, sample_fraction)
-               ][, tot_abund := sum(frac_abund), by = .(taxon_id, sample_id) # group by replicate here, not sample-fraction
-                 ][, weight := frac_abund / tot_abund, by = .(taxon_id, sample_fraction)
+  data <- data[, frac_abund_tax := rel_abund * frac_abund, by = .(taxon_id, sample_fraction)
+               ][, tot_abund := sum(frac_abund_tax), by = .(taxon_id, sample_id) # group by replicate here, not sample-fraction
+                 ][, weight := frac_abund_tax / tot_abund, by = .(taxon_id, sample_fraction)
                    ][, .(wad = sum(weight * density, na.rm = TRUE),
                          wvd = sum(weight * (density - sum(weight * density, na.rm = TRUE))^2, na.rm = TRUE),   # weighted variance of density
-                         abund = sum(frac_abund, na.rm = TRUE)),
+                         abund = sum(frac_abund_tax, na.rm = TRUE)),
                      by = c(taxon_id, sample_id, grouping_cols)
                      ][wad > 0]
     return(data)
