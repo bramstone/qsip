@@ -18,7 +18,7 @@
 #'  Taxonomic information may be included here as well.
 #'  
 #'
-#' @details The weighted average buoyant density for taxon's DNA \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
+#' @details The weighted average buoyant density (WAD) for taxon's DNA \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
 #'
 #'   \deqn{W_{ij} = \sum_{k=1}^{K} x_{jk} \cdot \left( \frac{y_{ijk}}{y_{ij}} \right)}
 #'
@@ -35,6 +35,10 @@
 #' @return \code{calc_wad} returns a reduced data.table where each row represents a taxonomic feature within a single replicate.
 #'  The following columns are produced: weighted average densities (\code{wad}), weighted variance of densities (\code{wvd}), and
 #'  replicate-level abundances (\code{abund}). \code{wad} values < 0 are removed.
+#'
+#'  The \code{wvd} term produced is the weighted variance in density, essentially a measure of how spread-out a feature's WAD value is. 
+#'  It is not strictly necessary to calculate fractional enrichment. 
+#'  It can sometimes be useful as a diagnostic of the quality of a feature’s density estimate.
 #'
 #'  Abundances are expressed in the same unit as fraction-level abundance measures of the community. For example, if fraction-level
 #'  abundances were made using qPCR of a target gene (e.g., 16S or ITS), abundances represent the proportion of that gene attributed
