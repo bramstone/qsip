@@ -86,173 +86,49 @@
 #'
 #' @export
 
-calc_excess <- function(data, percent=FALSE, ci_method=c('', 'bootstrap', 'bayesian'), ci=.95, iters=999, filter=FALSE,
-                        correction=FALSE, offset_taxa=0.1, max_label=1, separate_light=FALSE, separate_label=TRUE, recalc=TRUE) {
-  if(is(data)[1]!='phylosip') stop('Must provide phylosip object')
-  ci_method <- match.arg(tolower(ci_method), c('', 'bootstrap', 'bayesian'))
-  #
-  # -------------------------------------------------------------
-  # no CI and resampling
-  #
-  if(ci_method=='') {
-    # if recalculation wanted, do that first
-    # this will also handle rep_id validity (through calc_wad) and rep_group/iso_trt validity (through calc_d_wad)
-    if(recalc | is.null(data@qsip[['mw_label']])) {
-      data <- calc_mw(data, filter=filter, correction=correction, offset_taxa=offset_taxa,
-                      separate_light=separate_light, separate_label=separate_label, recalc=TRUE)
-    }
-    # extract MW-labeled and convert to S3 matrix with taxa as ROWS (opposite all other calcs)
-    mw_h <- data@qsip[['mw_label']]
-    mw_l <- data@qsip[['mw_light']]
-    if(!phyloseq::taxa_are_rows(data)) {
-      mw_h <- t(mw_h)
-      if(is.matrix(mw_l)) mw_l <- t(mw_l)
-    }
-    tax_names <- rownames(mw_h)
-    # calculate mol. weight heavy max (i.e., what is maximum possible labeling)
-    if(data@qsip@iso=='18O') {
-      adjust <- 12.07747
-      nat_abund <- 0.002000429
-    } else if(data@qsip@iso=='13C') {
-      wl <- data@qsip[['wad_light']]
-      gc <- (wl - 1.646057) / 0.083506
-      adjust <- (-0.4987282 * gc) + 9.974564
-      nat_abund <- 0.01111233
-    } else if(data@qsip@iso=='15N') {
-      wl <- data@qsip[['wad_light']]
-      gc <- (wl - 1.646057) / 0.083506
-      adjust <- (0.5024851 * gc) + 3.517396
-      nat_abund <- 0.003663004
-    }
-    # create MW heavy max
-    mw_max <- (adjust + mw_l)
-    # calculate atom excess
-    if(isTRUE(all.equal(dim(mw_l), dim(mw_h)))) {
-      excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
-    } else {
-      num <- sweep(mw_h, 1, mw_l)
-      denom <- mw_max - mw_l
-      excess <- sweep(num, 1, denom, '/') * (1 - nat_abund)
-      # adjust for differences maximum possible labeling
-      excess <- excess / max_label
-    }
-    # organize and add new data as S4 matrix
-    if(percent) excess <- excess * 100
-    data <- collate_results(data, t(excess), tax_names=tax_names, 'atom_excess', sparse=TRUE)
-    return(data)
-    #
-    # -------------------------------------------------------------
-    # CI values obtained through bootstrap subsampling
-    #
-  } else if(ci_method=='bootstrap') {
-    # Calc WADs
-    data <- suppressWarnings(calc_wad(data, filter=filter))
-    ft <- data@qsip[['wad']]
-    if(phyloseq::taxa_are_rows(data)) ft <- t(ft)
-    n_taxa <- ncol(ft)
-    tax_names <- colnames(ft)
-    ft <- valid_samples(data, ft, 'iso')
-    iso_group <- ft[[2]]; ft <- ft[[1]]
-    sam_names <- iso_group$replicate
-    ft <- split_data(data, ft, iso_group$interaction, grouping_w_phylosip=FALSE)
-    # how many samples in each group to subsample with?
-    subsample_n <- base::lapply(ft, nrow)
-    subsample <- base::lapply(subsample_n,
-                              function(x) sample.int(x, size=iters*x, replace=TRUE))
-    subsample <- base::mapply(matrix,
-                              subsample,
-                              nrow=subsample_n,
-                              byrow=F, SIMPLIFY=FALSE)
-    # collect output in matrix (each column is an atom excess matrix from that iterations subsampling)
-    # Note: this matrix will be very large if you don't filter taxa out first
-    if(length(data@qsip@rep_group)==0) {
-      boot_collect <- matrix(0, nrow=n_taxa, ncol=iters)
-      rownames(boot_collect) <- tax_names
-      } else {
-      boot_collect <- matrix(0,
-                             nrow=n_taxa * nlevels(iso_group$grouping),
-                             ncol=iters)
-      boot_rnames <- expand.grid(tax_names,
-                                 levels(iso_group$grouping),
-                                 stringsAsFactors=FALSE)
-      rownames(boot_collect) <- interaction(boot_rnames[,1], boot_rnames[,2], sep=':')
-      rm(boot_rnames)
-    }
-    for(i in 1:iters) {
-      # subsample WAD values, calc diff_WAD and molecular weights
-      subsample_i <- lapply(subsample, function(x) x[,i])
-      ft_i <- mapply(function(x, y) x[y,,drop=FALSE], ft, subsample_i, SIMPLIFY=FALSE)
-      ft_i <- recombine_in_order(ft_i, iso_group, n_taxa)
-      rownames(ft_i) <- sam_names
-      data <- suppressWarnings(collate_results(data, ft_i, tax_names=tax_names, 'wad', sparse=TRUE))
-      data <- suppressWarnings(calc_d_wad(data, correction=correction,
-                                          offset_taxa=offset_taxa,
-                                          separate_light=FALSE,
-                                          separate_label=FALSE,
-                                          recalc=FALSE))
-      data <- suppressWarnings(calc_mw(data,
-                                       separate_light=FALSE,
-                                       separate_label=FALSE,
-                                       recalc=FALSE))
-      mw_h <- data@qsip[['mw_label']]
-      mw_l <- data@qsip[['mw_light']]
-      if(!phyloseq::taxa_are_rows(data)) {
-        mw_h <- t(mw_h)
-        if(is.matrix(mw_l)) mw_l <- t(mw_l)
-      }
-      # calculate atom excess for this subsampling iteration
-      if(data@qsip@iso=='18O') {
-        adjust <- 12.07747
-        nat_abund <- 0.002000429
-      } else if(data@qsip@iso=='13C') {
-        wl <- data@qsip[['wad_light']]
-        gc <- (wl - 1.646057) / 0.083506
-        adjust <- (-0.4987282 * gc) + 9.974564
-        nat_abund <- 0.01111233
-      } else if(data@qsip@iso=='15N') {
-        wl <- data@qsip[['wad_light']]
-        gc <- (wl - 1.646057) / 0.083506
-        adjust <- (0.5024851 * gc) + 3.517396
-        nat_abund <- 0.003663004
-      }
-      mw_max <- (adjust + mw_l)
-      # atom excess
-      if(isTRUE(all.equal(dim(mw_l), dim(mw_h)))) {
-        excess <- ((mw_h - mw_l)/(mw_max - mw_l)) * (1 - nat_abund)
-      } else {
-        num <- sweep(mw_h, 1, mw_l)
-        denom <- mw_max - mw_l
-        excess <- sweep(num, 1, denom, '/') * (1 - nat_abund)
-        # adjust for differences maximum possible labeling
-        excess <- excess / max_label
-      }
-      # organize and add data as single column in bootstrap output matrix
-      boot_collect[,i] <- c(excess)
-    }
-    if(percent) boot_collect <- boot_collect * 100
-    # clean workspace
-    rm(ft_i, subsample, subsample_n, subsample_i)
-    # summarize across iterations (lower CI, median, upper CI)
-    ci_data <- summarize_ci(boot_collect, ci, grouping=iso_group, ncols=n_taxa, data=data)
-    data <- collate_results(data, ci_data$ci_l, tax_names=tax_names, 'atom_excess_ci_l', sparse=TRUE)
-    data <- collate_results(data, ci_data$med, tax_names=tax_names, 'atom_excess', sparse=TRUE)
-    data <- collate_results(data, ci_data$ci_u, tax_names=tax_names, 'atom_excess_ci_u', sparse=TRUE)
-    # recalculate WAD, diff_WAD, and MW values (they've been replaced by bootstrapped versions)
-    data <- suppressWarnings(calc_mw(data,
-                                     filter=filter,
-                                     correction=correction,
-                                     offset_taxa=offset_taxa,
-                                     separate_light=separate_light,
-                                     separate_label=separate_label,
-                                     recalc=TRUE))
-    return(data)
-    #
-    # -------------------------------------------------------------
-    # CI values obtained through Bayesian analysis
-    #
-  } else if(ci_method=='bayesian') { # method for bayesian analysis
-    print('No Bayesian method yet, returning data unaltered')
-    return(data)
-    # code here.....
+calc_excess <- function(data, tax_id = c(), sample_id = c(), iso_trt = c(),
+                        wad_light = c(), wad_label = c(), abund = c(), grouping_cols = c(),
+                       correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
+                       nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
+  vars <- list(tax_id, sample_id, iso_trt, wad_light, wad_label))
+  if(any(sapply(vars, is.null)) {
+    null_vars <- which(sapply(vars, is.null))
+    null_vars <- paste(c('taxon IDs', 'sample IDs', 'isotope addition (for each row "13C" or "15N" or "18O")',
+                         'unlabeled WADs', 'labeled WADs')[null_vars],
+                       sep = ',')
+    stop("Must supply the following columns:", null_vars)
   }
+  # calculate molecular weights
+  data[, gc_prop := (1 / 0.083506) * (wad_light - 1.646057)
+       ][, mw_light := (0.496 * gc_prop) + 307.691
+         ][, mw_label := (((wad_label - wad_light) / wad_light) + 1) * mw_light]
+  # calculate enrichment
+  data[isotope == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
+       ][isotope == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
+         ][isotope == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
+           ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
+  # correct enrichment values
+  if(correction) {
+    if(rm_outliers) {
+      pos_out <- pos_outlier(data$eaf)
+      neg_out <- neg_outlier(data$eaf)
+      } else {
+      pos_out <- Inf
+      neg_out <- -Inf
+      }
+    shift <- data[!is.na(eaf)
+                 ][order(eaf)
+                   ][eaf > neg_out
+                     ][eaf < pos_out
+                       ][, .(shift = median(eaf[1:floor(non_grower_prop * .N)])),
+                         by = sample_id]
+    data <- merge(data, shift, by = 'sample_id', all.x = TRUE)
+    data[, eaf_corrected := eaf - shift][, shift := NULL]
+  }
+  # clean final data output
+  # remove NA EAF values - this will also remove all the unlabeled samples
+     eaf_dat <- data[!is.na(eaf), !c('wad_label', 'wad_light', 'wvd_light', 'gc_prop', 
+                                     'mw_light', 'mw_label', 'mw_max', 'nat_abund', 'tube_shift')]
+     setnames(eaf_dat, 'wvd_label', 'wvd')
+  return(data)
 }
