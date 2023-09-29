@@ -1,5 +1,59 @@
 #' Read QIIME 2 data
 #'
+#' Reads BIOM V2 files created from QIIME 2 which utilize the HDF5 data format
+#'
+#' @param file The name of the file which the feature data are to be read from. Each row of the table appears as one line of the file.
+#'   If it does not contain an absolute path, the file name is relative to the current working directory, \code{getwd()}.
+#'   Tilde-expansion is performed where supported.
+#'
+#'   This can be a compressed file (see \code{\link[base]{connections}}).
+#' @param list Whether or not to return the structure of the HDF5 file.
+#'    If TRUE, returns only the list of the file contents.
+#'    If FALSE (the default), returns the actual BIOM data.
+#'
+#' @details QIIME 2 uses the term features to refer to microbial taxonomic units in a way that is agnostic to the user's decision to use
+#'   ASVs or OTUs. OTUs must first be clustered in QIIME 2, commonly at 97\% sequence similarity. ASVs represent unique sequences and so these tables will be
+#'   larger than OTU tables for the same data set. QIIME 2 favors ASVs by default. For a discussion on the benefits of using ASVs over
+#'   OTUs see: \url{https://www.nature.com/articles/ismej2017119} (referenced below).
+#'
+#'
+#' @return \code{read_qiime2_table} returns a long-form data.table of microbial features (ASVs or OTUs) and sample IDs. 
+#'
+#' @seealso \code{\link{read_qiime2_tax}}
+#'
+#' @examples
+#' data(example_data)
+#'
+#' dat <- read_qiime2_table(data_name)
+#' dat
+#'
+#' @references
+#' Callahan, B.J., P.J. McMurdie, S.P. Holmes. 2017. Exact sequence variants should replace operational
+#'   taxonomic units in marker-gene data analysis. \emph{ISME Journal} \strong{11}: 2639-2643.
+#'
+#' @export
+
+read_biom_v2 <- function(file, list = F) {
+  if(is.null(file)) stop('Must provide file for input')
+  if(list) return(h5ls(file))  # lists contents
+  else {
+      y <- rhdf5::h5read(file, '/')
+  z <- y$observation$matrix$indptr
+  # z[1] <- 1
+  z <- abs(diff(z))
+  feat <- list(lengths = z, values = y$observation$ids)
+  class(feat) <- 'rle'
+  feat <- inverse.rle(feat)
+  #
+  return(data.table(taxon_id = feat,
+                    seq_SampleID = y$sample$ids[y$observation$matrix$indices + 1],
+                    seq_abund = y$observation$matrix$data))
+  }
+}
+
+
+#' Read QIIME 2 data
+#'
 #' Reads TSV tables of microbial features exported from QIIME 2's \code{biom} format
 #'
 #' @param file The name of the file which the feature data are to be read from. Each row of the table appears as one line of the file.
