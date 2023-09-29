@@ -1,15 +1,11 @@
 #' Sequence and taxon count summaries
 #'
-#' Returns the number of sequences and taxonomic features in the data. Useful for filtering
+#' Returns the number of sequences and taxonomic features in the data. Useful for filtering.
 #'
-#' @param file The name of the file which the feature data are to be read from. Each row of the table appears as one line of the file.
-#'   If it does not contain an absolute path, the file name is relative to the current working directory, \code{getwd()}.
-#'   Tilde-expansion is performed where supported.
-#'
-#'   This can be a compressed file (see \code{\link[base]{connections}}).
-#' @param list Whether or not to return the structure of the HDF5 file.
-#'    If TRUE, returns only the list of the file contents.
-#'    If FALSE (the default), returns the actual BIOM data.
+#' @param data data.table object in long-format where each row represents a sequence feature in a given sequenced sample.
+#' @param reads Column name specifying sequence read data.
+#'   Should be sequence read counts and not relativized abundances.
+#' @param tax_id Column name specifying a unique identifier for each sequence feature.
 #'
 #' @details QIIME 2 uses the term features to refer to microbial taxonomic units in a way that is agnostic to the user's decision to use
 #'   ASVs or OTUs. OTUs must first be clustered in QIIME 2, commonly at 97\% sequence similarity. ASVs represent unique sequences and so these tables will be
@@ -25,28 +21,33 @@
 #' data(example_data)
 #'
 #' # initial sequence and ASV count? 
-#' seq_check(dat)
+#' seq_summary(dat, 'seq_abund', 'taxon_id')
 #'
-#' Identify lineages to remove
+#' # Remove global singletons and doubletons
+#' dat <- dat[seq_abund > 2]
+#' seq_summary(dat, 'seq_abund', 'taxon_id')
+#'
+#' # Identify lineages to remove
 #' unassign <- tax[Kingdom == 'Unassigned', taxon_id]
 #' euk <- tax[Kingdom == 'Eukaryota', taxon_id]
 #' arch <- tax[Kingdom == 'Archaea', taxon_id]
 #' mito_chloro <- tax[, tax_string := paste(Phylum, Class, Order, Family, Genus, Species, sep = ';')
 #'                    ][grepl('mitochond|chloroplast', tax_string, ignore.case = T), taxon_id]
 #' 
-#' cat('Unassigned\n'); seq_check(dat[taxon_id %in% unassign]) 
-#' cat('Eukarya\n'); seq_check(dat[taxon_id %in% euk])  
-#' cat('Archaea\n');seq_check(dat[taxon_id %in% arch]) 
-#' cat('Mitochondria, Chloroplasts\n');seq_check(dat[taxon_id %in% mito_chloro])  
+#' cat('Unassigned\n'); seq_summary(dat, 'seq_abund', 'taxon_id')
+#' cat('Eukarya\n'); seq_summary(dat, 'seq_abund', 'taxon_id')
+#' cat('Archaea\n'); seq_summary(dat, 'seq_abund', 'taxon_id')
+#' cat('Mitochondria, Chloroplasts\n'); seq_summary(dat, 'seq_abund', 'taxon_id')
 #'
-#' Filter out lineages
+#' # Filter out lineages
 #' dat <- dat[!taxon_id %in% c(arch, mito_chloro, euk, unassign)]
-#' cat('\n\nFinal after filtering\n'); seq_check(dat)
+#' cat('\n\nFinal after filtering\n'); seq_summary(dat, 'seq_abund', 'taxon_id')
 #'
 #' @export
 
-seq_summary <- function(x, reads = c(), tax_id = c()) {
+seq_summary <- function(data, reads = c(), tax_id = c()) {
   if(is.null(reads) || is.null(tax_id)) stop("Must supply columns for sequence reads and taxon ID")
+  if(length(reads) > 1 || length(tax_id) > 1) stop("Must supply single column name")
   nums <- formatC(c(sum(x[[reads]], na.rm = TRUE), 
                     uniqueN(x[[tax_id]])), 
                   format = 'fg', width = 12, big.mark = ',')
