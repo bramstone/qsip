@@ -1,45 +1,23 @@
-#' Calculation of atom excess
+#' Calculation of excess atom fraction
 #'
-#' Calculates isotope incorporation in excess of natural abundances
+#' Calculates fractional isotope incorporation in excess of natural abundances
 #'
-#' @param data Data as a \code{phyloseq} object
-#' @param percent Logical value indicating whether or not to calculate atom percent excess (\code{percent=TRUE}) or atom excess fraction (the default)
-#' @param ci_method Character value indicating how to calculate confidence intervals of stable isotope atom excess.
-#'   Options are \code{bootstrap} or \code{bayesian} (see \code{details} below for discussion on their differences).
-#'   The default is blank indicating that no confidence intervals will be calculated.
-#' @param ci Numeric value from 0 to 1 indicating the width of the confidence interval for bootsrapped atom excess values.
-#' @param iters Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.
-#' @param filter Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
-#'   This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.
-#' @param correction Logical value indicating whether or not to apply tube-level correction to labeled WAD values.
-#' @param offset_taxa Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
-#'   Taxa are ordered by lowest difference in WAD values.
-#'   Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.
-#' @param max_label Numeric value indicating the maximum possible isotope labeling in an experiment.
-#'   Keeping the value at \code{1} will ensure that the maximum possible atom excess value of 1 corresponds to complete updake of the isotope.
-#'   Recommended for experiments with lower atom percent enrichment treatments (see Details).
-#' @param separate_light Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
-#'   If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
-#'   representing it's genetic molecular weight in the absence of isotope addition.
-#' @param separate_label Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
-#'   If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
-#'   representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}.
-#' @param recalc Logical value indicating whether or not to recalculate WAD and molecular weight values or use existing values. Default is \code{TRUE}.
-#'   Using bootstrapped calculations will automatically recalculate all values.
+#' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
+#' @param tax_id Unique identifier for each taxonomic feature. Required.
+#' @param sample_id Unique identifier for each replicate. Required
+#' @param frac_id Fraction identifier. Does not have to be unique to each replciate because \code{calc_wad} will 
+#'  combine the unique sample ID with the fraction ID to generate a unique sample-fraction code. Required
+#' @param frac_dens Buoyant density value for each fraction. Typically expressed as grams per milliliter from a cesium chloride
+#'  density buffer. Required
+#' @param frac_abund Abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
+#'  (e.g., 16S, ITS such as from qPCR) or DNA concentration (e.g., nanograms per microliter such as from a Qubit). Required
+#' @param rel_abund Relativized abundance of each taxonomic feature, typically calculated after the removal of non-target
+#'  lineages but before frequency filtering has been applied. Required
+# @param grouping_cols Additional columns that should be included as important treatment groups in the output.
+#'  Not strictly necessary for the calculation, but these will be utilized next to calculate fractional isotopic enrichment.
+#'  Taxonomic information may be included here as well.
 #'
-#' @details Some details about proper isotope control-treatment factoring. If weighted average densities or the change in weighted average densities
-#'   have not been calculated beforehand, \code{calc_mw} will compute those first.
-#'
-#'   Atom excess values calculated when \code{max_label < 1} are \strong{not} atom percent excess values but rather \emph{percent maximum enrichment}.
-#'   Setting \code{max_label < 1} will return an atom excess value higher than would otherwise be returned. A \code{max_label} value of 1 indicates
-#'   that atom excess fraction ranges from 0 to 1 where 0 indicates no isotope incorporation and 1 indicates complete, or 100\%, isotope incorporation.
-#'   For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate atom excess
-#'   fraction where 0 indicates no isotope incorporation and 1 indicates the highest possible incorporation, as constrained by atom percent enrichment
-#'   provided in the experiment. For example, an experiment enriching soil with 13-C at 50\% atom enrichment will want to specify \code{max_label=0.5}
-#'   and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating 13-C into it's nucleic acids
-#'   at 50\%.
-#'
-#'   The calculation for the proportion of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
+#' @details The calculation for the fractional of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
 #'
 #'   \deqn{A_{i} = \frac{M_{Lab,i} - M_{Light,i}}{M_{Heavymax,i} - M_{Light,i}} \cdot (1 - N_{x})}
 #'
