@@ -11,6 +11,18 @@ seq_summary <- function(x, reads = c(), tax_id = c()) {
 }
 
 
+# exclude outliers following the standard definition of above or below 
+# the 25th quantile by a distance of 1.5X the interquartile range
+neg_outlier <- function(x) {
+  neg_out <- quantile(x, .25) - (1.5 * IQR(x))
+  max(x[x < out_thresh])
+}
+
+pos_outlier <- function(x) {
+  pos_out <- quantile(x, .25) + (1.5 * IQR(x))
+  min(x[x < out_thresh])
+}
+
 # Calculation of 16S copies per taxon from relative abundances and 16S copy numbers
 # Note, will return a feature table with taxa as columns
 copy_no <- function(data) {
