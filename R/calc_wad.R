@@ -61,13 +61,13 @@ calc_wad <- function(data, tax_id = c(), sample_id = c(), frac_id = c(),
                      frac_dens = c(), frac_abund = c(), rel_abund = c(), 
                      grouping_cols = c()) {
   vars <- list(tax_id, sample_id, frac_id, frac_dens, frac_abund, rel_abund)
-  if(any(sapply(vars, is.null)) {
+  if(any(sapply(vars, is.null))) {
     null_vars <- which(sapply(vars, is.null))
     null_vars <- paste(c('taxon IDs', 'sample IDs', 'fraction IDs', 'densities', 
                          'fraction abundances', 'relative taxon abundances')[null_vars],
                        sep = ',')
     stop("Must supply the following columns:", null_vars)
-    }
+  }
   # use sample ID and fraction ID to create unique sample-fraction ID
   data[, sample_fraction := paste(sample_id, fraction_id, sep = '_')]
   # calculate WADs
