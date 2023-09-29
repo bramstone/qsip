@@ -1,9 +1,7 @@
 # documentation here
 
-calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad', 
-                        iso_trt = c(), isotope = c(),
-                        correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
-                       nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
+wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad', 
+                     iso_trt = c(), isotope = c(), average_light = TRUE) {
   vars <- list(tax_id, sample_id, iso_trt, isotope, wads))
   if(any(sapply(vars, is.null)) {
     null_vars <- which(sapply(vars, is.null))
@@ -21,4 +19,6 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   wide_formula <- paste0(paste(all_cols, collapse = ' + '), ' ~ iso_trt')
   data <- dcast(dat, as.formula(wide_formula), value.var = 'wad', fill = NA)
   # average light WADs by taxon
-  data[, light := mean(light, na.rm = T), by = tax_id]
+  if(average_light) data[, light := mean(light, na.rm = T), by = tax_id]
+  return(data)
+}
