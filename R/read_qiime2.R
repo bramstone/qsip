@@ -17,7 +17,7 @@
 #'   OTUs see: \url{https://www.nature.com/articles/ismej2017119} (referenced below).
 #'
 #'
-#' @return \code{read_qiime2_table} returns a long-form data.table of microbial features (ASVs or OTUs) and sample IDs. 
+#' @return \code{read_qiime2_table} returns a long-form data frame of microbial features (ASVs or OTUs) and sample IDs. 
 #'
 #' @seealso \code{\link{read_qiime2_tax}}
 #'
@@ -25,7 +25,7 @@
 #' data(example_data)
 #'
 #' dat <- read_qiime2_table(data_name)
-#' dat
+#' head(dat)
 #'
 #' @references
 #' Callahan, B.J., P.J. McMurdie, S.P. Holmes. 2017. Exact sequence variants should replace operational
@@ -45,7 +45,7 @@ read_biom_v2 <- function(file, list = F) {
   class(feat) <- 'rle'
   feat <- inverse.rle(feat)
   #
-  return(data.table(taxon_id = feat,
+  return(data.frame(taxon_id = feat,
                     seq_SampleID = y$sample$ids[y$observation$matrix$indices + 1],
                     seq_abund = y$observation$matrix$data))
   }
