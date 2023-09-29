@@ -5,7 +5,6 @@ Version: 0.1.0
 Authors@R: c(
   person('Bram', 'Stone', email='stone.bram@gmail.com', role=c('cre','aut')),
   person('Ben', 'Koch', role='aut'),
-  person('Natasha', 'van Gestel', role='ctb'),
   person('Bruce', 'Hungate', role='aut'))
 Maintainer: Bram Stone <stone.bram@gmail.com>
 Description: This package contains code that allows for the 
@@ -18,8 +17,9 @@ Description: This package contains code that allows for the
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 3.5.0)
+Depends: R (>= 4.0.0)
 Imports:
     methods,
-    phyloseq (>= 1.24.2)
+    data.table (>= 1.14.6)
+    phyloseq (>= 1.44)
 RoxygenNote: 6.1.1
