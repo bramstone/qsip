@@ -37,7 +37,7 @@
 
 freq_filter <- function(data, min_freq = 0, filter_target = c(), tax_id = c()) {
   if(is.null(filter_target) || is.null(tax_id)) stop("Must supply columns for sample ID and taxon ID")
-  if(length(tax_id) > 1). stop("Must supply single column name")
+  if(length(tax_id) > 1) stop("Must supply single column name")
   if(length(min_freq) > 1) stop("Must supply single frequency threshold value")
   return(data[, freq := .N, by = c(filter_target, tax_id)
               ][freq >= min_freq
