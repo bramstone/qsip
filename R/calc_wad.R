@@ -15,6 +15,7 @@
 #'  lineages but before frequency filtering has been applied. Required
 # @param grouping_cols Additional columns that should be included as important treatment groups in the output.
 #'  Not strictly necessary for the calculation, but these will be utilized next to calculate fractional isotopic enrichment.
+#'  Taxonomic information may be included here as well.
 #'  
 #'
 #' @details The weighted average buoyant density for taxon's DNA \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
