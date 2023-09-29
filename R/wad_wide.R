@@ -1,4 +1,35 @@
-# documentation here
+#' Wide-format for WAD values
+#'
+#' Transforms weighted average density values into wide-format
+#'
+#' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
+#'  Typically, this is the output from the \code{calc_wad} function.
+#' @param tax_id Column name specifying unique identifier for each taxonomic feature.
+#' @param sample_id Column name specifying unique identifier for each replicate. 
+#' @param wads Column name specifying weighted average density values.
+#' @param iso_trt Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
+#'  isotopic composition is at natural abundance (i.e., "light").
+#'  Any terms may be applied but care should be taken for these values.
+#'  If supplied as a factor, \code{calc_excess} will take the lowest level as the "light" treatment and the higher
+#'  level as the "heavy" treatment.
+#'  Alternatively, if supplied as a character, \code{calc_excess} will coerce the column to a factor and with the default behavior wherein the
+#'  first value in alphabetical order will be assumed to be the lowest factor level (i.e. the "light" treatment).
+#' @param average_light Whether to average the "light" WAD values.
+#'
+#' @return \code{wad_wide} returns a wide-transformed data.table where each row represents a taxonomic feature within a single replicate.
+#'  If averaging unamended ("light") values is not performed, each taxon will have one numeric value and one \code{NA}
+#'  value based on whether it was present in an unamended "light" sample or an amended "heavy" sample. 
+#'
+#'
+#' @seealso \code{\link{calc_wad}}, \code{\link{calc_excess}}
+#'
+#' @examples
+#'  # Load in example data
+#'
+#'  # Transform to wide format
+#'
+#'
+#' @export
 
 wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad', 
                      iso_trt = c(), isotope = c(), average_light = TRUE) {
