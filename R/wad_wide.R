@@ -51,5 +51,7 @@ wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   data <- dcast(dat, as.formula(wide_formula), value.var = 'wad', fill = NA)
   # average light WADs by taxon
   if(average_light) data[, light := mean(light, na.rm = T), by = tax_id]
+  # replace NaN values with NA
+  data[is.nan(light), light := NA]
   return(data)
 }
