@@ -2,7 +2,11 @@
 #'
 #' Calculates weighted average densities for each microbial taxa in each sample replicate
 #'
-#' @param data Data as a \code{phylosip} object
+#' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
+#' @param tax_id Unique identifier for each taxonomic feature. Required.
+#' @param sample_id Unique identifier for each replicate.
+#' @param fraction_id Fraction identifier. Does not have to be unique to each replciate because \code{calc_wad} will 
+#'  combine the unique sample ID with the fraction ID to generate a unique sample-fraction code.
 #'
 #' @details Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
 #'   that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
@@ -24,7 +28,7 @@
 #'
 #' @return \code{calc_wad} returns a reduced data.table where each row represents a taxonomic feature within a single replicate.
 #'  The following columns are produced: weighted average densities (\code{wad}), weighted variance of densities (\code{wvd}), and
-#'  replicate-level abundances (\code{abund}). 
+#'  replicate-level abundances (\code{abund}). \code{wad} values < 0 are removed.
 #'
 #'  Abundances are expressed in the same unit as fraction-level abundance measures of the community. For example, if fraction-level
 #'  abundances were made using qPCR of a target gene (e.g., 16S or ITS), abundances represent the proportion of that gene attributed
@@ -43,18 +47,29 @@
 #'
 #' @export
 
-calc_wad <- function(data, sample_id = c(), fraction_id = c(), density = c(), abund = c(), grouping_cols = c()) {
-  
+calc_wad <- function(data, tax_id = c(), sample_id = c(), fraction_id = c(), 
+                     density = c(), abund = c(), rel_abund = c(), 
+                     grouping_cols = c()) {
+  vars <- list(tax_id, sample_id, fraction_id, density, abund, rel_abund))
+  if(any(sapply(vars, is.null)) {
+    null_vars <- which(sapply(vars, is.null))
+    null_vars <- paste(c('taxon IDs', 'sample IDs', 'fraction IDs', 'densities', 
+                         'fraction abundances', 'relative taxon abundances')[null_vars],
+                       sep = ',')
+    stop("Must supply the following columns:", null_vars)
+    }
+  # use sample ID and fraction ID to create unique sample-fraction ID
+  data[, sample_fraction := paste(sample_id, fraction_id, sep = '_')]
   # calculate WADs
-  dat <- dat[, abund_16s := rel_abund * avg_16S_g_soil, by = .(taxon_id, sample_fraction)
-             ][, tot_abund := sum(abund_16s), by = .(taxon_id, sample_id) # group by replicate here, not sample-fraction
-               ][, weight := abund_16s / tot_abund, by = .(taxon_id, sample_fraction)
-                 ][, .(wad = sum(weight * Density.g.ml, na.rm = T),
-                       wvd = sum(weight * (Density.g.ml - sum(weight * Density.g.ml, na.rm = T))^2, na.rm = T),   # weighted variance of density
-                       abund_16s = sum(abund_16s, na.rm = T)),
-                   by = c('taxon_id', 'sample_id', 'iso_trt', vars_to_keep, grouping_vars)
-                   ][wad > 0]
-    return(dat)
+  data <- data[, frac_abund := rel_abund * abund, by = .(taxon_id, sample_fraction)
+               ][, tot_abund := sum(frac_abund), by = .(taxon_id, sample_id) # group by replicate here, not sample-fraction
+                 ][, weight := frac_abund / tot_abund, by = .(taxon_id, sample_fraction)
+                   ][, .(wad = sum(weight * density, na.rm = TRUE),
+                         wvd = sum(weight * (density - sum(weight * density, na.rm = TRUE))^2, na.rm = TRUE),   # weighted variance of density
+                         abund = sum(frac_abund, na.rm = TRUE)),
+                     by = c(taxon_id, sample_id, grouping_cols)
+                     ][wad > 0]
+    return(data)
   }
 
 
