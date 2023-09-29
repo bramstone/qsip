@@ -1,7 +1,7 @@
 Package: qsip
 Type: Package
 Title: Extracts and make calculations on qSIP data in phyloseq objects
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
   person('Bram', 'Stone', email='stone.bram@gmail.com', role=c('cre','aut')),
   person('Ben', 'Koch', role='aut'),
@@ -19,7 +19,5 @@ Encoding: UTF-8
 LazyData: true
 Depends: R (>= 4.0.0)
 Imports:
-    methods,
     data.table (>= 1.14.6)
-    phyloseq (>= 1.44)
 RoxygenNote: 6.1.1
