@@ -42,9 +42,11 @@
 #' @export
 
 calc_pop <- function(data, tax_id = c(), sample_id = c(), wads = 'wad', 
-                        iso_trt = c(), isotope = c(),
-                        correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
+                        iso_trt = c(), isotope = c(), timepoint = c(), abund = c(),
+                        correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1, mu = 0.6,
                        nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
+  if(is.null(timepoint) || is.null(abund)) stop("Must specify timepoint and abundances")
+  t0 <- data[timepoint == min(timepoint)]
   data <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
   #
   # correct density shifts
@@ -54,28 +56,29 @@ calc_pop <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                           ][order(wad_diff)
                             ][, .(shift = median(wad_diff[1:floor(non_grower_prop * .N)])), by = sample_id]
     data <- merge(data, label_shift, by = 'sample_id', all.x = TRUE)
-    data[, label_corrected := label - shift][, shift := NULL]
+    data[, label := label - shift][, shift := NULL]
   }
   # calculate molecular weights
-  data[, gc_prop := (1 / 0.083506) * (wad_light - 1.646057)
-       ][, mw_light := (0.496 * gc_prop) + 307.691
-         ][, mw_label := (((wad_label - wad_light) / wad_light) + 1) * mw_light]
-  # calculate enrichment
-  data[isotope == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
-       ][isotope == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
-         ][isotope == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
-           ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
+  data[, gc_prop := (1 / 0.083506) * (light - 1.646057)
+      ][, mw_light := (0.496 * gc_prop) + 307.691
+       ][, `:=` (mw_label = (((label - light) / light) + 1) * mw_light,
+                 mw_max = mw_light + 12.07747 * mu)]
+  # calculate population rates
+  data <- merge(data, t0, by = tax_id, all.x = TRUE)
+  #
+  dat[, abund_light := abund * ((mw_max - mw_label) / (mw_max - mw_light))
+      ][, `:=` (growth = log(abund / abund_light) / timepoint,
+                mortality = log(abund_light / abund_t0) / timepoint)]
   # clean final data output
-      if(rm_outliers) {
-      pos_out <- pos_outlier(data$eaf)
-      neg_out <- neg_outlier(data$eaf)
-      } else {
-      pos_out <- Inf
-      neg_out <- -Inf
-      }
+  if(rm_outliers) {
+    pos_out <- pos_outlier(data$eaf)
+    neg_out <- neg_outlier(data$eaf)
+  } else {
+    pos_out <- Inf
+    neg_out <- -Inf
+  }
   # remove NA EAF values - this will also remove all the unlabeled samples
-     eaf_dat <- data[!is.na(eaf), !c('wad_label', 'wad_light', 'wvd_light', 'gc_prop', 
-                                     'mw_light', 'mw_label', 'mw_max', 'nat_abund', 'tube_shift')]
-     setnames(eaf_dat, 'wvd_label', 'wvd')
+  data <- data[!is.na(growth) & !is.na(mortality), 
+               !c('wad_label', 'wad_light', 'gc_prop', 'mw_light', 'mw_label', 'mw_max', 'abund_16s_light')]
   return(data)
 }
