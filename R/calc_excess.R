@@ -24,6 +24,17 @@
 #'
 #' @details \code{calc_excess} automatically averages the isotopically unamended WAD values for each taxonomic feature on the assumption that density values
 #'   will be identical (or nearly identical) for those samples.
+#'
+#'   The equations for calculating the molecular weights of taxon \emph{i}, designated \eqn{M_{Lab,i}} for labeled and \eqn{M_{Light,i}} for
+#'   unlabeled, are:
+#'
+#'   \deqn{M_{Light,i} = 0.496 \cdot G_{i} + 307.691}
+#'   \deqn{M_{Lab,i} = \left( \frac{\Delta W}{W_{Light,i}} + 1 \right) \cdot M_{Light,i}}
+#'
+#'   Where
+#'
+#'   \deqn{G_{i} = \frac{1}{0.083506} \cdot (W_{Light,i} - 1.646057)}
+#'   Which indicates the GC content of taxon \emph{i} based on the density of its DNA when unlabeled
 #' 
 #'   The calculation for the fractional of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
 #'
