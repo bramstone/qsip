@@ -3,27 +3,35 @@
 #' Calculates fractional isotope incorporation in excess of natural abundances
 #'
 #' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
-#' @param tax_id Unique identifier for each taxonomic feature. Required.
-#' @param sample_id Unique identifier for each replicate. Required
-#' @param frac_id Fraction identifier. Does not have to be unique to each replciate because \code{calc_wad} will 
-#'  combine the unique sample ID with the fraction ID to generate a unique sample-fraction code. Required
-#' @param frac_dens Buoyant density value for each fraction. Typically expressed as grams per milliliter from a cesium chloride
-#'  density buffer. Required
-#' @param frac_abund Abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
-#'  (e.g., 16S, ITS such as from qPCR) or DNA concentration (e.g., nanograms per microliter such as from a Qubit). Required
-#' @param rel_abund Relativized abundance of each taxonomic feature, typically calculated after the removal of non-target
-#'  lineages but before frequency filtering has been applied. Required
-# @param grouping_cols Additional columns that should be included as important treatment groups in the output.
-#'  Not strictly necessary for the calculation, but these will be utilized next to calculate fractional isotopic enrichment.
-#'  Taxonomic information may be included here as well.
+#'  Typically, this is the output from the \code{calc_wad} function.
+#' @param tax_id Column name specifying unique identifier for each taxonomic feature.
+#' @param sample_id Column name specifying unique identifier for each replicate. 
+#' @param wads Column name specifying weighted average density values.
+#' @param iso_trt Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
+#'  isotopic composition is at natural abundance (i.e., "light").
+#'  Any terms may be applied but care should be taken for these values.
+#'  If supplied as a factor, \code{calc_excess} will take the lowest level as the "light" treatment and the higher
+#'  level as the "heavy" treatment.
+#'  Alternatively, if supplied as a character, \code{calc_excess} will coerce the column to a factor and with the default behavior wherein the
+#'  first value in alphabetical order will be assumed to be the lowest factor level (i.e. the "light" treatment).
+#' @param isotope Column name specifying the isotope applied to each replicate. For "heavy" samples, these values should be one of "13C", "15N", or "18O".
+#' @param correction Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.
+#' @param rm_outlers Whether or not to remove fractional enrichment values that are 1.5X greater or lesser than the distance between the median
+#'   and interquartile ranges.
+#' @param non_grower_group Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
+#'  non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
+#'  as a correction to all enrichment values in the sample.
 #'
-#' @details The calculation for the fractional of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
+#' @details \code{calc_excess} automatically averages the isotopically unamended WAD values for each taxonomic feature on the assumption that density values
+#'   will be identical (or nearly identical) for those samples.
+#' 
+#'   The calculation for the fractional of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
 #'
 #'   \deqn{A_{i} = \frac{M_{Lab,i} - M_{Light,i}}{M_{Heavymax,i} - M_{Light,i}} \cdot (1 - N_{x})}
 #'
 #'   Where
 #'
-#'   \eqn{N_{x}}: The natural abundance of heavy isotope. \eqn{N_{18O} = 0.002000429}, \eqn{N_{13C} = 0.01111233},
+#'   \eqn{N_{x}}: The natural abundance of heavy isotope. Default estimates are: \eqn{N_{18O} = 0.002000429}, \eqn{N_{13C} = 0.01111233},
 #'   and \eqn{N_{15N} = 0.003663004}
 #'
 #'   \eqn{N_{Heavymax,i}}: The highest theoretical molecular weight of taxon \emph{i} assuming maximum labeling by the heavy isotope
@@ -36,14 +44,12 @@
 #'
 #'   \emph{L}: The maximum label possible based off the percent of heavy isotope making up the atoms of that element in the labeled treatment
 #'
-#' @return \code{calc_excess} adds an S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@@qsip@@.Data} slot
-#'   of molecular weights for each taxon at each group of replicates in the labeled and unlabeled groups. The row and column
-#'   specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}}, meaning if taxa are listed on the table rows,
-#'   they will in the resulting S4 Matrix class.
+#' @return \code{calc_excess} returns a data.table where each row represents a taxonomic feature within a single replicate.
+#'  The following columns are produced: excess atom fraction (\code{eaf}). \code{NA} values (usually when an organism is present in
+#'  only the unlabeled or labeled samples) are removed.
 #'
-#'   Note that the bootstrap method produces a \emph{single} bootstrapped median (and matching confidence intervals) for groups of replicates,
-#'   either grouped by isotope treatment alone, or also by some other grouping factor (if \code{data@@qsip@@rep_group} is specified).
-#'   Using no bootstrap value allows separate enrichment values to be attained for each replicate, if \code{separate_label=TRUE}.
+#'  Because fraction-level data are being condensed to replicate-level, a list of columns to keep is not necessary.
+#'
 #'
 #' @seealso \code{\link{calc_wad}}, \code{\link{calc_d_wad}}, \code{\link{calc_mw}}
 #'
@@ -64,18 +70,31 @@
 #'
 #' @export
 
-calc_excess <- function(data, tax_id = c(), sample_id = c(), iso_trt = c(),
-                        wad_light = c(), wad_label = c(), abund = c(), grouping_cols = c(),
-                       correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
+calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad', 
+                        iso_trt = c(), isotope = c(),
+                        correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
                        nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
-  vars <- list(tax_id, sample_id, iso_trt, wad_light, wad_label))
+  vars <- list(tax_id, sample_id, iso_trt, isotope, wads))
   if(any(sapply(vars, is.null)) {
     null_vars <- which(sapply(vars, is.null))
     null_vars <- paste(c('taxon IDs', 'sample IDs', 'isotope addition (for each row "13C" or "15N" or "18O")',
-                         'unlabeled WADs', 'labeled WADs')[null_vars],
+                         'isotope treatment (amended or unamended)', 'WAD values')[null_vars],
                        sep = ',')
     stop("Must supply the following columns:", null_vars)
   }
+  # re-express the iso_trt column to be either "label" or "light"
+  if(!is.factor(iso_trt)) message('Assigned', levels(iso_trt)[1], 'as the unamended or "light" treatment'))
+  iso_trt <- as.factor(data$iso_trt)
+  iso_trt <- factor(iso_trt, labels = c('light', 'label'))
+  # convert to wide format
+  all_cols <- setdiff(names(data), c(iso_trt, wads))
+  wide_formula <- paste0(paste(all_cols, collapse = ' + '), ' ~ iso_trt')
+  data <- dcast(dat, as.formula(wide_formula), value.var = 'wad', fill = NA)
+  # average light WADs by taxon
+  data[, light := mean(light, na.rm = T), by = tax_id]
+  # replace NaN values with NA
+  data[is.nan(light), light := NA]
+  #
   # calculate molecular weights
   data[, gc_prop := (1 / 0.083506) * (wad_light - 1.646057)
        ][, mw_light := (0.496 * gc_prop) + 307.691
