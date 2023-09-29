@@ -13,9 +13,9 @@
 #'   OTUs see: \url{https://www.nature.com/articles/ismej2017119} (referenced below).
 #'
 #'
-#' @return \code{read_qiime2_table} returns a long-form data frame of microbial features (ASVs or OTUs) and sample IDs. 
+#' @return Produces formatted count of total sequence reads and unique taxonomic features across the data.
 #'
-#' @seealso \code{\link{read_qiime2_tax}}
+#' @seealso \code{\link{freq_filter}}
 #'
 #' @examples
 #' data(example_data)
@@ -51,5 +51,5 @@ seq_summary <- function(data, reads = c(), tax_id = c()) {
   nums <- formatC(c(sum(x[[reads]], na.rm = TRUE), 
                     uniqueN(x[[tax_id]])), 
                   format = 'fg', width = 12, big.mark = ',')
-  cat(nums[1], ' sequences\n', nums[2], ' ASVs', sep = ''); cat('\n')
+  cat(nums[1], ' sequences\n', nums[2], ' Features', sep = ''); cat('\n')
 }
