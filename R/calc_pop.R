@@ -42,9 +42,8 @@
 #' @export
 
 calc_pop <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
-                        iso_trt = c(), isotope = c(), timepoint = c(), abund = c(),
-                        correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1, mu = 0.6,
-                       nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
+                     iso_trt = c(), isotope = c(), timepoint = c(), abund = c(),
+                     correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1, mu = 0.6) {
   if(is.null(timepoint) || is.null(abund)) stop("Must specify timepoint and abundances")
   t0 <- data[timepoint == min(timepoint)]
   data <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
