@@ -4,48 +4,57 @@
 \alias{calc_wad}
 \title{Calculation of weighted average densities}
 \usage{
-calc_wad(data, filter = FALSE, pool_unlabeled = TRUE,
-  calc_wvd = FALSE)
+calc_wad(
+  data,
+  tax_id = c(),
+  sample_id = c(),
+  frac_id = c(),
+  frac_dens = c(),
+  frac_abund = c(),
+  rel_abund = c(),
+  grouping_cols = c()
+)
 }
 \arguments{
-\item{data}{Data as a \code{phylosip} object}
+\item{data}{Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.}
 
-\item{filter}{Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
-A hard filter is applied for \code{calc_wad} (meaning taxa are removed from all replicates/groups if they don't meet threshold).
-Note, however, that this will have different outcomes depending on whether or not \code{filter_qsip} has been called
-before calculations or not (see \code{details})}
+\item{tax_id}{Unique identifier for each taxonomic feature. Required.}
 
-\item{pool_unlabeled}{Logical vector specifying if unlabeled replicates should be pooled together across any grouping factor prior
-to filtering. If \code{TRUE} (the default), unlabeled replicates will be pooled, and any soft filtering threshold will be applied to
-\emph{all} unlabeled replicates together.}
+\item{sample_id}{Unique identifier for each replicate. Required}
 
-\item{calc_wvd}{Logical vector specifying whether or not to calculate weighted variance of densities (WVD).
-The weighted variance of densities of a taxon within a replicate is the complement to its weighted average.
-It describes how much variance exists around every given weighted average density.
-If \code{TRUE}, another output matrix (\code{wvd}) will be returned with identical dimensions to the weighted average
-density output.}
+\item{frac_id}{Fraction identifier. Does not have to be unique to each replciate because \code{calc_wad} will 
+combine the unique sample ID with the fraction ID to generate a unique sample-fraction code. Required}
+
+\item{frac_dens}{Buoyant density value for each fraction. Typically expressed as grams per milliliter from a cesium chloride
+density buffer. Required}
+
+\item{frac_abund}{Abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
+(e.g., 16S, ITS such as from qPCR) or DNA concentration (e.g., nanograms per microliter such as from a Qubit). Required}
+
+\item{rel_abund}{Relativized abundance of each taxonomic feature, typically calculated after the removal of non-target
+lineages but before frequency filtering has been applied. Required
+Not strictly necessary for the calculation, but these will be utilized next to calculate fractional isotopic enrichment.
+Taxonomic information may be included here as well.}
 }
 \value{
-\code{calc_wad} adds an S4 Matrix class (which more efficiently stores sparse matrix data) to the \code{.Data} slot within
-  the \code{qsip} slot of the object. of weighted average density values for each taxon at each sample. The row and column
-  specifications will mirror those of the \code{phylosip}'s \code{\link{otu_table}}, meaning if taxa are listed on the table rows,
-  they will in the resulting S4 Matrix class.
+\code{calc_wad} returns a reduced data.table where each row represents a taxonomic feature within a single replicate.
+ The following columns are produced: weighted average densities (\code{wad}), weighted variance of densities (\code{wvd}), and
+ replicate-level abundances (\code{abund}). \code{wad} values < 0 are removed.
+
+ The \code{wvd} term produced is the weighted variance in density, essentially a measure of how spread-out a feature's WAD value is. 
+ It is not strictly necessary to calculate fractional enrichment. 
+ It can sometimes be useful as a diagnostic of the quality of a feature’s density estimate.
+
+ Abundances are expressed in the same unit as fraction-level abundance measures of the community. For example, if fraction-level
+ abundances were made using qPCR of a target gene (e.g., 16S or ITS), abundances represent the proportion of that gene attributed
+ to a given taxon. If fraction-level abundances were made using DNA concentrations (e.g., such as from a Qubit measure), then the
+ \code{abund} column is an expression of a taxon's proportional contribution to DNA concentration.
 }
 \description{
 Calculates weighted average densities for each microbial taxa in each sample replicate
 }
 \details{
-Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted average density values from samples
-  that have one or more fractions without a valid density value. The default setting, \code{na.rm=FALSE}, returns values
-  of \code{NA} for every taxa in a sample with missing density data.
-
-  Filtering for \code{calc_wad} utilized \code{filter_qsip} and employs a hard filter. If filtering is specified using
-  \code{filter=TRUE}, then filtering is employed on fractions \emph{only} (\emph{i.e.}, \code{filter_qsip} is implemented with
-  \code{replicate=1}). In order to set more stringent hard filters, \code{filter_qsip} must be employed before calculating WAD values.
-  We \emph{strongly} recommend that \code{rm_low_freq} be set as \code{TRUE}, as this should reduce the occurrence of
-  negative shifts in density.
-
-  The weighted average density for taxon \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
+The weighted average buoyant density (WAD) for taxon's DNA \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
 
   \deqn{W_{ij} = \sum_{k=1}^{K} x_{jk} \cdot \left( \frac{y_{ijk}}{y_{ij}} \right)}
 
@@ -67,7 +76,4 @@ Specifying \code{na.rm=TRUE} will allow \code{calc_wad} to calculate weighted av
 \references{
 Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
  \emph{Applied and Environmental Microbiology} \strong{81}: 7570 - 7581.
-}
-\seealso{
-\code{\link{filter_qsip}}
 }

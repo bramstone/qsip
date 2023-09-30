@@ -17,7 +17,7 @@
 #'   OTUs see: \url{https://www.nature.com/articles/ismej2017119} (referenced below).
 #'
 #'
-#' @return \code{read_qiime2_table} returns a long-form data frame of microbial features (ASVs or OTUs) and sample IDs. 
+#' @return \code{read_qiime2_table} returns a long-form data frame of microbial features (ASVs or OTUs) and sample IDs.
 #'
 #' @seealso \code{\link{read_qiime2_tax}}
 #'
@@ -190,7 +190,7 @@ read_qiime2_tax <- function(file, confidence=TRUE, feature_type=c('OTU', 'ASV'),
 #'
 #' @return \code{read_qiime2_metadata} returns a data frame from either a single or multiple QIIME2-formatted metadata tables.
 #'
-#' @examples
+#' @examples to go here
 #'
 #' @export
 

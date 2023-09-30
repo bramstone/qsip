@@ -20,4 +20,4 @@ LazyData: true
 Depends: R (>= 4.0.0)
 Imports:
     data.table (>= 1.14.6)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.2.3

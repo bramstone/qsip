@@ -4,8 +4,12 @@
 \alias{read_qiime2_metadata}
 \title{Read QIIME 2 data}
 \usage{
-read_qiime2_metadata(file, barcodes = FALSE, stringsAsFactors = TRUE,
-  run_names = c())
+read_qiime2_metadata(
+  file,
+  barcodes = FALSE,
+  stringsAsFactors = TRUE,
+  run_names = c()
+)
 }
 \arguments{
 \item{file}{The name of the file(s) which the data are to be read from. After ignoring any redundant headers, each row of the table appears
@@ -31,5 +35,6 @@ Reads TSV or txt files used as QIIME 2 metadata
 Some details
 }
 \examples{
+to go here
 
 }

@@ -5,7 +5,7 @@
 #' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
 #'  Typically, this is the output from the \code{calc_wad} function.
 #' @param tax_id Column name specifying unique identifier for each taxonomic feature.
-#' @param sample_id Column name specifying unique identifier for each replicate. 
+#' @param sample_id Column name specifying unique identifier for each replicate.
 #' @param wads Column name specifying weighted average density values.
 #' @param iso_trt Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
 #'  isotopic composition is at natural abundance (i.e., "light").
@@ -22,7 +22,7 @@
 #'  non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
 #'  as a correction to all enrichment values in the sample.
 #'
-#' @details 
+#' @details Details to go here.
 #'
 #' @return \code{calc_pop} returns a data.table where each row represents a taxonomic feature within a single replicate.
 #'  The following columns are produced: growth rate (\code{growth}), mortality or turnover rate (\code{mortality}).
@@ -41,7 +41,7 @@
 #'
 #' @export
 
-calc_pop <- function(data, tax_id = c(), sample_id = c(), wads = 'wad', 
+calc_pop <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                         iso_trt = c(), isotope = c(), timepoint = c(), abund = c(),
                         correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1, mu = 0.6,
                        nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
@@ -78,7 +78,7 @@ calc_pop <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     neg_out <- -Inf
   }
   # remove NA EAF values - this will also remove all the unlabeled samples
-  data <- data[!is.na(growth) & !is.na(mortality), 
+  data <- data[!is.na(growth) & !is.na(mortality),
                !c('wad_label', 'wad_light', 'gc_prop', 'mw_light', 'mw_label', 'mw_max', 'abund_16s_light')]
   return(data)
 }

@@ -4,92 +4,62 @@
 \alias{calc_pop}
 \title{Calculation of population dynamics}
 \usage{
-calc_pop(data, ci_method = c("", "bootstrap", "bayesian"), ci = 0.95,
-  iters = 999, filter = FALSE, growth_model = c("exponential",
-  "linear"), mu = 0.6, correction = FALSE, offset_taxa = 0.1,
-  max_label = 1, separate_light = FALSE, separate_label = TRUE,
-  match_replicate = FALSE, rm_light_abund = FALSE, recalc = TRUE)
+calc_pop(
+  data,
+  tax_id = c(),
+  sample_id = c(),
+  wads = "wad",
+  iso_trt = c(),
+  isotope = c(),
+  timepoint = c(),
+  abund = c(),
+  correction = TRUE,
+  rm_outliers = TRUE,
+  non_grower_prop = 0.1,
+  mu = 0.6,
+  nat_abund_13C = 0.01111233,
+  nat_abund_15N = 0.003663004,
+  nat_abund_18O = 0.002011429
+)
 }
 \arguments{
-\item{data}{Data as a \code{phyloseq} object}
+\item{data}{Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
+Typically, this is the output from the \code{calc_wad} function.}
 
-\item{ci_method}{Character value indicating how to calculate confidence intervals of stable isotope atom excess.
-Options are \code{bootstrap} or \code{bayesian} (see \code{details} below for discussion on their differences).
-The default is blank indicating that no confidence intervals will be calculated.}
+\item{tax_id}{Column name specifying unique identifier for each taxonomic feature.}
 
-\item{ci}{Numeric value from 0 to 1 indicating the width of the confidence interval for bootsrapped atom excess values.}
+\item{sample_id}{Column name specifying unique identifier for each replicate.}
 
-\item{iters}{Number of (subsampling) iterations to conduct to calculate confidence intervals. Default is \code{999}.}
+\item{wads}{Column name specifying weighted average density values.}
 
-\item{filter}{Logical vector specifying whether or not to filter taxa from the weighted average density calculation.
-This will require \code{data} to have a filter applied with \code{\link{filter_qsip}}.}
+\item{iso_trt}{Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
+isotopic composition is at natural abundance (i.e., "light").
+Any terms may be applied but care should be taken for these values.
+If supplied as a factor, \code{calc_excess} will take the lowest level as the "light" treatment and the higher
+level as the "heavy" treatment.
+Alternatively, if supplied as a character, \code{calc_excess} will coerce the column to a factor and with the default behavior wherein the
+first value in alphabetical order will be assumed to be the lowest factor level (i.e. the "light" treatment).}
 
-\item{growth_model}{Character vector specifying whether growth rates should be calculated using exponential or linear growth.
-Default is \code{exponential}.}
+\item{isotope}{Column name specifying the isotope applied to each replicate. For "heavy" samples, these values should be one of "13C", "15N", or "18O".}
 
-\item{mu}{Numeric value from 0 to 1 indicating the expected incorporation of labeled O into DNA during replication.
-Default is \code{0.60}.}
+\item{correction}{Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.}
 
-\item{correction}{Logical value indicating whether or not to apply tube-level correction to labeled WAD values.}
+\item{rm_outlers}{Whether or not to remove fractional enrichment values that are 1.5X greater or lesser than the distance between the median
+and interquartile ranges.}
 
-\item{offset_taxa}{Value from 0 to 1 indicating the percentage of the taxa to utilize for calculating offset correction values.
-Taxa are ordered by lowest difference in WAD values.
-Default is \code{0.1} indicating 10 percent of taxa with the lowest difference in WAD values.}
-
-\item{max_label}{Numeric value indicating the maximum possible isotope labeling in an experiment.
-Keeping the value at \code{1} will ensure that the maximum possible atom excess value of 1 corresponds to complete updake of the isotope.
-Recommended for experiments with lower atom percent enrichment treatments (see Details).}
-
-\item{separate_light}{Logical value indicating whether or not WAD-light scores should be averaged across all replicate groups or not.
-If \code{FALSE}, unlabeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
-representing it's genetic molecular weight in the absence of isotope addition.}
-
-\item{separate_label}{Logical value indicating whether or not WAD-label scores should be averaged across all replicate groups or not.
-If \code{FALSE}, labeled WAD scores across all replicate groups will be averaged, creating a single molecular weight score per taxon
-representing it's genetic molecular weight as a result of isotope addition. The default is \code{TRUE}, resulting in no averaging across replicates.}
-
-\item{match_replicate}{Logical value indicating whether or not per-capita rates for individual replicates should be calculated using
-abundances at time zero that match in sample origin (\code{TRUE}) or using abundances at time zero that have been averaged across
-each group of replicates (\code{FALSE}, the default). Requires that replicate matches have been recorded and specified in the \code{@rep_num} slot.}
-
-\item{rm_light_abund}{Logical value indicating whether to remove the abundance of taxa from light replicates (\code{TRUE}) and average abundances at
-time \emph{t} only from labeled replicates. The alternative (value of \code{FALSE}) is to average abundances at time \emph{t} using all replicates,
-labeled and unlabeled which is the default action.}
-
-\item{recalc}{Logical value indicating whether or not to recalculate WAD and molecular weight values or use existing values. Default is \code{TRUE}.
-Using bootstrapped calculations will automatically recalculate all values.}
+\item{non_grower_group}{Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
+non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
+as a correction to all enrichment values in the sample.}
 }
 \value{
-\code{calc_pop} adds two S4 Matrix class objects (which more efficiently stores sparse matrix data) to the \code{data@qsip@.Data} slot
-  of population birth rates for each taxon at each group of replicates. The row and column specifications will mirror those of the \code{phylosip}'s
-  \code{\link{otu_table}}, meaning if taxa are listed on the table rows, they will in the resulting S4 Matrix class.
-
-  Note that the bootstrap method produces a \emph{single} bootstrapped median (and matching confidence intervals) for groups of replicates,
-  either grouped by isotope treatment alone, or also by some other grouping factor (if \code{data@qsip@rep_group} is specified).
-  Using no bootstrap value allows separate enrichment values to be attained for each replicate, if \code{separate_label=TRUE}.
+\code{calc_pop} returns a data.table where each row represents a taxonomic feature within a single replicate.
+ The following columns are produced: growth rate (\code{growth}), mortality or turnover rate (\code{mortality}).
 }
 \description{
 Calculates population growth and death rates
 }
 \details{
-Some details about proper isotope control-treatment factoring and timepoint specification. If weighted average densities or the
-  change in weighted average densities have not been calculated beforehand, \code{calc_pop} will compute those first.
-
-  Timepoint should be in units of days, so that birth will be new 16S copies d-1 and death will be loss of light 16S copies d-1.
-  Use of different time increments will yield growth rates (e.g. per hour), but must be appropriate for the frequency of sampling.
-
-  The \code{recalc} argument is necessary to support the bootstrap subsampling implementation, which re-draws from the table of WAD
-  values to create a bootstrap resampled WAD table. As such, automatic recalculation of WAD values is inappropriate within each
-  bootstrap iteration. Typically, users should not set \code{recalc} to \code{FALSE}. Note that the true, observed WAD and
-  molecular weight values will be returned following completion of bootstrapping.
-
-  Setting \code{max_label < 1} will return birth and death values higher than would otherwise be returned. A \code{max_label} value of 1 indicates
-  that the maximum molecular weight of an organism respresents its molecular weight under the assumption of complete, or 100\%, isotope incorporation.
-  For various reasons, complete isotope incorporation will be impossible. However, a \code{max_label} value less than 1 will indicate molecular weight
-  where 0 indicates no isotope incorporation and 1 indicates the highest possible incorporation, as constrained by atom percent enrichment
-  provided in the experiment. For example, an experiment enriching soil with 18-O at 50\% atom enrichment will want to specify \code{max_label=0.5}
-  and an atom excess fraction value of 1 in this case corresponds to an organism that has succeeded in incorporating 18-O into it's nucleic acids
-  at 50\%.
+Details to go here.
 }
 \examples{
  # Load in example data
@@ -97,6 +67,10 @@ Some details about proper isotope control-treatment factoring and timepoint spec
  # Calculate population fluxes
 
 }
+\references{
+Koch, Benjamin, \emph{et al.} 2018. Estimating taxon-specific population dynamics in diverse microbial communities.
+ \emph{Ecosphere} \strong{9}.
+}
 \seealso{
-\code{\link{calc_mw}}
+\code{\link{calc_wad}}
 }
