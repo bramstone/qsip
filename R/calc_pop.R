@@ -17,7 +17,7 @@
 #' @param timepoint Column name specifying the timepoint at which each sample was collected.
 #'  For population rates, the lowest timepoint will be assumed to be the initial timepoints with which to base
 #'  changes in abundances on.
-#' @abund Column name specifying abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
+#' @param abund Column name specifying abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
 #'  (e.g., 16S, ITS such as from qPCR) or DNA concentration (e.g., nanograms per microliter such as from a Qubit).
 #' @param correction Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.
 #' @param rm_outlers Whether or not to remove fractional enrichment values that are 1.5X greater or lesser than the distance between the median

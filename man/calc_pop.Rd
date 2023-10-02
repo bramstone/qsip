@@ -13,13 +13,11 @@ calc_pop(
   isotope = c(),
   timepoint = c(),
   abund = c(),
+  t0_grouping = c(),
   correction = TRUE,
   rm_outliers = TRUE,
   non_grower_prop = 0.1,
-  mu = 0.6,
-  nat_abund_13C = 0.01111233,
-  nat_abund_15N = 0.003663004,
-  nat_abund_18O = 0.002011429
+  mu = 0.6
 )
 }
 \arguments{
@@ -35,12 +33,17 @@ Typically, this is the output from the \code{calc_wad} function.}
 \item{iso_trt}{Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
 isotopic composition is at natural abundance (i.e., "light").
 Any terms may be applied but care should be taken for these values.
-If supplied as a factor, \code{calc_excess} will take the lowest level as the "light" treatment and the higher
+If supplied as a factor, \code{calc_pop} will take the lowest level as the "light" treatment and the higher
 level as the "heavy" treatment.
-Alternatively, if supplied as a character, \code{calc_excess} will coerce the column to a factor and with the default behavior wherein the
+Alternatively, if supplied as a character, \code{calc_pop} will coerce the column to a factor and with the default behavior wherein the
 first value in alphabetical order will be assumed to be the lowest factor level (i.e. the "light" treatment).}
 
-\item{isotope}{Column name specifying the isotope applied to each replicate. For "heavy" samples, these values should be one of "13C", "15N", or "18O".}
+\item{timepoint}{Column name specifying the timepoint at which each sample was collected.
+For population rates, the lowest timepoint will be assumed to be the initial timepoints with which to base
+changes in abundances on.}
+
+\item{abund}{Column name specifying abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
+(e.g., 16S, ITS such as from qPCR) or DNA concentration (e.g., nanograms per microliter such as from a Qubit).}
 
 \item{correction}{Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.}
 
@@ -72,5 +75,5 @@ Koch, Benjamin, \emph{et al.} 2018. Estimating taxon-specific population dynamic
  \emph{Ecosphere} \strong{9}.
 }
 \seealso{
-\code{\link{calc_wad}}
+\code{\link{calc_wad}, \link{wad_wide}}
 }

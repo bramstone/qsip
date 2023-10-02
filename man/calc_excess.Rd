@@ -95,10 +95,9 @@ Calculates fractional isotope incorporation in excess of natural abundances
 \examples{
  # Load in example data
 
- # Calculate atom fraction excess
+ # Calculate excess atom fraction
 
  # compare
- all.equal(aef*100, ape)
 
 }
 \references{
@@ -109,5 +108,5 @@ Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stabl
  \emph{Environmental Microbiology} \strong{20}: 1112 - 1119.
 }
 \seealso{
-\code{\link{calc_wad}}, \code{\link{calc_d_wad}}, \code{\link{calc_mw}}
+\code{\link{calc_wad}, \link{wad_wide}}
 }
