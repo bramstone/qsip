@@ -5,7 +5,7 @@
 #' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
 #'  Typically, this is the output from the \code{calc_wad} function.
 #' @param tax_id Column name specifying unique identifier for each taxonomic feature.
-#' @param sample_id Column name specifying unique identifier for each replicate. 
+#' @param sample_id Column name specifying unique identifier for each replicate.
 #' @param wads Column name specifying weighted average density values.
 #' @param iso_trt Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
 #'  isotopic composition is at natural abundance (i.e., "light").
@@ -18,7 +18,7 @@
 #'
 #' @return \code{wad_wide} returns a wide-transformed data.table where each row represents a taxonomic feature within a single replicate.
 #'  If averaging unamended ("light") values is not performed, each taxon will have one numeric value and one \code{NA}
-#'  value based on whether it was present in an unamended "light" sample or an amended "heavy" sample. 
+#'  value based on whether it was present in an unamended "light" sample or an amended "heavy" sample.
 #'
 #'
 #' @seealso \code{\link{calc_wad}}, \code{\link{calc_excess}}
@@ -31,7 +31,7 @@
 #'
 #' @export
 
-wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad', 
+wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                      iso_trt = c(), isotope = c(), average_light = TRUE) {
   vars <- list(tax_id, sample_id, iso_trt, isotope, wads)
   if(any(sapply(vars, is.null))) {
@@ -42,7 +42,8 @@ wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     stop("Must supply the following columns:", null_vars)
   }
   # re-express the iso_trt column to be either "label" or "light"
-  if(!is.factor(iso_trt)) message('Assigned', levels(iso_trt)[1], 'as the unamended or "light" treatment')
+  if(!is.factor(iso_trt)) message('Assigned', levels(iso_trt)[1], 'as the unamended or "light" treatment',
+                                  'and', levels(iso_tt)[2], 'as the "heavy" treatment.')
   iso_trt <- as.factor(data$iso_trt)
   iso_trt <- factor(iso_trt, labels = c('light', 'label'))
   # convert to wide format
