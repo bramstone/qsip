@@ -5,7 +5,7 @@
 #' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
 #'  Typically, this is the output from the \code{calc_wad} function.
 #' @param tax_id Column name specifying unique identifier for each taxonomic feature.
-#' @param sample_id Column name specifying unique identifier for each replicate. 
+#' @param sample_id Column name specifying unique identifier for each replicate.
 #' @param wads Column name specifying weighted average density values.
 #' @param iso_trt Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
 #'  isotopic composition is at natural abundance (i.e., "light").
@@ -35,7 +35,7 @@
 #'
 #'   \deqn{G_{i} = \frac{1}{0.083506} \cdot (W_{Light,i} - 1.646057)}
 #'   Which indicates the GC content of taxon \emph{i} based on the density of its DNA when unlabeled
-#' 
+#'
 #'   The calculation for the fractional of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
 #'
 #'   \deqn{A_{i} = \frac{M_{Lab,i} - M_{Light,i}}{M_{Heavymax,i} - M_{Light,i}} \cdot (1 - N_{x})}
@@ -62,15 +62,14 @@
 #'  Because fraction-level data are being condensed to replicate-level, a list of columns to keep is not necessary.
 #'
 #'
-#' @seealso \code{\link{calc_wad}}, \code{\link{calc_d_wad}}, \code{\link{calc_mw}}
+#' @seealso \code{\link{calc_wad}}
 #'
 #' @examples
 #'  # Load in example data
 #'
-#'  # Calculate atom fraction excess
+#'  # Calculate excess atom fraction
 #'
 #'  # compare
-#'  all.equal(aef*100, ape)
 #'
 #' @references
 #'  Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
@@ -81,10 +80,10 @@
 #'
 #' @export
 
-calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad', 
+calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                         iso_trt = c(), isotope = c(),
                         correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
-                       nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
+                        nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
   data <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
   # calculate molecular weights
   data[, gc_prop := (1 / 0.083506) * (wad_light - 1.646057)
@@ -100,23 +99,23 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     if(rm_outliers) {
       pos_out <- pos_outlier(data$eaf)
       neg_out <- neg_outlier(data$eaf)
-      } else {
+    } else {
       pos_out <- Inf
       neg_out <- -Inf
-      }
+    }
     shift <- data[!is.na(eaf)
-                 ][order(eaf)
-                   ][eaf > neg_out
-                     ][eaf < pos_out
-                       ][, .(shift = median(eaf[1:floor(non_grower_prop * .N)])),
-                         by = sample_id]
+                  ][order(eaf)
+                    ][eaf > neg_out
+                      ][eaf < pos_out
+                        ][, .(shift = median(eaf[1:floor(non_grower_prop * .N)])),
+                          by = sample_id]
     data <- merge(data, shift, by = 'sample_id', all.x = TRUE)
     data[, eaf_corrected := eaf - shift][, shift := NULL]
   }
   # clean final data output
   # remove NA EAF values - this will also remove all the unlabeled samples
-     eaf_dat <- data[!is.na(eaf), !c('wad_label', 'wad_light', 'wvd_light', 'gc_prop', 
-                                     'mw_light', 'mw_label', 'mw_max', 'nat_abund', 'tube_shift')]
-     setnames(eaf_dat, 'wvd_label', 'wvd')
+  eaf_dat <- data[!is.na(eaf), !c('wad_label', 'wad_light', 'wvd_light', 'gc_prop',
+                                  'mw_light', 'mw_label', 'mw_max', 'nat_abund', 'tube_shift')]
+  setnames(eaf_dat, 'wvd_label', 'wvd')
   return(data)
 }
