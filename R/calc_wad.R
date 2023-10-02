@@ -3,20 +3,20 @@
 #' Calculates weighted average densities for each microbial taxa in each sample replicate
 #'
 #' @param data Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
-#' @param tax_id Unique identifier for each taxonomic feature. Required.
-#' @param sample_id Unique identifier for each replicate. Required
-#' @param frac_id Fraction identifier. Does not have to be unique to each replciate because \code{calc_wad} will 
+#' @param tax_id Column name specifying unique identifier for each taxonomic feature. Required.
+#' @param sample_id Column name specifying unique identifier for each replicate. Required
+#' @param frac_id Column name specifying fraction identifier. Does not have to be unique to each replciate because \code{calc_wad} will
 #'  combine the unique sample ID with the fraction ID to generate a unique sample-fraction code. Required
-#' @param frac_dens Buoyant density value for each fraction. Typically expressed as grams per milliliter from a cesium chloride
+#' @param frac_dens Column name specifying buoyant density value for each fraction. Typically expressed as grams per milliliter from a cesium chloride
 #'  density buffer. Required
-#' @param frac_abund Abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
+#' @param frac_abund Column name specifying abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
 #'  (e.g., 16S, ITS such as from qPCR) or DNA concentration (e.g., nanograms per microliter such as from a Qubit). Required
-#' @param rel_abund Relativized abundance of each taxonomic feature, typically calculated after the removal of non-target
+#' @param rel_abund Column name specifying relativized abundance of each taxonomic feature, typically calculated after the removal of non-target
 #'  lineages but before frequency filtering has been applied. Required
-# @param grouping_cols Additional columns that should be included as important treatment groups in the output.
+#' @param grouping_cols Additional columns that should be included as important treatment groups in the output.
 #'  Not strictly necessary for the calculation, but these will be utilized next to calculate fractional isotopic enrichment.
 #'  Taxonomic information may be included here as well.
-#'  
+#'
 #'
 #' @details The weighted average buoyant density (WAD) for taxon's DNA \emph{i} in replicate \emph{j}, designated as \eqn{W_{ij}}, is:
 #'
@@ -36,8 +36,8 @@
 #'  The following columns are produced: weighted average densities (\code{wad}), weighted variance of densities (\code{wvd}), and
 #'  replicate-level abundances (\code{abund}). \code{wad} values < 0 are removed.
 #'
-#'  The \code{wvd} term produced is the weighted variance in density, essentially a measure of how spread-out a feature's WAD value is. 
-#'  It is not strictly necessary to calculate fractional enrichment. 
+#'  The \code{wvd} term produced is the weighted variance in density, essentially a measure of how spread-out a feature's WAD value is.
+#'  It is not strictly necessary to calculate fractional enrichment.
 #'  It can sometimes be useful as a diagnostic of the quality of a feature’s density estimate.
 #'
 #'  Abundances are expressed in the same unit as fraction-level abundance measures of the community. For example, if fraction-level
@@ -57,13 +57,13 @@
 #'
 #' @export
 
-calc_wad <- function(data, tax_id = c(), sample_id = c(), frac_id = c(), 
-                     frac_dens = c(), frac_abund = c(), rel_abund = c(), 
+calc_wad <- function(data, tax_id = c(), sample_id = c(), frac_id = c(),
+                     frac_dens = c(), frac_abund = c(), rel_abund = c(),
                      grouping_cols = c()) {
   vars <- list(tax_id, sample_id, frac_id, frac_dens, frac_abund, rel_abund)
   if(any(sapply(vars, is.null))) {
     null_vars <- which(sapply(vars, is.null))
-    null_vars <- paste(c('taxon IDs', 'sample IDs', 'fraction IDs', 'densities', 
+    null_vars <- paste(c('taxon IDs', 'sample IDs', 'fraction IDs', 'densities',
                          'fraction abundances', 'relative taxon abundances')[null_vars],
                        sep = ',')
     stop("Must supply the following columns:", null_vars)
