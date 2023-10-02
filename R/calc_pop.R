@@ -10,9 +10,9 @@
 #' @param iso_trt Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
 #'  isotopic composition is at natural abundance (i.e., "light").
 #'  Any terms may be applied but care should be taken for these values.
-#'  If supplied as a factor, \code{calc_excess} will take the lowest level as the "light" treatment and the higher
+#'  If supplied as a factor, \code{calc_pop} will take the lowest level as the "light" treatment and the higher
 #'  level as the "heavy" treatment.
-#'  Alternatively, if supplied as a character, \code{calc_excess} will coerce the column to a factor and with the default behavior wherein the
+#'  Alternatively, if supplied as a character, \code{calc_pop} will coerce the column to a factor and with the default behavior wherein the
 #'  first value in alphabetical order will be assumed to be the lowest factor level (i.e. the "light" treatment).
 #' @param timepoint Column name specifying the timepoint at which each sample was collected.
 #'  For population rates, the lowest timepoint will be assumed to be the initial timepoints with which to base
@@ -32,7 +32,7 @@
 #'  The following columns are produced: growth rate (\code{growth}), mortality or turnover rate (\code{mortality}).
 #'
 #'
-#' @seealso \code{\link{calc_wad}}
+#' @seealso \code{\link{calc_wad}, \link{wad_wide}}
 #'
 #' @examples
 #'  # Load in example data

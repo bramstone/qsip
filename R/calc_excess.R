@@ -62,7 +62,7 @@
 #'  Because fraction-level data are being condensed to replicate-level, a list of columns to keep is not necessary.
 #'
 #'
-#' @seealso \code{\link{calc_wad}}
+#' @seealso \code{\link{calc_wad}, \link{wad_wide}}
 #'
 #' @examples
 #'  # Load in example data
