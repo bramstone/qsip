@@ -42,8 +42,13 @@ wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     stop("Must supply the following columns:", null_vars)
   }
   # re-express the iso_trt column to be either "label" or "light"
-  if(!is.factor(data[[iso_trt]])) message('Assigned', levels(data[[iso_trt]])[1], 'as the unamended or "light" treatment',
-                                  'and', levels(data[[iso_trt]])[2], 'as the "heavy" treatment.')
+  if(!is.factor(data[[iso_trt]])) {
+    test_trt <- as.factor(data[[iso_trt]])
+    light_trt <- levels(test_trt)[1]
+    message('Assigned', light_trt, 'as the unamended or "light" treatment',
+            'and', levels(test_trt)[!levels(test_trt) %in% light_trt],
+            'as the "heavy" treatment.')
+  }
   data$iso_trt <- as.factor(data$iso_trt)
   data$iso_trt <- factor(data$iso_trt, labels = c('light', 'label'))
   # convert to wide format
