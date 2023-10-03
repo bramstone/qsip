@@ -5,7 +5,7 @@
 #'
 #' \itemize{
 #' \item asv_id. unique identifier for individual microbial taxa (here, amplicon sequence
-#'  variance or ASVs) as identified by 16S amplicon sequencing
+#'  variants or ASVs) as identified by 16S amplicon sequencing
 #' \item sampleID. unique identifier or code for experimental replicates
 #' \item fraction. the fraction number of a replicate (1--22)
 #' \item timepoint. the time of sampling for a replicate in days (0, 7)
