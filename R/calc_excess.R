@@ -141,8 +141,8 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
               'and', levels(test_trt)[!levels(test_trt) %in% light_trt],
               'as the "heavy" treatment.')
     }
-    data$iso_trt <- as.factor(data$iso_trt)
-    data$iso_trt <- factor(data$iso_trt, labels = c('light', 'label'))
+    data[[iso_trt]] <- as.factor(data[[iso_trt]])
+    data[[iso_trt]] <- factor(data[[iso_trt]], labels = c('light', 'label'))
     # assess minimum frequency
     data <- data[iso_trt == 'label', rep_freq := uniqueN(sample_code), by = c(tax_id, grouping_cols)
                  ][iso_trt == 'light', rep_freq := uniqueN(sample_code), by = tax_id

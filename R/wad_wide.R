@@ -49,8 +49,8 @@ wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
             'and', levels(test_trt)[!levels(test_trt) %in% light_trt],
             'as the "heavy" treatment.')
   }
-  data$iso_trt <- as.factor(data$iso_trt)
-  data$iso_trt <- factor(data$iso_trt, labels = c('light', 'label'))
+  data[[iso_trt]] <- as.factor(data[[iso_trt]])
+  data[[iso_trt]] <- factor(data[[iso_trt]], labels = c('light', 'label'))
   # convert to wide format
   all_cols <- setdiff(names(data), c(iso_trt, wads))
   wide_formula <- paste0(paste(all_cols, collapse = ' + '), ' ~ iso_trt')
