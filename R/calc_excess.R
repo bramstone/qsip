@@ -98,6 +98,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                         bootstrap = FALSE, iters = 999L, grouping_cols = c(), min_freq = 3,
                         correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
                         nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
+  setnames(data, old = wads, new = 'wad')
   if(bootstrap == FALSE) {
     data <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
     # calculate molecular weights
@@ -132,6 +133,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                                       'mw_light', 'mw_label', 'mw_max', 'nat_abund', 'tube_shift')]
       setnames(eaf_dat, 'wvd_label', 'wvd')
     }
+    #
   } else if(bootstrap == TRUE) {
     # re-express the iso_trt column to be either "label" or "light"
     if(!is.factor(data[[iso_trt]])) {
@@ -148,12 +150,16 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                  ][iso_trt == 'light', rep_freq := uniqueN(sample_code), by = tax_id
                    ][rep_freq >= min_freq
                      ][, rep_freq := NULL]
-    #
-    #######
-    # NEED TO REMOVE OUTLIER WAD VALUES AT THIS STEP!!!
-    #######
-    #
-    # sort for faster merging in for-loop
+    # remove outlier WAD values
+      if(rm_outliers) {
+        pos_out <- pos_outlier(data$wad)
+        neg_out <- neg_outlier(data$wad)
+      } else {
+        pos_out <- Inf
+        neg_out <- -Inf
+      }
+    data <- data[wad > neg_out][wad < pos_out]
+    # set keys and sort for faster merging in for-loop
     data <- setkeyv(data, c(tax_id, grouping_cols))
     # store permutation output in a data.table
     eaf_output <- unique(data[iso_trt == 'label', c(tax_id, grouping_cols)])
