@@ -11,6 +11,10 @@ calc_excess(
   wads = "wad",
   iso_trt = c(),
   isotope = c(),
+  bootstrap = FALSE,
+  iters = 999L,
+  grouping_cols = c(),
+  min_freq = 3,
   correction = TRUE,
   rm_outliers = TRUE,
   non_grower_prop = 0.1,
@@ -27,7 +31,8 @@ Typically, this is the output from the \code{calc_wad} function.}
 
 \item{sample_id}{Column name specifying unique identifier for each replicate.}
 
-\item{wads}{Column name specifying weighted average density values.}
+\item{wads}{Column name specifying weighted average density values.
+It is possible to change this if preferred but not recommended.}
 
 \item{iso_trt}{Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
 isotopic composition is at natural abundance (i.e., "light").
@@ -39,10 +44,25 @@ first value in alphabetical order will be assumed to be the lowest factor level 
 
 \item{isotope}{Column name specifying the isotope applied to each replicate. For "heavy" samples, these values should be one of "13C", "15N", or "18O".}
 
+\item{bootstrap}{Whether to generate bootstrapped enrichment values for each taxonomic feature across groups of samples.
+If \code{TRUE}, replicates within specified treatment groupings will be randomly resampled with replacement and resulting
+WAD values used to generate a distribution of enrichment values for each taxon.}
+
+\item{iters}{Integer specifying the number of bootstrap iterations to perform.}
+
+\item{grouping_cols}{Column(s) used to indicate bootstrap resampling groups.
+Within each group, replicates will be resampled with replacement.
+Resampling will not occur across groups.}
+
+\item{min_freq}{Minimum number of replicates a taxonomic feature must occur in to be kept.
+If treatment grouping columns are specified, frequencies will be assessed at this level.
+For unlabeled "light" samples, treatment groupings will be ignored when assessing adequate frequency of occurrence.}
+
 \item{correction}{Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.}
 
 \item{rm_outlers}{Whether or not to remove fractional enrichment values that are 1.5X greater or lesser than the distance between the median
-and interquartile ranges.}
+and interquartile ranges.
+If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampling and enrichment calculation.}
 
 \item{non_grower_group}{Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
 non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
@@ -53,7 +73,8 @@ as a correction to all enrichment values in the sample.}
  The following columns are produced: excess atom fraction (\code{eaf}). \code{NA} values (usually when an organism is present in
  only the unlabeled or labeled samples) are removed.
 
- Because fraction-level data are being condensed to replicate-level, a list of columns to keep is not necessary.
+ Because fraction-level data are being condensed to replicate-level, a list of grouping columns to keep is not necessary
+ \emph{unless} bootstrapping is specified, wherein those groupings will be used to organize the resampling effort.
 }
 \description{
 Calculates fractional isotope incorporation in excess of natural abundances
