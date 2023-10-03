@@ -89,21 +89,48 @@ example_qsip <- dat[taxonID %in% c(ex_bad, ex_good)]
 # final cleaning and column ordering
 example_qsip <- setcolorder(example_qsip, neworder = c('taxonID', 'sampleID', 'fraction',
                                                        'timepoint', 'isotope', 'iso_trt',
-                                                       'ecosystem', 'rep', 'Density.g.ml',
-                                                       'avg_16S_g_soil', 'seq_abund',
+                                                       'ecosystem', 'treatment', 'rep',
+                                                       'Density.g.ml', 'avg_16S_g_soil', 'seq_abund',
                                                        'Kingdom', 'Phylum', 'Class', 'Order',
                                                        'Family', 'Genus'))
 
 example_qsip <- example_qsip[, c('taxonID', 'sampleID', 'fraction', 'timepoint',
-                                 'isotope', 'iso_trt', 'ecosystem', 'rep', 'Density.g.ml',
-                                 'avg_16S_g_soil', 'seq_abund', 'Kingdom', 'Phylum',
-                                 'Class', 'Order', 'Family', 'Genus')]
+                                 'isotope', 'iso_trt', 'ecosystem', 'treatment', 'rep',
+                                 'Density.g.ml', 'avg_16S_g_soil', 'seq_abund',
+                                 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus')]
 
 # change the iso_trt values for the t0 samples to NA
 example_qsip[timepoint == 0, iso_trt := NA]
 
 # round up 16S abundances
 example_qsip[, avg_16S_g_soil := ceiling(avg_16S_g_soil)]
+
+# set factor levels for iso_trt
+example_qsip[, iso_trt := factor(iso_trt, levels = c('light', 'label'))
+             ][, treatment := factor(treatment,
+                                     levels = c('control', 'C', 'C_N'),
+                                     labels = c('Control', 'C', 'CN'))]
+
+# re-order by samples and treatments
+example_qsip <- example_qsip[order(timepoint, iso_trt, treatment, ecosystem, rep)]
+
+# relabel ASVs based on Phylum and abundance
+asv_labels <- example_qsip[, .(tot_abund = sum(seq_abund)), by = .(taxonID, Kingdom, Phylum, Class, Order, Family, Genus)
+                           ][, phy_abund := sum(tot_abund), by = Phylum
+                             ][order(-phy_abund)]
+
+phy_order <- asv_labels[order(Kingdom)][!duplicated(Phylum), Phylum]
+
+asv_labels[, Phylum := factor(Phylum, levels = phy_order)]
+asv_labels <- asv_labels[order(Phylum, Class, -tot_abund)]
+
+asv_labels[, asv_id := paste0('ASV_', 1:.N)]
+
+# combine with example data
+example_qsip <- merge(example_qsip, asv_labels[, .(taxonID, asv_id)], by = 'taxonID', all.x = T, sort = F)
+
+setcolorder(example_qsip, 'asv_id')
+example_qsip[, taxonID := NULL]
 
 # output final data into /data folder of package directory to be documented and exported
 # NOTE THAT THIS IS A DATA.TABLE OBJECT AND WILL BE SAVED AS AN .RDA FILE
