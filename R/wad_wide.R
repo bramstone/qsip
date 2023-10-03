@@ -41,6 +41,7 @@ wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                        sep = ',')
     stop("Must supply the following columns:", null_vars)
   }
+  setnames(data, old = wads, new = 'wad')
   # re-express the iso_trt column to be either "label" or "light"
   if(!is.factor(data[[iso_trt]])) {
     test_trt <- as.factor(data[[iso_trt]])
