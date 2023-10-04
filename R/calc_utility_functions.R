@@ -4,22 +4,22 @@
 # used in filtering taxa function
 seq_summary <- function(x, reads = c(), tax_id = c()) {
   if(is.null(reads) || is.null(tax_id)) stop("Must supply columns for sequence reads and taxon ID")
-  nums <- formatC(c(sum(x[[reads]], na.rm = TRUE), 
-                    uniqueN(x[[tax_id]])), 
+  nums <- formatC(c(sum(x[[reads]], na.rm = TRUE),
+                    uniqueN(x[[tax_id]])),
                   format = 'fg', width = 12, big.mark = ',')
   cat(nums[1], ' sequences\n', nums[2], ' ASVs', sep = ''); cat('\n')
 }
 
 
-# exclude outliers following the standard definition of above or below 
-# the 25th quantile by a distance of 1.5X the interquartile range
+# exclude outliers following the standard definition of above or below
+# the 25th/75th quantile by a distance of 1.5X the interquartile range
 neg_outlier <- function(x) {
-  neg_out <- quantile(x, .25) - (1.5 * IQR(x))
+  neg_out <- quantile(x, .25, na.rm = TRUE) - (1.5 * IQR(x))
   max(x[x < out_thresh])
 }
 
 pos_outlier <- function(x) {
-  pos_out <- quantile(x, .25) + (1.5 * IQR(x))
+  pos_out <- quantile(x, .75, na.rm = TRUE) + (1.5 * IQR(x))
   min(x[x < out_thresh])
 }
 
