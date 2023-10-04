@@ -39,26 +39,34 @@ wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     null_vars <- paste(c('taxon IDs', 'sample IDs', 'isotope addition (for each row "13C" or "15N" or "18O")',
                          'isotope treatment (amended or unamended)', 'WAD values')[null_vars],
                        sep = ',')
-    stop("Must supply the following columns:", null_vars)
+    stop("Must supply the following columns: ", null_vars)
   }
+  if(any(sapply(vars, function(x) !exists(x, data)))) {
+    missing_vars <- which(sapply(vars, function(x) !exists(x, data)))
+    missing_vars <- paste(vars[missing_vars], sep = ',')
+    stop("Missing the following column(s) in supplied data: ", missing_vars)
+  }
+  ww <- copy(data)
   setnames(data, old = wads, new = 'wad')
-  # re-express the iso_trt column to be either "label" or "light"
-  if(!is.factor(data[[iso_trt]])) {
-    test_trt <- as.factor(data[[iso_trt]])
+  # make sure iso_trt column is a factor
+  if(is.factor(ww[[iso_trt]]) == FALSE || nlevels(ww[[iso_trt]]) > 2) {
+    test_trt <- factor(ww[[iso_trt]])
     light_trt <- levels(test_trt)[1]
-    message('Assigned', light_trt, 'as the unamended or "light" treatment',
-            'and', levels(test_trt)[!levels(test_trt) %in% light_trt],
-            'as the "heavy" treatment.')
+    message('Assigned ', light_trt, ' as the unamended or "light" treatment and ',
+            levels(test_trt)[!levels(test_trt) %in% light_trt],
+            ' as the "heavy" treatment(s).')
+    ww[[iso_trt]] <- factor(ww[[iso_trt]])
   }
-  data[[iso_trt]] <- as.factor(data[[iso_trt]])
-  data[[iso_trt]] <- factor(data[[iso_trt]], labels = c('light', 'label'))
+  # rename factor levels
+  ww[[iso_trt]] <- factor(ww[[iso_trt]], level = levels(ww[[iso_trt]]), labels = c('light', 'label'))
   # convert to wide format
-  all_cols <- setdiff(names(data), c(iso_trt, wads))
+  all_cols <- setdiff(names(ww), c(iso_trt, wads))
   wide_formula <- paste0(paste(all_cols, collapse = ' + '), ' ~ iso_trt')
-  data <- dcast(dat, as.formula(wide_formula), value.var = 'wad', fill = NA)
+  ww <- dcast(ww, as.formula(wide_formula), value.var = 'wad', fill = NA)
   # average light WADs by taxon
-  if(average_light) data[, light := mean(light, na.rm = T), by = tax_id]
+  if(average_light) ww[, light := mean(light, na.rm = T), by = tax_id]
   # replace NaN values with NA
-  data[is.nan(light), light := NA]
-  return(data)
+  ww[is.nan(light), light := NA]
+  return(ww[])
 }
+
