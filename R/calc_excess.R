@@ -98,73 +98,89 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                         bootstrap = FALSE, iters = 999L, grouping_cols = c(), min_freq = 3,
                         correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
                         nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
-  setnames(data, old = wads, new = 'wad')
+  vars <- list(tax_id, sample_id, iso_trt, isotope)
+  if(any(sapply(vars, is.null))) {
+    null_vars <- which(sapply(vars, is.null))
+    null_vars <- paste(c('taxon IDs', 'sample IDs', 'isotope addition (for each row "13C" or "15N" or "18O")',
+                         'isotope treatment (amended or unamended)')[null_vars],
+                       sep = ',')
+    stop("Must supply the following columns: ", null_vars)
+  }
+  if(any(sapply(vars, function(x) !exists(x, data)))) {
+    missing_vars <- which(sapply(vars, function(x) !exists(x, data)))
+    missing_vars <- paste(vars[missing_vars], sep = ',')
+    stop("Missing the following column(s) in supplied data: ", missing_vars)
+  }
   if(bootstrap == FALSE) {
-    data <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
+    eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
     # calculate molecular weights
-    data[, gc_prop := (1 / 0.083506) * (wad_light - 1.646057)
+    eafd[, gc_prop := (1 / 0.083506) * (wad_light - 1.646057)
          ][, mw_light := (0.496 * gc_prop) + 307.691
            ][, mw_label := (((wad_label - wad_light) / wad_light) + 1) * mw_light]
     # calculate enrichment
-    data[isotope == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
+    eafd[isotope == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
          ][isotope == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
            ][isotope == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
              ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
     # correct enrichment values
     if(correction) {
       if(rm_outliers) {
-        pos_out <- pos_outlier(data$eaf)
-        neg_out <- neg_outlier(data$eaf)
+        pos_out <- pos_outlier(eafd$eaf)
+        neg_out <- neg_outlier(eafd$eaf)
       } else {
         pos_out <- Inf
         neg_out <- -Inf
       }
-      shift <- data[!is.na(eaf)
+      shift <- eafd[!is.na(eaf)
                     ][order(eaf)
                       ][eaf > neg_out
                         ][eaf < pos_out
                           ][, .(shift = median(eaf[1:floor(non_grower_prop * .N)])),
                             by = sample_id]
-      data <- merge(data, shift, by = 'sample_id', all.x = TRUE)
-      data[, eaf := eaf - shift][, shift := NULL]
+      eafd <- merge(eafd, shift, by = 'sample_id', all.x = TRUE)
+      eafd[, eaf := eaf - shift][, shift := NULL]
       # clean final data output
       # remove NA EAF values - this will also remove all the unlabeled samples
-      eaf_dat <- data[!is.na(eaf), !c('wad_label', 'wad_light', 'wvd_light', 'gc_prop',
-                                      'mw_light', 'mw_label', 'mw_max', 'nat_abund', 'tube_shift')]
-      setnames(eaf_dat, 'wvd_label', 'wvd')
+      eafd <- eafd[!is.na(eaf), !c('wad_label', 'wad_light', 'wvd_light', 'gc_prop',
+                                   'mw_light', 'mw_label', 'mw_max', 'nat_abund', 'tube_shift')]
+      setnames(eafd, 'wvd_label', 'wvd')
     }
     #
+    #
   } else if(bootstrap == TRUE) {
-    # re-express the iso_trt column to be either "label" or "light"
-    if(!is.factor(data[[iso_trt]])) {
-      test_trt <- as.factor(data[[iso_trt]])
+    bd <- copy(data)
+    setnames(bd, old = wads, new = 'wad')
+    # make sure iso_trt column is a factor
+    if(is.factor(bd[[iso_trt]]) == FALSE || nlevels(bd[[iso_trt]]) > 2) {
+      test_trt <- factor(bd[[iso_trt]])
       light_trt <- levels(test_trt)[1]
-      message('Assigned', light_trt, 'as the unamended or "light" treatment',
-              'and', levels(test_trt)[!levels(test_trt) %in% light_trt],
-              'as the "heavy" treatment.')
+      message('Assigned ', light_trt, ' as the unamended or "light" treatment and ',
+              levels(test_trt)[!levels(test_trt) %in% light_trt],
+              ' as the "heavy" treatment(s).')
+      bd[[iso_trt]] <- factor(bd[[iso_trt]])
     }
-    data[[iso_trt]] <- as.factor(data[[iso_trt]])
-    data[[iso_trt]] <- factor(data[[iso_trt]], labels = c('light', 'label'))
+    # rename factor levels
+    bd[[iso_trt]] <- factor(bd[[iso_trt]], level = levels(bd[[iso_trt]]), labels = c('light', 'label'))
     # assess minimum frequency
-    data <- data[iso_trt == 'label', rep_freq := uniqueN(sample_code), by = c(tax_id, grouping_cols)
-                 ][iso_trt == 'light', rep_freq := uniqueN(sample_code), by = tax_id
-                   ][rep_freq >= min_freq
-                     ][, rep_freq := NULL]
+    bd <- bd[iso_trt == 'label', rep_freq := uniqueN(sample_code), by = c(tax_id, grouping_cols)
+             ][iso_trt == 'light', rep_freq := uniqueN(sample_code), by = tax_id
+               ][rep_freq >= min_freq
+                 ][, rep_freq := NULL]
     # remove outlier WAD values
       if(rm_outliers) {
-        pos_out <- pos_outlier(data$wad)
-        neg_out <- neg_outlier(data$wad)
+        pos_out <- pos_outlier(bd$wad)
+        neg_out <- neg_outlier(bd$wad)
       } else {
         pos_out <- Inf
         neg_out <- -Inf
       }
-    data <- data[wad > neg_out][wad < pos_out]
+    bd <- bd[wad > neg_out][wad < pos_out]
     # set keys and sort for faster merging in for-loop
-    data <- setkeyv(data, c(tax_id, grouping_cols))
+    bd <- setkeyv(bd, c(tax_id, grouping_cols))
     # store permutation output in a data.table
-    eaf_output <- unique(data[iso_trt == 'label', c(tax_id, grouping_cols)])
+    eaf_output <- unique(bd[iso_trt == 'label', c(tax_id, grouping_cols)])
     # quickly generate a list of replicate resampling permutations within your grouping variables
-    reps <- unique(data[, c(sample_id, iso_trt, grouping_cols)])
+    reps <- unique(bd[, c(sample_id, iso_trt, grouping_cols)])
     reps[, rep_count := uniqueN(sample_id), by = c(iso_trt, grouping_cols)]
     resamps <- reps[, as.list(sample.int(rep_count, iters, replace = TRUE)), by = c(sample_id, grouping_cols)]
     #----------------
@@ -173,7 +189,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       cat('bootstrap iteration', i, 'of', iters, '\r')
       cols_for_subsample <- c(sample_id, grouping_cols, paste0('V', i))
       # subsample replicates
-      dat_boot <- merge(data, resamps[, ..cols_for_subsample],
+      dat_boot <- merge(bd, resamps[, ..cols_for_subsample],
                         by = c(sample_id, grouping_cols),
                         all.x = TRUE)
       setnames(dat_boot, paste0('V', i), 'resample_rep')
@@ -224,8 +240,8 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     eaf_pval <- eaf_output[, 1 - (sum(eaf > 0) / .N), by = c(tax_id, grouping_cols)]
     setnames(eaf_pval, 'V1', 'p_val')
     # combine and remove NA values -- this will also remove all the unlabeled samples
-    eaf_dat <- merge(eaf_med_ci, eaf_pval)
-    eaf_dat <- eaf_dat[!is.na(`50%`)]
+    eafd <- merge(eaf_med_ci, eaf_pval)
+    eafd <- eafd[!is.na(`50%`)]
   }
-  return(eaf_dat)
+  return(eafd)
 }
