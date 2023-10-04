@@ -38,7 +38,8 @@
 #'                   grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
 #'
 #'  # transform to wide format
-#'  ww <- wad_wide(wads, tax_id = 'asv_id', sample_id = 'sampleID', iso_trt = 'iso_trt', isotope = 'isotope')
+#'  ww <- wad_wide(wads, tax_id = 'asv_id', sample_id = 'sampleID',
+#'                 iso_trt = 'iso_trt', isotope = 'isotope')
 #'
 #' @export
 

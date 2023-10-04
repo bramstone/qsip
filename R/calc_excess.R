@@ -92,7 +92,8 @@
 #'                   grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
 #'
 #'  # calculate fractional enrichment in excess of background
-#'  eaf <- calc_excess(wads, tax_id = 'asv_id', sample_id = 'sampleID', iso_trt = 'iso_trt', isotope = 'isotope')
+#'  eaf <- calc_excess(wads, tax_id = 'asv_id', sample_id = 'sampleID',
+#'                     iso_trt = 'iso_trt', isotope = 'isotope')
 #'
 #' @references
 #'  Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
