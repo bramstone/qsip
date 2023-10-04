@@ -117,7 +117,7 @@ Calculates fractional isotope incorporation in excess of natural abundances
  # Load in example data
  data(example_qsip)
 
- relativize sequence abundances (should be done after taxonomic filtering)
+ # relativize sequence abundances (should be done after taxonomic filtering)
  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
 
  # calculate weighted average densities
