@@ -10,7 +10,7 @@
 #'
 #' @details There is no strong agreement among qSIP-users on the proper threshold to set for removing rare features.
 #'   Rare and infrequent taxa produce noise in the data, making it hard to discern quality.
-#'   The one guiding principle that there may be agreement on is that it’s best to set minimum filters at first -- to be as inclusive as possible –- 
+#'   The one guiding principle that there may be agreement on is that it’s best to set minimum filters at first -- to be as inclusive as possible –-
 #'   and intensify filters as needed to reduce noise.
 #'
 #'   One or more columns may be specified in the filter_target parameter, allowing for frequency filtering across treatment groups.
@@ -23,15 +23,15 @@
 #' @seealso \code{\link{seq_summary}}
 #'
 #' @examples
-#' data(example_data)
+#' data(example_qsip)
 #'
-#' # initial sequence and ASV count? 
-#' seq_summary(dat, 'seq_abund', 'taxon_id')
+#' # initial sequence and ASV count?
+#' seq_summary(example_qsip, 'seq_abund', 'asv_id')
 #'
 #' # Remove taxa that occur in fewer than 3 fractions in any given replicate
-#' dat <- freq_filter(dat, 3, 'sample_id', 'taxon_id')
+#' example_qsip <- freq_filter(example_qsip, 3, 'sampleID', 'asv_id')
 #'
-#' seq_summary(dat, 'seq_abund', 'taxon_id')
+#' seq_summary(example_qsip, 'seq_abund', 'asv_id')
 #'
 #' @export
 
