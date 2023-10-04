@@ -15,12 +15,12 @@ seq_summary <- function(x, reads = c(), tax_id = c()) {
 # the 25th/75th quantile by a distance of 1.5X the interquartile range
 neg_outlier <- function(x) {
   neg_out <- quantile(x, .25, na.rm = TRUE) - (1.5 * IQR(x, na.rm = TRUE))
-  max(x[x < out_thresh])
+  max(x[x < neg_out & !is.na(x)])
 }
 
 pos_outlier <- function(x) {
   pos_out <- quantile(x, .75, na.rm = TRUE) + (1.5 * IQR(x, na.rm = TRUE))
-  min(x[x < out_thresh])
+  min(x[x > pos_out & !is.na(x)])
 }
 
 # Calculation of 16S copies per taxon from relative abundances and 16S copy numbers
