@@ -55,7 +55,7 @@
 #'
 #'  # Calculate weighted average densities
 #'  wads <- calc_wad(example_qsip,
-#'                   tax_id = 'asv_id', sample_id = sampleID', frac_id = 'fraction',
+#'                   tax_id = 'asv_id', sample_id = 'sampleID', frac_id = 'fraction',
 #'                   frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',
 #'                   rel_abund = 'rel_abund',
 #'                   grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
