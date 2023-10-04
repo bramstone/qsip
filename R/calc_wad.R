@@ -48,8 +48,17 @@
 #'
 #' @examples
 #'  # Load in example data
+#'  data(example_qsip)
+#'
+#'  relativize sequence abundances (should be done after taxonomic filtering)
+#'  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
 #'
 #'  # Calculate weighted average densities
+#'  wads <- calc_wad(example_qsip,
+#'                   tax_id = 'asv_id', sample_id = sampleID', frac_id = 'fraction',
+#'                   frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',
+#'                   rel_abund = 'rel_abund',
+#'                   grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
 #'
 #' @references
 #'  Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
@@ -66,20 +75,21 @@ calc_wad <- function(data, tax_id = c(), sample_id = c(), frac_id = c(),
     null_vars <- paste(c('taxon IDs', 'sample IDs', 'fraction IDs', 'densities',
                          'fraction abundances', 'relative taxon abundances')[null_vars],
                        sep = ',')
-    stop("Must supply the following columns:", null_vars)
+    stop("Must supply the following columns: ", null_vars)
   }
-  # use sample ID and fraction ID to create unique sample-fraction ID
-  data[, sample_fraction := paste(sample_id, fraction_id, sep = '_')]
+  wads <- copy(data)
+  # rename columns used in the j expressions for computation
+  setnames(wads, old = c(rel_abund, frac_abund, frac_dens), new = c('ra', 'fa', 'fd'))
   # calculate WADs
-  data <- data[, frac_abund_tax := rel_abund * frac_abund, by = .(taxon_id, sample_fraction)
-               ][, tot_abund := sum(frac_abund_tax), by = .(taxon_id, sample_id) # group by replicate here, not sample-fraction
-                 ][, weight := frac_abund_tax / tot_abund, by = .(taxon_id, sample_fraction)
-                   ][, .(wad = sum(weight * density, na.rm = TRUE),
-                         wvd = sum(weight * (density - sum(weight * density, na.rm = TRUE))^2, na.rm = TRUE),   # weighted variance of density
+  wads <- wads[, frac_abund_tax := ra * fa, by = c(tax_id, sample_id, frac_id),
+               ][, tot_abund := sum(frac_abund_tax), by = c(tax_id, sample_id) # group by replicate here, not sample-fraction
+                 ][, weight := frac_abund_tax / tot_abund, by = c(tax_id, sample_id, frac_id)
+                   ][, .(wad = sum(weight *fd, na.rm = TRUE),
+                         wvd = sum(weight * (fd - sum(weight * fd, na.rm = TRUE))^2, na.rm = TRUE),   # weighted variance of density
                          abund = sum(frac_abund_tax, na.rm = TRUE)),
-                     by = c(taxon_id, sample_id, grouping_cols)
+                     by = c(tax_id, sample_id, grouping_cols)
                      ][wad > 0]
-    return(data)
+    return(wads)
   }
 
 
