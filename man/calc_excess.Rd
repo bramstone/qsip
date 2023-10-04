@@ -60,8 +60,8 @@ For unlabeled "light" samples, treatment groupings will be ignored when assessin
 
 \item{correction}{Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.}
 
-\item{rm_outlers}{Whether or not to remove fractional enrichment values that are 1.5X greater or lesser than the distance between the median
-and interquartile ranges.
+\item{rm_outlers}{Whether or not to remove low fractional enrichment values that are 1.5X lesser than the distance between the 25th quantile
+and interquartile range.
 If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampling and enrichment calculation.}
 
 \item{non_grower_group}{Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
@@ -115,10 +115,21 @@ Calculates fractional isotope incorporation in excess of natural abundances
 }
 \examples{
  # Load in example data
+ data(example_qsip)
 
- # Calculate excess atom fraction
+ relativize sequence abundances (should be done after taxonomic filtering)
+ example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
 
- # compare
+ # calculate weighted average densities
+ wads <- calc_wad(example_qsip,
+                  tax_id = 'asv_id', sample_id = 'sampleID', frac_id = 'fraction',
+                  frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',
+                  rel_abund = 'rel_abund',
+                  grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
+
+ # calculate fractional enrichment in excess of background
+ eaf <- calc_excess(wads, tax_id = 'asv_id', sample_id = 'sampleID',
+                    iso_trt = 'iso_trt', isotope = 'isotope')
 
 }
 \references{

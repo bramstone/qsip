@@ -44,9 +44,21 @@ Transforms weighted average density values into wide-format
 }
 \examples{
  # Load in example data
+ data(example_qsip)
 
- # Transform to wide format
+ relativize sequence abundances (should be done after taxonomic filtering)
+ example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
 
+ # calculate weighted average densities
+ wads <- calc_wad(example_qsip,
+                  tax_id = 'asv_id', sample_id = 'sampleID', frac_id = 'fraction',
+                  frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',
+                  rel_abund = 'rel_abund',
+                  grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
+
+ # transform to wide format
+ ww <- wad_wide(wads, tax_id = 'asv_id', sample_id = 'sampleID',
+                iso_trt = 'iso_trt', isotope = 'isotope')
 
 }
 \seealso{
