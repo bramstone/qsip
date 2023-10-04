@@ -159,11 +159,12 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                                    'mw_light', 'mw_label', 'mw_max', 'nat_abund')]
       setnames(eafd, 'wvd_label', 'wvd', skip_absent = TRUE)
     }
-    #
-    #
+    ####################
+    # BOOTSTRAPPING CODE
+    ####################
   } else if(bootstrap == TRUE) {
     bd <- copy(data)
-    setnames(bd, old = wads, new = 'wad')
+    setnames(bd, old = c(sample_id, iso_trt, wads), new = c('sid', 'iso_trt', 'wad'))
     # make sure iso_trt column is a factor
     if(is.factor(bd[[iso_trt]]) == FALSE || nlevels(bd[[iso_trt]]) > 2) {
       test_trt <- factor(bd[[iso_trt]])
@@ -174,10 +175,10 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       bd[[iso_trt]] <- factor(bd[[iso_trt]])
     }
     # rename factor levels
-    bd[[iso_trt]] <- factor(bd[[iso_trt]], level = levels(bd[[iso_trt]]), labels = c('light', 'label'))
+    bd[, iso_trt := factor(iso_trt, levels = levels(iso_trt), labels = c('light', 'label'))]
     # assess minimum frequency
-    bd <- bd[iso_trt == 'label', rep_freq := uniqueN(sample_code), by = c(tax_id, grouping_cols)
-             ][iso_trt == 'light', rep_freq := uniqueN(sample_code), by = tax_id
+    bd <- bd[iso_trt == 'label', rep_freq := uniqueN(sid), by = c(tax_id, grouping_cols)
+             ][iso_trt == 'light', rep_freq := uniqueN(sid), by = tax_id
                ][rep_freq >= min_freq
                  ][, rep_freq := NULL]
     # remove outlier WAD values
@@ -192,24 +193,26 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     # set keys and sort for faster merging in for-loop
     bd <- setkeyv(bd, c(tax_id, grouping_cols))
     # store permutation output in a data.table
-    eaf_output <- unique(bd[iso_trt == 'label', c(tax_id, grouping_cols)])
+    eaf_output <- subset(bd, iso_trt == 'label', select = c(tax_id, grouping_cols))
+    eaf_output <- unique(eaf_output)
     # quickly generate a list of replicate resampling permutations within your grouping variables
-    reps <- unique(bd[, c(sample_id, iso_trt, grouping_cols)])
-    reps[, rep_count := uniqueN(sample_id), by = c(iso_trt, grouping_cols)]
-    resamps <- reps[, as.list(sample.int(rep_count, iters, replace = TRUE)), by = c(sample_id, grouping_cols)]
+    reps <- subset(bd, select = c('sid', 'iso_trt', grouping_cols))
+    reps <- unique(reps)
+    reps[, rep_count := uniqueN(sid), by = c('iso_trt', grouping_cols)]
+    resamps <- reps[, as.list(sample.int(rep_count, iters, replace = TRUE)), by = c('sid', grouping_cols)]
     #----------------
     # BEGINNING OF FOR-LOOP
     for(i in 1:iters) {
       cat('bootstrap iteration', i, 'of', iters, '\r')
-      cols_for_subsample <- c(sample_id, grouping_cols, paste0('V', i))
+      cols_for_subsample <- c('sid', grouping_cols, paste0('V', i))
       # subsample replicates
       dat_boot <- merge(bd, resamps[, ..cols_for_subsample],
-                        by = c(sample_id, grouping_cols),
+                        by = c('sid', grouping_cols),
                         all.x = TRUE)
       setnames(dat_boot, paste0('V', i), 'resample_rep')
       dat_boot <- dat_boot[, wad := wad[resample_rep], by = c(tax_id, grouping_cols, 'iso_trt')]
       # convert to wide format
-      dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
+      dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = 'sid', wads = wads, iso_trt = iso_trt, isotope = isotope)
       dat_boot <- dat_boot[isotope %in% c('18O', '13C', '15N')]
       # calculate molecular weights
       dat_boot[, gc_prop := (1 / 0.083506) * (light - 1.646057)
@@ -220,6 +223,8 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                ][isotope == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
                  ][isotope == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
                    ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
+      # calculate mean enrichment for
+      dat_boot <- dat_boot[, .(eaf = mean(eaf)), by = c(tax_id, grouping_cols)]
       # add iteration count to EAF columns
       setnames(dat_boot, 'eaf', paste0('eaf_', i))
       # add EAF values to output data
@@ -257,6 +262,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     # combine and remove NA values -- this will also remove all the unlabeled samples
     eafd <- merge(eaf_med_ci, eaf_pval)
     eafd <- eafd[!is.na(`50%`)]
+    # setnames(eafd, old = '50%', new = 'eaf_boot')
   }
   return(eafd)
 }
