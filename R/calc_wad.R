@@ -77,6 +77,11 @@ calc_wad <- function(data, tax_id = c(), sample_id = c(), frac_id = c(),
                        sep = ',')
     stop("Must supply the following columns: ", null_vars)
   }
+  if(any(exists(vars, data) == FALSE)) {
+    missing_vars <- which(sapply(vars, function(x) !exists(x, data)))
+    missing_vars <- paste(vars[missing_vars], sep = ',')
+    stop("Missing the following column(s) in supplied data: ", missing_vars)
+  }
   wads <- copy(data)
   # rename columns used in the j expressions for computation
   setnames(wads, old = c(rel_abund, frac_abund, frac_dens), new = c('ra', 'fa', 'fd'))
