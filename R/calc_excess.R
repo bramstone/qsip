@@ -125,36 +125,40 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   if(bootstrap == FALSE) {
     eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
     # calculate molecular weights
-    eafd[, gc_prop := (1 / 0.083506) * (wad_light - 1.646057)
+    eafd[, gc_prop := (1 / 0.083506) * (light - 1.646057)
          ][, mw_light := (0.496 * gc_prop) + 307.691
-           ][, mw_label := (((wad_label - wad_light) / wad_light) + 1) * mw_light]
+           ][, mw_label := (((label - light) / light) + 1) * mw_light]
     # calculate enrichment
     eafd[isotope == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
          ][isotope == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
            ][isotope == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
              ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
     # correct enrichment values
+    if(rm_outliers) {
+      neg_out <- neg_outlier(eafd$eaf)
+      # pos_out <- pos_outlier(eafd$eaf)
+    } else {
+      neg_out <- -Inf
+      # pos_out <- Inf
+    }
     if(correction) {
-      if(rm_outliers) {
-        pos_out <- pos_outlier(eafd$eaf)
-        neg_out <- neg_outlier(eafd$eaf)
-      } else {
-        pos_out <- Inf
-        neg_out <- -Inf
-      }
       shift <- eafd[!is.na(eaf)
                     ][order(eaf)
                       ][eaf > neg_out
-                        ][eaf < pos_out
+                        # ][eaf < pos_out
                           ][, .(shift = median(eaf[1:floor(non_grower_prop * .N)])),
                             by = sample_id]
-      eafd <- merge(eafd, shift, by = 'sample_id', all.x = TRUE)
+      eafd <- merge(eafd, shift, by = sample_id, all.x = TRUE)
       eafd[, eaf := eaf - shift][, shift := NULL]
+      if(rm_outliers) {
+      } else {
+        neg_out <- -Inf
+      }
       # clean final data output
       # remove NA EAF values - this will also remove all the unlabeled samples
-      eafd <- eafd[!is.na(eaf), !c('wad_label', 'wad_light', 'wvd_light', 'gc_prop',
-                                   'mw_light', 'mw_label', 'mw_max', 'nat_abund', 'tube_shift')]
-      setnames(eafd, 'wvd_label', 'wvd')
+      eafd <- eafd[!is.na(eaf), !c('label', 'light', 'gc_prop',
+                                   'mw_light', 'mw_label', 'mw_max', 'nat_abund')]
+      setnames(eafd, 'wvd_label', 'wvd', skip_absent = TRUE)
     }
     #
     #
@@ -179,13 +183,13 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                  ][, rep_freq := NULL]
     # remove outlier WAD values
       if(rm_outliers) {
-        pos_out <- pos_outlier(bd$wad)
+        # pos_out <- pos_outlier(bd$wad)
         neg_out <- neg_outlier(bd$wad)
       } else {
-        pos_out <- Inf
+        # pos_out <- Inf
         neg_out <- -Inf
       }
-    bd <- bd[wad > neg_out][wad < pos_out]
+    bd <- bd[wad > neg_out]
     # set keys and sort for faster merging in for-loop
     bd <- setkeyv(bd, c(tax_id, grouping_cols))
     # store permutation output in a data.table
@@ -209,9 +213,9 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
       dat_boot <- dat_boot[isotope %in% c('18O', '13C', '15N')]
       # calculate molecular weights
-      dat_boot[, gc_prop := (1 / 0.083506) * (wad_light - 1.646057)
+      dat_boot[, gc_prop := (1 / 0.083506) * (light - 1.646057)
                ][, mw_light := (0.496 * gc_prop) + 307.691
-                 ][, mw_label := (((wad_label - wad_light) / wad_light) + 1) * mw_light]
+                 ][, mw_label := (((label - light) / light) + 1) * mw_light]
       # calculate enrichment
       dat_boot[isotope == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
                ][isotope == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
@@ -246,7 +250,8 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       eaf_output[, eaf := eaf - shift][, shift := NULL]
     }
     # note: your EAF confidence interval columns are called `2.5%`, `50%`, and `97.5%`
-    eaf_med_ci <- eaf_output[, as.list(quantile(eaf, probs = c(0.025, .5, .975))), by = c(tax_id, grouping_cols)]
+    eaf_med_ci <- eaf_output[, as.list(quantile(eaf, probs = c(0.025, .5, .975), na.rm = TRUE)),
+                             by = c(tax_id, grouping_cols)]
     # calculate p-value for EAF being greater than 0
     eaf_pval <- eaf_output[, 1 - (sum(eaf > 0) / .N), by = c(tax_id, grouping_cols)]
     setnames(eaf_pval, 'V1', 'p_val')
