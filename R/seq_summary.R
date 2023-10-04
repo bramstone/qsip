@@ -37,21 +37,22 @@
 #' seq_summary(example_qsip[, c(1, 12)]) # should be the same as above
 #'
 #' # Identify lineages to remove
-#' tax <- unique(example_qsip[, c('asv_id', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus')])
-#' unassign <- tax[Kingdom == 'Unassigned', asv_id]
-#' euk <- tax[Kingdom == 'Eukaryota', asv_id]
-#' arch <- tax[Kingdom == 'Archaea', asv_id]
-#' mito_chloro <- tax[, tax_string := paste(Phylum, Class, Order, Family, Genus, Species, sep = ';')
-#'                    ][grepl('mitochond|chloroplast', tax_string, ignore.case = T), asv_id]
+#' tx <- unique(example_qsip[, c('asv_id', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus')])
+#' unassign <- tx[Kingdom == 'Unassigned', asv_id]
+#' euk <- tx[Kingdom == 'Eukaryota', asv_id]
+#' arch <- tx[Kingdom == 'Archaea', asv_id]
+#' mito_chloro <- tx[, tax_string := paste(Phylum, Class, Order, Family, Genus, sep = ';')
+#'                   ][grepl('mitochond|chloroplast', tax_string, ignore.case = T), asv_id]
 #'
-#' cat('Unassigned\n'); seq_summary(example_qsip, 'seq_abund', 'asv_id')
-#' cat('Eukarya\n'); seq_summary(example_qsip, 'seq_abund', 'asv_id')
-#' cat('Archaea\n'); seq_summary(example_qsip, 'seq_abund', 'asv_id')
-#' cat('Mitochondria, Chloroplasts\n'); seq_summary(example_qsip, 'seq_abund', 'asv_id')
+#' cat('Unassigned\n'); seq_summary(example_qsip[asv_id %in% unassign, c(1, 12)])
+#' cat('Eukarya\n'); seq_summary(example_qsip[asv_id %in% euk, c(1, 12)])
+#' cat('Archaea\n'); seq_summary(example_qsip[asv_id %in% arch, c(1, 12)])
+#' cat('Mitochondria, Chloroplasts\n'); seq_summary(example_qsip[asv_id %in% mito_chloro, c(1, 12)])
 #'
 #' # Filter out lineages
 #' example_qsip <- example_qsip[!asv_id %in% c(arch, mito_chloro, euk, unassign)]
 #' cat('\n\nFinal after filtering\n'); seq_summary(example_qsip, 'seq_abund', 'asv_id')
+#' rm(tx, unassign, euk, arch, mito_chloro)
 #'
 #' @export
 
