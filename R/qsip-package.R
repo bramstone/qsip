@@ -1,2 +1,2 @@
-#' @importFrom data.table ":=" ".N" uniqueN dcast order merge subset
+#' @importFrom data.table ":=" ".N" uniqueN dcast
 NULL
