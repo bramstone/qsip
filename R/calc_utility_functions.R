@@ -14,12 +14,12 @@ seq_summary <- function(x, reads = c(), tax_id = c()) {
 # exclude outliers following the standard definition of above or below
 # the 25th/75th quantile by a distance of 1.5X the interquartile range
 neg_outlier <- function(x) {
-  neg_out <- quantile(x, .25, na.rm = TRUE) - (1.5 * IQR(x))
+  neg_out <- quantile(x, .25, na.rm = TRUE) - (1.5 * IQR(x, na.rm = TRUE))
   max(x[x < out_thresh])
 }
 
 pos_outlier <- function(x) {
-  pos_out <- quantile(x, .75, na.rm = TRUE) + (1.5 * IQR(x))
+  pos_out <- quantile(x, .75, na.rm = TRUE) + (1.5 * IQR(x, na.rm = TRUE))
   min(x[x < out_thresh])
 }
 
