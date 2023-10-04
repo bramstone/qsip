@@ -27,8 +27,8 @@
 #'  If treatment grouping columns are specified, frequencies will be assessed at this level.
 #'  For unlabeled "light" samples, treatment groupings will be ignored when assessing adequate frequency of occurrence.
 #' @param correction Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.
-#' @param rm_outlers Whether or not to remove fractional enrichment values that are 1.5X greater or lesser than the distance between the median
-#'   and interquartile ranges.
+#' @param rm_outlers Whether or not to remove low fractional enrichment values that are 1.5X lesser than the distance between the 25th quantile
+#'   and interquartile range.
 #'   If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampling and enrichment calculation.
 #' @param non_grower_group Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
 #'  non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
@@ -134,20 +134,19 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
            ][isotope == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
              ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
     # correct enrichment values
-    if(rm_outliers) {
+    if(rm_outliers == TRUE) {
       neg_out <- neg_outlier(eafd$eaf)
-      # pos_out <- pos_outlier(eafd$eaf)
+      pos_out <- pos_outlier(eafd$eaf)
     } else {
       neg_out <- -Inf
-      # pos_out <- Inf
+      pos_out <- Inf
     }
+    eafd <- eafd[eaf > neg_out]
     if(correction) {
       shift <- eafd[!is.na(eaf)
                     ][order(eaf)
-                      ][eaf > neg_out
-                        # ][eaf < pos_out
-                          ][, .(shift = median(eaf[1:floor(non_grower_prop * .N)])),
-                            by = sample_id]
+                      ][, .(shift = median(eaf[1:floor(non_grower_prop * .N)])),
+                        by = sample_id]
       eafd <- merge(eafd, shift, by = sample_id, all.x = TRUE)
       eafd[, eaf := eaf - shift][, shift := NULL]
       if(rm_outliers) {
@@ -183,10 +182,10 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                  ][, rep_freq := NULL]
     # remove outlier WAD values
       if(rm_outliers) {
-        # pos_out <- pos_outlier(bd$wad)
+        pos_out <- pos_outlier(bd$wad)
         neg_out <- neg_outlier(bd$wad)
       } else {
-        # pos_out <- Inf
+        pos_out <- Inf
         neg_out <- -Inf
       }
     bd <- bd[wad > neg_out]
