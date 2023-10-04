@@ -53,7 +53,7 @@
 #'  relativize sequence abundances (should be done after taxonomic filtering)
 #'  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
 #'
-#'  # Calculate weighted average densities
+#'  # calculate weighted average densities
 #'  wads <- calc_wad(example_qsip,
 #'                   tax_id = 'asv_id', sample_id = 'sampleID', frac_id = 'fraction',
 #'                   frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',

@@ -79,10 +79,20 @@
 #'
 #' @examples
 #'  # Load in example data
+#'  data(example_qsip)
 #'
-#'  # Calculate excess atom fraction
+#'  relativize sequence abundances (should be done after taxonomic filtering)
+#'  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
 #'
-#'  # compare
+#'  # calculate weighted average densities
+#'  wads <- calc_wad(example_qsip,
+#'                   tax_id = 'asv_id', sample_id = 'sampleID', frac_id = 'fraction',
+#'                   frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',
+#'                   rel_abund = 'rel_abund',
+#'                   grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
+#'
+#'  # calculate fractional enrichment in excess of background
+#'  eaf <- calc_excess(wads, tax_id = 'asv_id', sample_id = 'sampleID', iso_trt = 'iso_trt', isotope = 'isotope')
 #'
 #' @references
 #'  Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
