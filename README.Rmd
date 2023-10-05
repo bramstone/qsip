@@ -12,13 +12,35 @@ csl: fems-microbiology-ecology.csl
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Legacy package code
+
+This branch is no longer the working (i.e., "main") branch of the `qsip` package moving forward.
+The functions contained here have been saved as "legacy" code meant to allow access
+to functionality that has been previously published on.
+The motivations for this switch were mainly that this code could not easily handle
+different types of experimental designs.
+As more groups are conducting qSIP experiments under a variety of settings and designs,
+it became more efficient to re-implement the core calculations using functionality 
+from the `data.table` package as this package moves forward.
+
+The main branch of the `qsip` package can be found at:
+[https://github.com/bramstone/qsip/tree/main](https://github.com/bramstone/qsip/tree/main)
+
+The following publications have utilized functions from this `legacy` branch:
+
+  + Finley *et al.* 2021. Soil minerals affect taxon-specific bacterial growth. *The ISME Journal* 16, 1318--1326. DOI: [10.1038/s41396-021-01162-y](https://doi.org/10.1038/s41396-021-01162-y)
+  + Hayer *et al.*. 2021. Microbes on decomposing litter in streams: entering on the leaf or colonizing in the water? *The ISME Journal* 16, 717--725. DOI: [10.1038/s41396-021-01114-6](https://doi.org/10.1038/s41396-021-01114-6)
+  + Stone *et al.* 2021. Nutrients cause consolidation of soil carbon flux to small proportion of bacterial community. *Nature Communications* 12, 1--9. DOI: [10.1038/s41467-021-23676-x](https://doi.org/10.1038/s41467-021-23676-x)
+  + Metz *et al.* 2023. Microbial growth under drought is confined to distinct taxa and modified by potential future climate conditions. *Nature Communications* 14. DOI: [10.1038/s41467-023-41524-y](https://doi.org/10.1038/s41467-023-41524-y)
+  + Ruan *et al.* 2023. Elevated temperature and CO~2~ strongly affect the growth strategies of soil bacteria. *Nature Communications* 14. DOI: [10.1038/s41467-023-36086-y](https://doi.org/10.1038/s41467-023-36086-y)
+
 ## Background
 
-**Quantitative stable isotope probing (qSIP)** is the combination of stable isotope probing &ndash; a foundational technique in the study of ecosystems &ndash; with targeted amplicon sequencing data of microbial communities. In conventional stable isotope probing (SIP) experiments, identification of the amount of isotopic enrichment of nucleic acids was done qualitatively &ndash; through visual identification and categorization of nucleic acids into either "heavy" or "light" regions. The qSIP approach is to divide a single sample into many different fractions (without *a priori* categorization) along a gradient of increasing densities, and to estimate the shift in density of an individual microbial taxon's nucleic acids based on it's abundance across the many fractions [@Hungate2015]. Further details on the qSIP methodology may be found in @Purcell2019. The core calculation produces estimates of every microbial taxon's proportion of enrichment which are often used as stand-ins for growth. However, **qsip** can also estimate population *per-capita* rates of growth and death [@Koch2018].
+**Quantitative stable isotope probing (qSIP)** is the combination of stable isotope probing &ndash; a foundational technique in the study of ecosystems &ndash; with targeted amplicon sequencing data of microbial communities. In conventional stable isotope probing (SIP) experiments, identification of the amount of isotopic enrichment of nucleic acids was done qualitatively &ndash; through visual identification and categorization of nucleic acids into either "heavy" or "light" regions. The qSIP approach is to divide a single sample into many different fractions (without *a priori* categorization) along a gradient of increasing densities, and to estimate the shift in density of an individual microbial taxon's nucleic acids based on it's abundance across the many fractions [@Hungate2015]. Further details on the qSIP methodology may be found in @Purcell2019. The core calculation produces estimates of every microbial taxon's proportion of enrichment which are often used as stand-ins for growth. However,`qsip` can also estimate population *per-capita* rates of growth and death [@Koch2018].
 
-The **qsip** package is built on the data structures of the **phyloseq** [package](http://joey711.github.io/phyloseq/index.html). **Phyloseq** uses S4 object classification to organize different aspects of microbial sequencing data into a single object (see Data Preparation, below). The purpose of **phyloseq** is to minimize the code necessary to perform common operations on microbial community datasets such as filtering out, or retaining, certain taxonomic lineages or groups of samples.
+The `"legacy"` `qsip` codebase is built on the data structures of the [`phyloseq` package](http://joey711.github.io/phyloseq/index.html). `phyloseq` uses S4 object classification to organize different aspects of microbial sequencing data into a single object (see Data Preparation, below). The purpose of `phyloseq` is to minimize the code necessary to perform common operations on microbial community datasets such as filtering out, or retaining, certain taxonomic lineages or groups of samples.
 
-The **qsip** package supports stable isotope experiments using ^18^O, ^13^C, and ^15^N [@Morrissey2018]. It is also agnostic towards the amplicon being sequenced. It will support 16S, 18S, ITS, or other amplicon sequencing data.
+The `qsip` legacy code supports stable isotope experiments using ^18^O, ^13^C, and ^15^N [@Morrissey2018]. It is also agnostic towards the amplicon being sequenced. It will support 16S, 18S, ITS, or other amplicon sequencing data.
 
 ### Terminology
 
@@ -34,25 +56,22 @@ Conducting a qSIP experiment is, in many ways, an exercise in data organization.
 
 ## Installation
 
-**qsip** is not currently on CRAN. The only way to install **qsip** is through Github. See here if you encounter issues [installing phyloseq](http://joey711.github.io/phyloseq/install.html).
+`qsip` is not currently on CRAN. The only way to install `qsip` is through Github. 
+To utilize functionality from the legacy codebase, make sure you specify `ref = "legacy"` when calling `install_github`.
+See here if you encounter issues [installing phyloseq](http://joey711.github.io/phyloseq/install.html).
 
 ```{r, eval=F}
 # install devtools and BiocManager
 install.packages('devtools')
 install.packages('BiocManager')
 
-# install phyloseq and qsip using the utilities on devtools and BiocManagerK
+# install phyloseq and qsip using the utilities on devtools and BiocManager
 BiocManager::install('phyloseq')
-devtools::install_github('bramstone/qsip')
+devtools::install_github('bramstone/qsip', ref = 'legacy')
 
 library(phyloseq)
 library(qsip)
 ```
-
-
-## Data preparation
-
-Here, go into how to organize and prepare experimental data, the feature table, and taxonomic data for phyloseq combination. Spend the most time on experimental data.
 
 ### Creation of phyloseq object
 
@@ -79,17 +98,22 @@ dat
 
 One of the first diagnostic plots that should be generated from an enrichment experiment is the enrichment curve. Often, this is done even before sequencing efforts begin. The basic idea of the enrichment curve is to plot the change in density of DNA due to the incorporation of stable isotopes.
 
-*With qsip, enrichment curves may be plotted from phyloseq, phylosip, or basic data.frame objects.* Because phylosip objects already have replicates, fractions, densities, and qPCR abundances specified, no other information is necessary. Using phyloseq or data.frame objects requires the specification of this information.
+**Note:** previous versions of this README demonstrated the `plot_curve` function.
+This function was merely a wrapper to put data into a format for plotting with `ggplot2`.
+To utilize the code below, extract the `@sam_data` slot from your `phyloseq` object,
+then replace the stand-in column names with the actual columns that correspond to 
+the fraction densities and abundances (e.g., qPCR amplicon abundances or DNA concentration).
 
 ```{r, eval=F}
-# plot from phylosip object
-plot_curve(dat)
+library(ggplot2)
 
-# plot from phyloseq object
-plot_curve(phlyo_dat, density='density_column', abund='qPCR_column', iso_trt='isotope_treatment_column')
+# extract metadata
+met <- dat@sam_data
 
-# plot from data.frame object
-plot_curve(exper_dat, density='density_column', abund='qPCR_column', iso_trt='isotope_treatment_column')
+# plot density curves
+ggplot(met, aes(frac_density_column, frac_abund_column)) +
+  geom_line(aes(group = sample_id_column)) +
+  geom_point()
 ```
 
 ## Specify frequency filtering criteria
@@ -123,15 +147,27 @@ names(dat@qsip)
 
 ## Extract data frames from phylosip object
 
+Previous versions of this README instructed users to use the `qsmelt` function
+which was intended to be an analog to phyloseq's `psmelt` function and where users
+could easily match their output to important experimental variables.
+However, I did not generate the different methods required to extract qSIP values
+that were abstracted to different levels (i.e., WAD values generated per-sample vs.
+bootstrapped enrichment or growth rates generated across many samples -- both of 
+which could exist in the same `phylosip` object).
+
+Instead I recommend users to extract the qSIP values themselves and merge them
+into their data as they see fit.
+
 ```{r, eval=F}
 # extract data related to isotopic "excess" and measures from "label"-ed samples
-qsip_enrich <- qsmelt(dat, include='excess|label', regex=T)
+qsip_enrich <- dat@qsip[['atom_excess']]
 head(qsip_enrich)
 
 # extract data related to birth and death
-qsip_growth <- qsmelt(dat, include='birth|death', abundance=T, regex=T)
+qsip_growth <- dat@qsip[['birth_rate']]
+qsip_death <- dat@qsip[['death_rate']]
 head(qsip_growth)
-
+head(qsip_death)
 ```
 
 ## References
