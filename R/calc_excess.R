@@ -30,7 +30,7 @@
 #' @param rm_outlers Whether or not to remove low fractional enrichment values that are 1.5X lesser than the distance between the 25th quantile
 #'   and interquartile range.
 #'   If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampling and enrichment calculation.
-#' @param non_grower_group Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
+#' @param non_grower_prop Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
 #'  non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
 #'  as a correction to all enrichment values in the sample.
 #'

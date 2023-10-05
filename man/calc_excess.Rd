@@ -60,13 +60,13 @@ For unlabeled "light" samples, treatment groupings will be ignored when assessin
 
 \item{correction}{Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.}
 
+\item{non_grower_prop}{Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
+non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
+as a correction to all enrichment values in the sample.}
+
 \item{rm_outlers}{Whether or not to remove low fractional enrichment values that are 1.5X lesser than the distance between the 25th quantile
 and interquartile range.
 If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampling and enrichment calculation.}
-
-\item{non_grower_group}{Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
-non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
-as a correction to all enrichment values in the sample.}
 }
 \value{
 \code{calc_excess} returns a data.table where each row represents a taxonomic feature within a single replicate.
