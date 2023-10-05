@@ -18,7 +18,7 @@ options(width = 400)
 # rmarkdown::render('qsip_tutorial.Rmd', rmarkdown::md_document(variant = 'gfm'))
 ```
 
-```{css}
+```{css, echo = F}
 pre, code {white-space:pre !important; overflow-x:scroll !important; overflow-y: scroll !important;}
 ```
 
