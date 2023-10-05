@@ -9,129 +9,431 @@ csl: fems-microbiology-ecology.csl
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = F)
+
+# ensures wide data output will scroll, and not wrap
+options(width = 400)
+
+# # NOTE: TO RENDER THIS AS A MARKDOWN DOCUMENT FOR GITHUB, USE THE FOLLOWING CODE
+# rmarkdown::render('qsip_tutorial.Rmd', rmarkdown::md_document(variant = 'gfm'))
 ```
+
+```{css}
+pre, code {white-space:pre !important; overflow-x:scroll !important; overflow-y: scroll !important;}
+```
+
 
 ## Background
 
-**Quantitative stable isotope probing (qSIP)** is the combination of stable isotope probing &ndash; a foundational technique in the study of ecosystems &ndash; with targeted amplicon sequencing data of microbial communities. In conventional stable isotope probing (SIP) experiments, identification of the amount of isotopic enrichment of nucleic acids was done qualitatively &ndash; through visual identification and categorization of nucleic acids into either "heavy" or "light" regions. The qSIP approach is to divide a single sample into many different fractions (without *a priori* categorization) along a gradient of increasing densities, and to estimate the shift in density of an individual microbial taxon's nucleic acids based on it's abundance across the many fractions [@Hungate2015]. Further details on the qSIP methodology may be found in @Purcell2019. The core calculation produces estimates of every microbial taxon's proportion of enrichment which are often used as stand-ins for growth. However, **qsip** can also estimate population *per-capita* rates of growth and death [@Koch2018].
+**Quantitative stable isotope probing (qSIP)** is the combination of stable isotope probing -- 
+a foundational technique in the study of ecosystems -- with targeted amplicon 
+sequencing data of microbial communities.
+In conventional stable isotope probing (SIP) experiments, identification of the amount 
+of isotopic enrichment of nucleic acids was done qualitatively -- through visual i
+dentification and categorization of nucleic acids into either "heavy" or "light" regions. 
+The qSIP approach is to divide a single sample into many different fractions 
+(without *a priori* categorization) along a gradient of increasing densities, and 
+to estimate the shift in the buoyant density of an individual microbial taxon's 
+nucleic acids based on it's abundance across the many fractions [@Hungate2015]. 
+Further details on the qSIP methodology may be found in @Purcell2019. 
+The core calculation produces estimates of every microbial taxon's fractional isotopic 
+enrichment above background -- or natural abundance -- levels. 
+However, qSIP can also estimate population *per-capita* rates of growth and mortality 
+(i.e., turnover) [@Koch2018].
 
-The **qsip** package is built on the data structures of the **phyloseq** [package](http://joey711.github.io/phyloseq/index.html). **Phyloseq** uses S4 object classification to organize different aspects of microbial sequencing data into a single object (see Data Preparation, below). The purpose of **phyloseq** is to minimize the code necessary to perform common operations on microbial community datasets such as filtering out, or retaining, certain taxonomic lineages or groups of samples.
+Current functionality in the `qsip` package is built on the 
+[`data.table` package](https://rdatatable.gitlab.io/data.table/).
+`data.table` can perform filtering, aggregating, merging, and reshaping functions on large
+data quickly and with low computational overhead.
+For initial data preparation and subsequent analyses, `data.table` is worth
+learning.
+As such, the current version `qsip` package works with tabular, long-form data.
+We note that this is a significant redirection from previous versions of the package which
+had expected data organized using the `phyloseq` format.
+For access to this older functionality, please see the 
+[`legacy` branch](https://github.com/bramstone/qsip/tree/legacy) of this package.
 
-The **qsip** package supports stable isotope experiments using ^18^O, ^13^C, and ^15^N [@Morrissey2018]. It is also agnostic towards the amplicon being sequenced. It will support 16S, 18S, ITS, or other amplicon sequencing data.
+The `qsip` package supports stable isotope experiments using ^18^O, ^13^C, and ^15^N [@Morrissey2018]. 
+It is also agnostic towards the sequencing method and taxonomic distinctions of the data. 
+16S, 18S, ITS, and metagenomic data can all be utilized.
+
+The generation of enrichment values via qSIP can typically be divided up into three parts:
+
+  1. Density curves (and initial data quality checking)
+  2. Per-taxon densities (and quality filtering)
+  3. Per-taxon enrichment calculations (and additional filtering)
 
 ### Terminology
 
-Conducting a qSIP experiment is, in many ways, an exercise in data organization. In an amplicon sequencing study, a single sequencing sample is usually produced from DNA extracted from a single point of collection (unless samples are pooled, in which case many points of collection yield one sequencing sample). In a qSIP experiment, DNA from each sample is divided into usually more than a dozen fractions which must all be sequenced separately. Because of this, as well as to make this package as easy to use as possible, consistent terminology should be applied to any qSIP experiment.
+Conducting a qSIP experiment is, in many ways, an exercise in data organization. 
+In an amplicon sequencing study, a single sequencing sample is usually produced 
+from DNA extracted from a single point of collection. 
+In a qSIP experiment, DNA from each sample is divided into usually more than a dozen 
+fractions which must all be sequenced separately. Because of this, as well as to 
+make this package as easy to use as possible, consistent terminology should be applied 
+to any qSIP experiment.
 
-  + **Replicate** - A single physical sample that has been divided into multiple fractions (usually 10&ndash;20). The term *replicate* is used rather than *sample* to avoid confusion during the sequencing preparation process, in which each qSIP fraction must be treated as a separate sample. Furthermore, the term *replicate* makes it clear that these represent the unit of statistical replication and power.
-  + **Fraction** - A subsample produced by fractionating a single replicate based on vertical stratification following ultra-centrifugation. *Each fraction must have its own qPCR amplicon abundance measurement as well as a density measurement.*
+  + **Replicate** - A single physical sample that has been divided into multiple fractions (usually 10--20). The term *replicate* is used rather than *sample* to avoid confusion during the sequencing preparation process, in which each qSIP fraction must be treated as a separate sample. Furthermore, the term *replicate* makes it clear that these represent the unit of statistical replication and power.
+  + **Fraction** - A subsample produced by fractionating a single replicate based on vertical stratification following ultra-centrifugation. *Each fraction must have its own measure of abundance (e.g., amplicon qPCR or DNA concentration) as well as a density measurement.*
   + **Feature Table** - Often called an OTU table, ASV table, or species abundance table. A table of abundances or relative frequences for each microbial taxon in each sample. For qSIP analyses, feature tables must include the abundances/frequencies in *each* fraction. For qSIP analyses, this should not be a binary presence-absence table.
-  + **Labeled** - A replicate that has been treated with a stable isotope (^18^O, ^13^C, or ^15^N). Often used to differentiate labeled from unlabeled values in output from the qsip package (as well as represented in equations throughout the published literature).
+  + **Labeled** - A replicate that has been treated with a stable isotope (^18^O, ^13^C, or ^15^N). Often used to differentiate labeled from unlabeled values in output from the `qsip` package (as well as represented in equations throughout the published literature). Sometimes also called a "heavy" sample.
   + **Light** - A replicate that has **not** been treated with a stable isotope. An unlabeled replicate.
-  + **Atom excess fraction (AEF)** - The proportion [0&ndash;1] of an organism's nucleic acids that are enriched by a stable isotope. Identical to **atom percent excess (APE)** or **atom excess percent (AEP)**.
-
+  + **Excess atom fraction (EAF)** - The fraction of an organism's nucleic acids that are enriched by a stable isotope in excess of the background (or natural abundance) concentration. Used interchangeably with atom percent excess (APE) or atom fraction excess (AFE), though EAF is the most appropriate term [@Coplen2011].
 
 ## Installation
 
-**qsip** is not currently on CRAN. The only way to install **qsip** is through Github. See here if you encounter issues [installing phyloseq](http://joey711.github.io/phyloseq/install.html).
+`qsip` is not currently on CRAN. 
+The only way to install `qsip` is through Github. 
 
-```{r, eval=F}
-# install devtools and BiocManager
+```{r, echo = T, eval=F}
+install.packages('data.table')
 install.packages('devtools')
-install.packages('BiocManager')
 
-# install phyloseq and qsip using the utilities on devtools and BiocManagerK
-BiocManager::install('phyloseq')
+# install qsip using the utilities on devtools
 devtools::install_github('bramstone/qsip')
 
-library(phyloseq)
+library(data.table)
+library(qsip)
+```
+
+```{r}
+library(data.table)
 library(qsip)
 ```
 
 
-## Data preparation
+## 1. Density curves
 
-Here, go into how to organize and prepare experimental data, the feature table, and taxonomic data for phyloseq combination. Spend the most time on experimental data.
+Density curves simply plot the amount of DNA, or specific sequences if using qPCR, across all of the fractions
+that you have laboriously separated your sample into following ultracentrifugation.
+This exploration of the data should be done prior to sequencing to ensure that
+sequencing will be successful.
+They serve as your initial screen of data quality because they show whether you have created "heavier" DNA
+during the course of your incubation.
+If you generate more samples than you plan to sequence, you can use this step to 
+prioritize your sequencing efforts.
+However, you are more than likely using it to determine if you need to respin and re-fractionate any of your samples.
 
-### Creation of phyloseq object
+**Necessary columns to plot density curves**
 
-Feature tables must be combined with taxonomic and experimental data into a single [phyloseq object](http://joey711.github.io/phyloseq/import-data.html). 
+  + ID column corresponding to unique replicates
+  + Density value of fraction **OR** fraction number
+  + Quantification of microbial abundance (DNA qubit, qPCR) for each fraction
+  
+In addition, it is usually important to have isotopic amendment and other important
+experimental grouping variables as well.
 
+For this tutorial, consider the experimental data (`exp_dat`) from an ^18^O addition
+experiment in soils from two ecosystems (`MC` and `GL`) and under three nutrient
+amendments (`control`, `C`, and `CN`) indicating un-amended soils or glucose-amended soils or
+glucose and ammomium-amended soils.
 
-## Creation of phylosip object
-
-```{r, eval=F}
-dat <- specify_qsip(dat,
-                    density='Density.g.ml',
-                    abund='avg_16S_g_soil',
-                    rep_id='sampleID',
-                    rep_group='ecosystem',
-                    iso='18O',
-                    iso_trt='isotope',
-                    timepoint='timepoint')
-
-# high-level qSIP-related data will display upon printing
-dat
+```{r, echo = T, eval = F}
+exp_dat
 ```
 
-### Plot enrichment curves
+```{r}
+data(example_qsip)
 
-One of the first diagnostic plots that should be generated from an enrichment experiment is the enrichment curve. Often, this is done even before sequencing efforts begin. The basic idea of the enrichment curve is to plot the change in density of DNA due to the incorporation of stable isotopes.
+exp_dat <- unique(example_qsip[, c('sampleID', 'fraction', 'timepoint', 'isotope', 
+                                   'iso_trt', 'ecosystem', 'treatment', 'rep',
+                                   'Density.g.ml', 'avg_16S_g_soil')])
 
-*With qsip, enrichment curves may be plotted from phyloseq, phylosip, or basic data.frame objects.* Because phylosip objects already have replicates, fractions, densities, and qPCR abundances specified, no other information is necessary. Using phyloseq or data.frame objects requires the specification of this information.
-
-```{r, eval=F}
-# plot from phylosip object
-plot_curve(dat)
-
-# plot from phyloseq object
-plot_curve(phlyo_dat, density='density_column', abund='qPCR_column', iso_trt='isotope_treatment_column')
-
-# plot from data.frame object
-plot_curve(exper_dat, density='density_column', abund='qPCR_column', iso_trt='isotope_treatment_column')
+exp_dat
 ```
 
-## Specify frequency filtering criteria
+```{r, echo = T, warning=F, fig.asp = .75}
+library(ggplot2)
 
-```{r, eval=F}
-dat@qsip@filter_levels <- create_filters(2, 5, soft=1)
+ggplot(exp_dat[!is.na(Density.g.ml)],
+       aes(Density.g.ml, avg_16S_g_soil, color = isotope)) +
+  geom_line(aes(group = sampleID)) +
+  geom_point(size = .5) +
+  facet_grid(treatment ~ ecosystem, scales = 'free_y') +
+  scale_color_manual(values = c('darkblue', 'orange')) +
+  theme(legend.position = c(1, 1),
+        legend.justification = c(1, 1))
 ```
 
+## 2. Per-taxon densities
 
-## Calculate enrichment and growth
+Following amplicon sequencing, the resulting feature table should be combined with 
+experimental data (e.g., `exp_dat`) into a long-format table.
+Here, each taxon in each fraction should have its own row.
 
-```{r, eval=F}
-# atom excess fraction (AEF) or atom percent excess (APE)
-dat <- calc_excess(dat,
-                   separate_label=T,
-                   filter=T,
-                   correction=T)
+With these data, per-taxon densities may be calculated.
 
-# per-capita growth
-dat <- calc_pop(dat,
-                separate_label=T,
-                filter=T,
-                correction=T,
-                growth_model='exponential')
+**Necessary columns for qSIP calculations:**
 
-# show new data has been added
-dat
-names(dat@qsip)
+  + ID column corresponding to unique replicates
+  + ID column corresponding to each unique replicate-fraction.
+  I'm putting it in *necessary* column list because you have already needed it to join your sequencing data
+  (which were generated for each fraction) to your experimental data
+  + taxonomic ID column
+  + Density value of fraction **OR** fraction number (if using internal standards)
+  + Quantification of microbial abundance (DNA qubit, qPCR) for each fraction
+  + Sequence reads (for each taxon in each fraction). **Sequence reads should be as unfiltered as possible with the exception of removing global singleton and doubleton features**. Further, sequence reads are **not** normalized -- that will be done after removing off-target sequences
+  
+**Example data format:**
+
+```{r, echo = T}
+data(example_qsip)
+
+example_qsip
 ```
 
+There are additional columns which are not strictly necessary but which were useful in data organization.
+It is encouraged to create the columns needed to effectively manage your data.
 
-## Extract data frames from phylosip object
+### Filtering and relativizing sequences
 
-```{r, eval=F}
-# extract data related to isotopic "excess" and measures from "label"-ed samples
-qsip_enrich <- qsmelt(dat, include='excess|label', regex=T)
-head(qsip_enrich)
+Depending on quantification method, and sequencing targets, sequences should be 
+relativized based on the relevant organisms of your study.
 
-# extract data related to birth and death
-qsip_growth <- qsmelt(dat, include='birth|death', abundance=T, regex=T)
-head(qsip_growth)
+For example, this study quantified bacterial 16S sequences with primers meant to exclude Eukarya and Archaea.
+**Therefore, relative abundances should only reflect our target organisms.**
 
+So in this case, we need to remove:
+
+  + Unassigned reads
+  + Eukarya
+  + Archaea
+  + Mitochondrial and chloroplast sequences
+
+First, how many taxa and how many sequence reads to we have?
+Reviewers typically want to know this, better to have these numbers now than have to go digging later.
+`qsip` offers the `seq_summary` function which is a small utility function which
+counts and automatically formats total sequence read abundances and number of taxonomic
+features across the whole data set.
+
+```{r, echo = T, results = 'hold'}
+# columns necessary for seq_summary
+ssc <- c('seq_abund', 'asv_id')
+
+# initial sequence and ASV count?
+cat('Initial\n')
+seq_summary(example_qsip[, ..ssc])
+
+# Identify lineages to remove
+tx <- unique(example_qsip[, c('asv_id', 'Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus')])
+
+unassign <- tx[Kingdom == 'Unassigned', asv_id]
+euk <- tx[Kingdom == 'Eukaryota', asv_id]
+arch <- tx[Kingdom == 'Archaea', asv_id]
+mito_chloro <- tx[, tax_string := paste(Phylum, Class, Order, Family, Genus, sep = ';')
+                  ][grepl('mitochond|chloroplast', tax_string, ignore.case = T), asv_id]
+
+cat('Unassigned\n')
+seq_summary(example_qsip[asv_id %in% unassign, ..ssc])
+cat('Eukarya\n')
+seq_summary(example_qsip[asv_id %in% euk, ..ssc])
+cat('Archaea\n')
+seq_summary(example_qsip[asv_id %in% arch,..ssc])
+cat('Mitochondria, Chloroplasts\n')
+seq_summary(example_qsip[asv_id %in% mito_chloro, ..ssc])
+
+# Filter out lineages
+example_qsip <- example_qsip[!asv_id %in% c(arch, mito_chloro, euk, unassign)]
+
+cat('\n\nFinal after filtering\n')
+seq_summary(example_qsip[,  ..ssc])
 ```
+
+Now that off-target sequences have been removed, we can normalize our sequences.
+
+```{r, echo = T}
+# normalize 16S abundances of bacteria
+example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
+```
+
+### Setting frequency thresholds
+
+The next decision is whether to keep, or to remove rare and infrequent lineages.
+There is no strong agreement among qSIP-users on whether to do this.
+Rare and infrequent taxa produce noise in the data, making it hard to discern quality.
+
+The one guiding principle that there may be agreement on is that it's best to set 
+minimum filters at first -- i.e. be as inclusive as possible -- and only intensify 
+filters as needed to reduce noise.
+
+`qsip` offers the `freq_filter` function which allows users to remove a taxon
+from a replicate if it fails to be present in the requisite number of instances.
+Because the data, at this time, contain fraction-level information, placing the 
+sample ID column as the `filter_target` directs the function to find out how many
+times an organism is present in a given sample.
+It then removes organisms that occur in *fewer* fractions than the minimum.
+In this example, an organism that occurs in 2 or fewer fractions in a sample is
+removed.
+
+The `filter_target` function accepts more than one column name and so frequency
+may be assessed across multiple samples in a treatment group at later stages
+in the analysis.
+
+
+```{r echo = T, results = 'hold'}
+# initial sequence and ASV count?
+cat('Before fraction filtering\n')
+seq_summary(example_qsip[, ..ssc])
+
+# Remove taxa that occur in fewer than 3 fractions in any given replicate
+example_qsip <- freq_filter(example_qsip, 
+                            min_freq = 3, 
+                            filter_target = 'sampleID',
+                            tax_id = 'asv_id')
+
+cat('\nAfter fraction filtering\n')
+seq_summary(example_qsip[, ..ssc])
+```
+
+### Calculating per-taxon weighted average densities (WADs)
+
+The `calc_wad` function estimates in which fraction a taxon is most present, 
+and creates a sample-wide buoyant density measure weighted by all fractions.
+The measure is called the *weighted average density* (or `wad`).
+
+The `wvd` term produced is the *weighted variance in density*, essentially a measure 
+of how spread-out an orgnanism's WAD value is.
+It is not strictly necessary for the qSIP calculations.
+It can sometimes be useful as a diagnostic of the quality of an organism's density estimate.
+
+`calc_wad` also attempts to express a taxon's sample-level abundance by multiplying
+relative abundances by per-fraction total abundance.
+Note that this value will be in the same terms as the abundance column -- in other
+words, `calc_wad` does not necessarily attempt to calculate sample-level sequence read abundance.
+
+It is important here to include the key grouping variables of the experiment in the 
+final line of the calculation.
+
+```{r, echo = T}
+# keep track of which columns should be kept for downstream analyses
+keep_cols <- setdiff(names(example_qsip), 
+                     c('asv_id', 'sampleID', 'fraction', 'Density.g.ml', 
+                       'avg_16S_g_soil', 'rel_abund', 'seq_abund'))
+
+# calculate weighted average densities
+wads <- calc_wad(example_qsip,
+                 tax_id = 'asv_id', sample_id = 'sampleID', frac_id = 'fraction',
+                 frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',
+                 rel_abund = 'rel_abund',
+                 grouping_cols = keep_cols)
+
+wads
+```
+
+### Unlabeled vs. labeled WAD values
+
+The easiest way to look at the change in WAD values for each taxon is to make unlabeled WADs 
+and labeled WADs into separate columns.
+In other words this is a transformation to wide-format.
+This operation can be carried out by the `wad_wide` function.
+Because each WAD value is specific to a single sample, the unlabeled WAD values
+are averaged by default (but this action can be suppressed by indicating `average_light = F`).
+
+
+```{r, echo = T, results = 'hold', fig.asp = 0.75, warning = F}
+# transform to wide format
+ww <- wad_wide(wads, 
+               tax_id = 'asv_id', 
+               sample_id = 'sampleID',
+               iso_trt = 'iso_trt', 
+               isotope = 'isotope')
+
+ww
+
+# plot light and heavy WADs for each isotope
+ggplot(ww, aes(light, label, color = rep)) + 
+  geom_abline(intercept = 0, slope = 1) + 
+  ylab('18O WAD') + 
+  xlab('unlabeled WAD') +
+  geom_point() + 
+  facet_grid(treatment ~ ecosystem) +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5))
+```
+
+The main thing to look for here is a **clean bottom line that _ideally_ matches the 1:1 slope.**
+The bottom line represents the WADs of (assumable-y) non-growing taxa **and** it also 
+represents the direct relationship between the densities of the labeled tubes with the unlabeled densities.
+In other words it can identify whether the density in the labeled tube is intrinsically 
+high or low (based on the preparation of the CsCl solution) **and** whether the 
+densities progress faster or slower across the fraction gradient than expected.
+
+If the bottom taxa follow the 1:1 line, and are merely a little high or low, then 
+it's fairly simple to adjust by shifting values up or down.
+But if the slope differs from the 1:1 line, then it may be necessary to look into 
+things like quantile regression to generates slopes for correction.
+Currently, there's no established (or published) method to do this.
+
+If a clean bottom line cannot be easily seen, then it is worth revisiting previous code steps.
+It may be possible that no bottom line is discernable because nearly all organisms become enriched.
+If there is an especially strong separation in the density curves, that may be the likely cause.
+
+The data in this example show some deference to the 1:1 line, just a little high
+or low in some cases.
+Thus, a simple adjustment of enrichment values will be carried out in the last step.
+
+## 3. Per-taxon enrichment
+
+The next step is to convert the density values to molecular weights, and then to isotopic enrichment.
+This step is carried out by `calc_excess`.
+The minor shift in excess atom fraction (`eaf`) values hinted at in the above section
+is carried out by specifying `correction = T` (the default behavior).
+With this option, the bottom 10% of values (represented by the `0.1` non-grower fraction)
+are assumed to represent organisms that did not grow and incorporate the heavy
+stable isotope provided.
+The median values of this group of values is therefore assumed to be 0 and all
+`eaf` values are shifted to meet this assumption [@Morrissey2016].
+
+For some isotopes (^13^C and ^15^N), GC content is important since it determines C and N content.
+^18^O is invariant to GC content.
+GC content is estimated based on the unlabeled densities, based on a regression equation
+generated from an experiment at Northern Arizona University [@Hungate2015].
+`calc_excess` can handle a data set with multiple isotopes across the sample list.
+
+`calc_excess` will keep any additional columns that are not specified in the function
+so the user should not worry about listing them here.
+As a caveat, rows corresponding to data from unlabeled samples will be removed and
+so information relating to taxa *in unlabeled samples* (e.g., abundances or WVD values)
+will be removed.
+
+```{r, echo = T}
+# calculate fractional enrichment in excess of background
+eaf <- calc_excess(wads, 
+                   tax_id = 'asv_id', 
+                   sample_id = 'sampleID', 
+                   iso_trt = 'iso_trt', 
+                   isotope = 'isotope',
+                   correction = T,
+                   non_grower_prop = 0.1)
+
+eaf
+```
+
+In addition, `calc_excess` can perform bootstrap calculations to determine the
+plausible distribution of an organism's `eaf` value.
+Bootstrap computation requires the user to define how samples should be grouped.
+It is also good practice to define the minimum frequency that a taxon must occur
+in a group of samples (the default is 3).
+
+```{r, echo = T, results = 'hide'}
+# calculate fractional enrichment in excess of background
+eaf <- calc_excess(wads, 
+                   tax_id = 'asv_id', 
+                   sample_id = 'sampleID', 
+                   iso_trt = 'iso_trt', 
+                   isotope = 'isotope',
+                   bootstrap = T,
+                   iters = 99,
+                   min_freq = 3,
+                   grouping_cols = c('treatment', 'ecosystem'))
+
+eaf
+```
+
+```{r, echo = F}
+eaf
+```
+
+`calc_excess` returns the 95\% confidence interval values, the median (i.e., 50th percentile)
+and the p-value that a taxon's enrichment is greater than 0 in a given sample group.
 
 ## References
