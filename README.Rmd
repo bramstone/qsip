@@ -414,6 +414,10 @@ Bootstrap computation requires the user to define how samples should be grouped.
 It is also good practice to define the minimum frequency that a taxon must occur
 in a group of samples (the default is 3).
 
+```{r, echo = F}
+set.seed(10523)
+```
+
 ```{r, echo = T, results = 'hide'}
 # calculate fractional enrichment in excess of background
 eaf <- calc_excess(wads, 
@@ -433,7 +437,8 @@ eaf
 eaf
 ```
 
-`calc_excess` returns the 95\% confidence interval values, the median (i.e., 50th percentile)
-and the p-value that a taxon's enrichment is greater than 0 in a given sample group.
+`calc_excess` returns the 95\% confidence intervals and median (i.e., 50th percentile)
+`eaf` values as well as the p-value that a taxon's enrichment is greater than 0 in 
+a given sample group.
 
 ## References
