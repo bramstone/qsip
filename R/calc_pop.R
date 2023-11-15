@@ -99,7 +99,7 @@ calc_pop <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                        sep = ',')
     stop("Must supply the following columns: ", null_vars)
   }
-  vars <- c(vars, c(abund, wads))
+  vars <- c(vars, abund, wads)
   if(any(sapply(vars, function(x) !exists(x, data)))) {
     missing_vars <- which(sapply(vars, function(x) !exists(x, data)))
     missing_vars <- paste(vars[missing_vars], sep = ',')
