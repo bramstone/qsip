@@ -76,8 +76,8 @@
 #'                   grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
 #'
 #'  # calculate population fluxes
-#'  eaf <- calc_pop(wads, tax_id = 'asv_id', sample_id = 'sampleID',
-#'                  iso_trt = 'iso_trt', time = 'timepoint')
+#'  rates <- calc_pop(wads, tax_id = 'asv_id', sample_id = 'sampleID',
+#'                    iso_trt = 'iso_trt', time = 'timepoint')
 #'
 #' @references
 #'  Koch, Benjamin, \emph{et al.} 2018. Estimating taxon-specific population dynamics in diverse microbial communities.

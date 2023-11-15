@@ -75,6 +75,12 @@ If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampli
 
  Because fraction-level data are being condensed to replicate-level, a list of grouping columns to keep is not necessary
  \emph{unless} bootstrapping is specified, wherein those groupings will be used to organize the resampling effort.
+
+ Bootstrap functionality produces the columns: \code{2.5\%}, \code{50\%}, and \code{97.5\%}
+ reflecting the median bootstrapped enrichment value and the 95\% confidence interval
+ of enrichment values.
+ In addition, probability that a taxon's enrichment was less than zero is represented
+ in the \code{p_val} column which is based on the proportion sub-zero bootstrapped observations.
 }
 \description{
 Calculates fractional isotope incorporation in excess of natural abundances

@@ -10,14 +10,17 @@ calc_pop(
   sample_id = c(),
   wads = "wad",
   iso_trt = c(),
-  isotope = c(),
-  timepoint = c(),
-  abund = c(),
+  time = c(),
+  abund = "abund",
   t0_grouping = c(),
+  mu = 0.6,
+  bootstrap = FALSE,
+  iters = 999L,
+  grouping_cols = c(),
+  min_freq = 3,
   correction = TRUE,
   rm_outliers = TRUE,
-  non_grower_prop = 0.1,
-  mu = 0.6
+  non_grower_prop = 0.1
 )
 }
 \arguments{
@@ -28,7 +31,8 @@ Typically, this is the output from the \code{calc_wad} function.}
 
 \item{sample_id}{Column name specifying unique identifier for each replicate.}
 
-\item{wads}{Column name specifying weighted average density values.}
+\item{wads}{Column name specifying weighted average density values.
+The default option is "wad" which is created by \code{calc_wad}.}
 
 \item{iso_trt}{Column name specifying a two-level categorical column indicating whether a sample has been amended with a stable isotope (i.e., is "heavy") or if
 isotopic composition is at natural abundance (i.e., "light").
@@ -38,36 +42,80 @@ level as the "heavy" treatment.
 Alternatively, if supplied as a character, \code{calc_pop} will coerce the column to a factor and with the default behavior wherein the
 first value in alphabetical order will be assumed to be the lowest factor level (i.e. the "light" treatment).}
 
-\item{timepoint}{Column name specifying the timepoint at which each sample was collected.
+\item{time}{Column name specifying the timepoint at which each sample was collected.
 For population rates, the lowest timepoint will be assumed to be the initial timepoints with which to base
 changes in abundances on.}
 
-\item{abund}{Column name specifying abundance measurement for each fraction. Typically either the numbers of a target gene amplicon
-(e.g., 16S, ITS such as from qPCR) or DNA concentration (e.g., nanograms per microliter such as from a Qubit).}
+\item{abund}{Column name specifying abundance measurement for each taxon in each sample.
+The default option is "abund" which is created by \code{calc_wad}.}
+
+\item{mu}{Assumption of the fraction of oxygen atoms incorporated into new DNA that come from water (instead of from carbon sources)}
+
+\item{bootstrap}{Whether to generate bootstrapped enrichment values for each taxonomic feature across groups of samples.
+If \code{TRUE}, replicates within specified treatment groupings will be randomly resampled with replacement and resulting
+WAD values used to generate a distribution of enrichment values for each taxon.}
+
+\item{iters}{Integer specifying the number of bootstrap iterations to perform.}
+
+\item{grouping_cols}{Column(s) used to indicate bootstrap resampling groups.
+Within each group, replicates will be resampled with replacement.
+Resampling will not occur across groups.}
+
+\item{min_freq}{Minimum number of replicates a taxonomic feature must occur in to be kept.
+If treatment grouping columns are specified, frequencies will be assessed at this level.
+For unlabeled "light" samples, treatment groupings will be ignored when assessing adequate frequency of occurrence.}
 
 \item{correction}{Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.}
 
 \item{rm_outlers}{Whether or not to remove fractional enrichment values that are 1.5X greater or lesser than the distance between the median
 and interquartile ranges.}
 
-\item{non_grower_group}{Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
+\item{non_grower_group}{Fractional value applied if \code{correction = TRUE} specifying the proportion of the community in each samples assumed to be
 non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
 as a correction to all enrichment values in the sample.}
 }
 \value{
 \code{calc_pop} returns a data.table where each row represents a taxonomic feature within a single replicate.
  The following columns are produced: growth rate (\code{growth}), mortality or turnover rate (\code{mortality}).
+
+ Bootstrap functionality produces the columns: \code{2.5\%}, \code{50\%}, and \code{97.5\%}
+ reflecting the median bootstrapped rate value and the 95\% confidence interval
+ of rate values.
+ In addition, probability that a taxon's enrichment was less than zero is represented
+ in the \code{p_val} column which is based on the proportion sub-zero bootstrapped observations.
+ Growth and mortality rates are differentiated by the \code{rate} column.
 }
 \description{
 Calculates population growth and death rates
 }
 \details{
-Details to go here.
+\code{calc_pop} can only calculate growth rates with samples enriched in 18O.
+ As such, the \code{isotope} parameter is not included here, but the user must ensure
+ that carbon and nitrogen isotopic samples are not included.
+ The default parameter for \code{mu} is 0.6 which was determined by sensitivity analysis
+ to be the value which produced nearly all positive growth rates in a pilot study.
+
+ By default, \code{calc_pop} averages the abundances of taxa from the initial time point.
+ If \code{boostrap = TRUE}, replicates will be resampled (with replacement) then averaged so that
+ population rates are a product of bootstrapped abundances as well as densities.
 }
 \examples{
  # Load in example data
+ data(example_qsip)
 
- # Calculate population fluxes
+ # relativize sequence abundances (should be done after taxonomic filtering)
+ example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
+
+ # calculate weighted average densities
+ wads <- calc_wad(example_qsip,
+                  tax_id = 'asv_id', sample_id = 'sampleID', frac_id = 'fraction',
+                  frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',
+                  rel_abund = 'rel_abund',
+                  grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
+
+ # calculate population fluxes
+ rates <- calc_pop(wads, tax_id = 'asv_id', sample_id = 'sampleID',
+                   iso_trt = 'iso_trt', time = 'timepoint')
 
 }
 \references{
