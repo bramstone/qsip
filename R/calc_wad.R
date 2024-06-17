@@ -83,19 +83,19 @@ calc_wad <- function(data, tax_id = c(), sample_id = c(), frac_id = c(),
     stop("Missing the following column(s) in supplied data: ", missing_vars)
   }
   # rename columns used in the j expressions for computation
-  setnames(data, old = c(rel_abund, frac_abund, frac_dens), new = c('ra', 'fa', 'fd'))
+  setnames(data, old = c(rel_abund, frac_abund, frac_dens), new = c('rA', 'fA', 'fD'))
   # calculate per-taxon abundances in each fraction and sample
-  data[, frac_abund_tax := ra * fa, by = c(tax_id, sample_id, frac_id)
-       ][, tot_abund := sum(frac_abund_tax), by = c(tax_id, sample_id)
-         ][, weight := frac_abund_tax / tot_abund, by = c(tax_id, sample_id, frac_id)]
+  data[, fAt := rA * fA, by = c(tax_id, sample_id, frac_id)
+       ][, tA := sum(fAt), by = c(tax_id, sample_id)
+         ][, weight := fAt / tA, by = c(tax_id, sample_id, frac_id)]
   # calculate WADs
-  wads <- data[, .(wad = sum(weight *fd, na.rm = TRUE),
-                   wvd = sum(weight * (fd - sum(weight * fd, na.rm = TRUE))^2, na.rm = TRUE),   # weighted variance of density
-                   abund = sum(frac_abund_tax, na.rm = TRUE)),
+  wads <- data[, .(wad = sum(weight * fD, na.rm = TRUE),
+                   wvd = sum(weight * (fD - sum(weight * fD, na.rm = TRUE))^2, na.rm = TRUE),   # weighted variance of density
+                   abund = sum(fAt, na.rm = TRUE)),
                by = c(tax_id, sample_id, grouping_cols)
                ][wad > 0]
-  setnames(data, old = c('ra', 'fa', 'fd'), new = c(rel_abund, frac_abund, frac_dens))
-  data[, `:=` (frac_abund_tax = NULL, tot_abund = NULL, weight = NULL)]
+  setnames(data, old = c('rA', 'fA', 'fD'), new = c(rel_abund, frac_abund, frac_dens))
+  data[, `:=` (tA = NULL, fAt = NULL, tA = NULL, weight = NULL)]
   return(wads)
 }
 
