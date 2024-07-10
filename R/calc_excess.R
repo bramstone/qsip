@@ -46,7 +46,8 @@
 #'   Where
 #'
 #'   \deqn{G_{i} = \frac{1}{0.083506} \cdot (W_{Light,i} - 1.646057)}
-#'   Which indicates the GC content of taxon \emph{i} based on the density of its DNA when unlabeled
+#'   Which indicates the GC content of taxon \emph{i} based on the density of its DNA when unlabeled.
+#'   Note that the slope and intercept in this equation may be changed using the \code{wad_to_gc_slope}, and \code{wad_to_gc_intercept} parameters.
 #'
 #'   The calculation for the fractional of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
 #'
@@ -114,6 +115,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                         iso_trt = c(), isotope = c(),
                         bootstrap = FALSE, iters = 999L, grouping_cols = c(), min_freq = 3,
                         correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
+                        wad_to_gc_slope = 0.083506, wad_to_gc_intercept = 1.646057,
                         nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
   vars <- list(tax_id, sample_id, iso_trt, isotope)
   if(any(sapply(vars, is.null))) {
@@ -132,7 +134,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   if(bootstrap == FALSE) {
     eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
     # calculate molecular weights
-    eafd[, gc_prop := (1 / 0.083506) * (light - 1.646057)
+    eafd[, gc_prop := (1 / wad_to_gc_slope) * (light - wad_to_gc_intercept)
          ][, mw_light := (0.496 * gc_prop) + 307.691
            ][, mw_label := (((label - light) / light) + 1) * mw_light]
     # calculate enrichment
@@ -222,7 +224,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = 'sid', wads = wads, iso_trt = iso_trt, isotope = isotope)
       dat_boot <- dat_boot[isotope %in% c('18O', '13C', '15N')]
       # calculate molecular weights
-      dat_boot[, gc_prop := (1 / 0.083506) * (light - 1.646057)
+      dat_boot[, gc_prop := (1 / wad_to_gc_slope) * (light - wad_to_gc_intercept)
                ][, mw_light := (0.496 * gc_prop) + 307.691
                  ][, mw_label := (((label - light) / light) + 1) * mw_light]
       # calculate enrichment
