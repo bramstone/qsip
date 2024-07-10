@@ -95,7 +95,7 @@ calc_wad <- function(data, tax_id = c(), sample_id = c(), frac_id = c(),
                by = c(tax_id, sample_id, grouping_cols)
                ][wad > 0]
   setnames(data, old = c('rA', 'fA', 'fD'), new = c(rel_abund, frac_abund, frac_dens))
-  data[, `:=` (tA = NULL, fAt = NULL, tA = NULL, weight = NULL)]
+  data[, `:=` (tA = NULL, fAt = NULL, fD = NULL, weight = NULL)]
   return(wads)
 }
 
