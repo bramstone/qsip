@@ -162,15 +162,15 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       } else {
         neg_out <- -Inf
       }
-      # clean final data output
-      # remove NA EAF values - this will also remove all the unlabeled samples
-      eafd <- eafd[!is.na(eaf), !c('label', 'light', 'gc_prop',
-                                   'mw_light', 'mw_label', 'mw_max', 'nat_abund')]
-      setnames(eafd, 'wvd_label', 'wvd', skip_absent = TRUE)
     }
-    ####################
-    # BOOTSTRAPPING CODE
-    ####################
+    # clean final data output
+    # remove NA EAF values - this will also remove all the unlabeled samples
+    eafd <- eafd[!is.na(eaf), !c('label', 'light', 'gc_prop',
+                                 'mw_light', 'mw_label', 'mw_max', 'nat_abund')]
+    setnames(eafd, 'wvd_label', 'wvd', skip_absent = TRUE)
+  ####################
+  # BOOTSTRAPPING CODE
+  ####################
   } else if(bootstrap == TRUE) {
     bd <- copy(data)
     setnames(bd, old = c(sample_id, iso_trt, wads), new = c('sid', 'iso_trt', 'wad'))
