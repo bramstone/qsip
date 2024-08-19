@@ -138,9 +138,9 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
          ][, mw_light := (0.496 * gc_prop) + 307.691
            ][, mw_label := (((label - light) / light) + 1) * mw_light]
     # calculate enrichment
-    eafd[isotope == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
-         ][isotope == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
-           ][isotope == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
+    eafd[get(isotope) == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
+         ][get(isotope) == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
+           ][get(isotope) == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
              ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
     # correct enrichment values
     if(rm_outliers == TRUE) {
@@ -228,9 +228,9 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                ][, mw_light := (0.496 * gc_prop) + 307.691
                  ][, mw_label := (((label - light) / light) + 1) * mw_light]
       # calculate enrichment
-      dat_boot[isotope == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
-               ][isotope == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
-                 ][isotope == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
+      dat_boot[get(isotope) == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
+               ][get(isotope) == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
+                 ][get(isotope) == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
                    ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
       # calculate mean enrichment for
       dat_boot <- dat_boot[, .(eaf = mean(eaf)), by = c(tax_id, grouping_cols)]
