@@ -222,7 +222,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       dat_boot <- dat_boot[, wad := wad[resample_rep], by = c(tax_id, grouping_cols, 'iso_trt')]
       # convert to wide format
       dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = 'sid', wads = wads, iso_trt = iso_trt, isotope = isotope)
-      dat_boot <- dat_boot[isotope %in% c('18O', '13C', '15N')]
+      dat_boot <- dat_boot[get(isotope) %in% c('18O', '13C', '15N')]
       # calculate molecular weights
       dat_boot[, gc_prop := (1 / wad_to_gc_slope) * (light - wad_to_gc_intercept)
                ][, mw_light := (0.496 * gc_prop) + 307.691
