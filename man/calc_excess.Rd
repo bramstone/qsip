@@ -68,15 +68,20 @@ non-growers and whose median enrichment values will be assumed to be zero. The a
 as a correction to all enrichment values in the sample.}
 
 \item{total_enrich}{Argument of length one describing the total enrichment value of the target isotope(s) achieved. The final fractional isotope enrichment
- calculations will be divided by this amount. A numeric value should be a positive number less than one and will be applied to every sample. A character value
- indicates a column with one or more total enrichment values, so that sample- or group-specific total enrichment values may be applied.
-@param wad_to_gc_slope Single numeric value indicating the slope of the relationship between WAD values and estimated genomic GC content.
- The default value represents that calculated by Hungate \emph{et al.} 2015.
-@param wad_to_gc_intercept Single numeric value indicating the intercept of the relationship between WAD values and estimated genomic GC content.
- The default value represents that calculated by Hungate \emph{et al.} 2015.
-@param nat_abund_13C Single numeric value indicating the default assumption for background 13C. See \code{details}.
-@param nat_abund_15N Single numeric value indicating the default assumption for background 15N See \code{details}.
-@param nat_abund_18O Single numeric value indicating the default assumption for background 18O. See \code{details}.}
+calculations will be divided by this amount. A numeric value should be a positive number less than one and will be applied to every sample. A character value
+indicates a column with one or more total enrichment values, so that sample- or group-specific total enrichment values may be applied.}
+
+\item{wad_to_gc_slope}{Single numeric value indicating the slope of the relationship between WAD values and estimated genomic GC content.
+The default value represents that calculated by Hungate \emph{et al.} 2015.}
+
+\item{wad_to_gc_intercept}{Single numeric value indicating the intercept of the relationship between WAD values and estimated genomic GC content.
+The default value represents that calculated by Hungate \emph{et al.} 2015.}
+
+\item{nat_abund_13C}{Single numeric value indicating the default assumption for background 13C. See \code{details}.}
+
+\item{nat_abund_15N}{Single numeric value indicating the default assumption for background 15N See \code{details}.}
+
+\item{nat_abund_18O}{Single numeric value indicating the default assumption for background 18O. See \code{details}.}
 
 \item{rm_outlers}{Whether or not to remove low fractional enrichment values that are 1.5X lesser than the distance between the 25th quantile
 and interquartile range.
