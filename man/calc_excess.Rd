@@ -18,6 +18,9 @@ calc_excess(
   correction = TRUE,
   rm_outliers = TRUE,
   non_grower_prop = 0.1,
+  total_enrich = 1,
+  wad_to_gc_slope = 0.083506,
+  wad_to_gc_intercept = 1.646057,
   nat_abund_13C = 0.01111233,
   nat_abund_15N = 0.003663004,
   nat_abund_18O = 0.002011429
@@ -64,6 +67,17 @@ For unlabeled "light" samples, treatment groupings will be ignored when assessin
 non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
 as a correction to all enrichment values in the sample.}
 
+\item{total_enrich}{Argument of length one describing the total enrichment value of the target isotope(s) achieved. The final fractional isotope enrichment
+ calculations will be divided by this amount. A numeric value should be a positive number less than one and will be applied to every sample. A character value
+ indicates a column with one or more total enrichment values, so that sample- or group-specific total enrichment values may be applied.
+@param wad_to_gc_slope Single numeric value indicating the slope of the relationship between WAD values and estimated genomic GC content.
+ The default value represents that calculated by Hungate \emph{et al.} 2015.
+@param wad_to_gc_intercept Single numeric value indicating the intercept of the relationship between WAD values and estimated genomic GC content.
+ The default value represents that calculated by Hungate \emph{et al.} 2015.
+@param nat_abund_13C Single numeric value indicating the default assumption for background 13C. See \code{details}.
+@param nat_abund_15N Single numeric value indicating the default assumption for background 15N See \code{details}.
+@param nat_abund_18O Single numeric value indicating the default assumption for background 18O. See \code{details}.}
+
 \item{rm_outlers}{Whether or not to remove low fractional enrichment values that are 1.5X lesser than the distance between the 25th quantile
 and interquartile range.
 If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampling and enrichment calculation.}
@@ -98,7 +112,8 @@ Calculates fractional isotope incorporation in excess of natural abundances
   Where
 
   \deqn{G_{i} = \frac{1}{0.083506} \cdot (W_{Light,i} - 1.646057)}
-  Which indicates the GC content of taxon \emph{i} based on the density of its DNA when unlabeled
+  Which indicates the GC content of taxon \emph{i} based on the density of its DNA when unlabeled.
+  Note that the slope and intercept in this equation may be changed using the \code{wad_to_gc_slope}, and \code{wad_to_gc_intercept} parameters.
 
   The calculation for the fractional of enrichment of taxon \emph{i}, \eqn{A_{i}} is:
 
@@ -109,13 +124,13 @@ Calculates fractional isotope incorporation in excess of natural abundances
   \eqn{N_{x}}: The natural abundance of heavy isotope. Default estimates are: \eqn{N_{18O} = 0.002000429}, \eqn{N_{13C} = 0.01111233},
   and \eqn{N_{15N} = 0.003663004}
 
-  \eqn{N_{Heavymax,i}}: The highest theoretical molecular weight of taxon \emph{i} assuming maximum labeling by the heavy isotope
+  \eqn{M_{Heavymax,i}}: The highest theoretical molecular weight of taxon \emph{i} assuming maximum labeling by the heavy isotope
 
-  \eqn{N_{O,Heavymax,i} = (12.07747 + M_{Light,i}) \cdot L}
+  \eqn{M_{O,Heavymax,i} = (12.07747 + M_{Light,i}) \cdot L}
 
-  \eqn{N_{C,Heavymax,i} = (-0.4987282 \cdot G_{i} + 9.974564 + M_{Light,i}) \cdot L}
+  \eqn{M_{C,Heavymax,i} = (-0.4987282 \cdot G_{i} + 9.974564 + M_{Light,i}) \cdot L}
 
-  \eqn{N_{N,Heavymax,i} =( 0.5024851 \cdot G_{i} + 3.517396 + M_{Light,i}) \cdot L}
+  \eqn{M_{N,Heavymax,i} =( 0.5024851 \cdot G_{i} + 3.517396 + M_{Light,i}) \cdot L}
 
   \emph{L}: The maximum label possible based off the percent of heavy isotope making up the atoms of that element in the labeled treatment
 }

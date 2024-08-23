@@ -34,15 +34,15 @@
 #'  non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
 #'  as a correction to all enrichment values in the sample.
 #' @param total_enrich Argument of length one describing the total enrichment value of the target isotope(s) achieved. The final fractional isotope enrichment
-#   calculations will be divided by this amount. A numeric value should be a positive number less than one and will be applied to every sample. A character value
-#   indicates a column with one or more total enrichment values, so that sample- or group-specific total enrichment values may be applied.
-#  @param wad_to_gc_slope Single numeric value indicating the slope of the relationship between WAD values and estimated genomic GC content. 
-#   The default value represents that calculated by Hungate \emph{et al.} 2015.
-#  @param wad_to_gc_intercept Single numeric value indicating the intercept of the relationship between WAD values and estimated genomic GC content. 
-#   The default value represents that calculated by Hungate \emph{et al.} 2015.
-#  @param nat_abund_13C Single numeric value indicating the default assumption for background 13C. See \code{details}.
-#  @param nat_abund_15N Single numeric value indicating the default assumption for background 15N See \code{details}.
-#  @param nat_abund_18O Single numeric value indicating the default assumption for background 18O. See \code{details}.
+#'   calculations will be divided by this amount. A numeric value should be a positive number less than one and will be applied to every sample. A character value
+#'   indicates a column with one or more total enrichment values, so that sample- or group-specific total enrichment values may be applied.
+#'  @param wad_to_gc_slope Single numeric value indicating the slope of the relationship between WAD values and estimated genomic GC content.
+#'   The default value represents that calculated by Hungate \emph{et al.} 2015.
+#'  @param wad_to_gc_intercept Single numeric value indicating the intercept of the relationship between WAD values and estimated genomic GC content.
+#'   The default value represents that calculated by Hungate \emph{et al.} 2015.
+#'  @param nat_abund_13C Single numeric value indicating the default assumption for background 13C. See \code{details}.
+#'  @param nat_abund_15N Single numeric value indicating the default assumption for background 15N See \code{details}.
+#'  @param nat_abund_18O Single numeric value indicating the default assumption for background 18O. See \code{details}.
 #'
 #' @details \code{calc_excess} automatically averages the isotopically unamended WAD values for each taxonomic feature on the assumption that density values
 #'   will be identical (or nearly identical) for those samples.
@@ -237,7 +237,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                         all.x = TRUE)
       setnames(dat_boot, paste0('V', i), 'resample_rep')
       dat_boot <- dat_boot[, `:=` (wad = wad[resample_rep],
-                                   te = te[resample_rep]), 
+                                   te = te[resample_rep]),
                            by = c(tax_id, grouping_cols, 'iso_trt')]
       # convert to wide format
       dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = 'sid', wads = wads, iso_trt = iso_trt, isotope = isotope)
