@@ -33,6 +33,16 @@
 #' @param non_grower_prop Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
 #'  non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
 #'  as a correction to all enrichment values in the sample.
+#' @param total_enrich Argument of length one describing the total enrichment value of the target isotope(s) achieved. The final fractional isotope enrichment
+#   calculations will be divided by this amount. A numeric value should be a positive number less than one and will be applied to every sample. A character value
+#   indicates a column with one or more total enrichment values, so that sample- or group-specific total enrichment values may be applied.
+#  @param wad_to_gc_slope Single numeric value indicating the slope of the relationship between WAD values and estimated genomic GC content. 
+#   The default value represents that calculated by Hungate \emph{et al.} 2015.
+#  @param wad_to_gc_intercept Single numeric value indicating the intercept of the relationship between WAD values and estimated genomic GC content. 
+#   The default value represents that calculated by Hungate \emph{et al.} 2015.
+#  @param nat_abund_13C Single numeric value indicating the default assumption for background 13C. See \code{details}.
+#  @param nat_abund_15N Single numeric value indicating the default assumption for background 15N See \code{details}.
+#  @param nat_abund_18O Single numeric value indicating the default assumption for background 18O. See \code{details}.
 #'
 #' @details \code{calc_excess} automatically averages the isotopically unamended WAD values for each taxonomic feature on the assumption that density values
 #'   will be identical (or nearly identical) for those samples.
@@ -58,13 +68,13 @@
 #'   \eqn{N_{x}}: The natural abundance of heavy isotope. Default estimates are: \eqn{N_{18O} = 0.002000429}, \eqn{N_{13C} = 0.01111233},
 #'   and \eqn{N_{15N} = 0.003663004}
 #'
-#'   \eqn{N_{Heavymax,i}}: The highest theoretical molecular weight of taxon \emph{i} assuming maximum labeling by the heavy isotope
+#'   \eqn{M_{Heavymax,i}}: The highest theoretical molecular weight of taxon \emph{i} assuming maximum labeling by the heavy isotope
 #'
-#'   \eqn{N_{O,Heavymax,i} = (12.07747 + M_{Light,i}) \cdot L}
+#'   \eqn{M_{O,Heavymax,i} = (12.07747 + M_{Light,i}) \cdot L}
 #'
-#'   \eqn{N_{C,Heavymax,i} = (-0.4987282 \cdot G_{i} + 9.974564 + M_{Light,i}) \cdot L}
+#'   \eqn{M_{C,Heavymax,i} = (-0.4987282 \cdot G_{i} + 9.974564 + M_{Light,i}) \cdot L}
 #'
-#'   \eqn{N_{N,Heavymax,i} =( 0.5024851 \cdot G_{i} + 3.517396 + M_{Light,i}) \cdot L}
+#'   \eqn{M_{N,Heavymax,i} =( 0.5024851 \cdot G_{i} + 3.517396 + M_{Light,i}) \cdot L}
 #'
 #'   \emph{L}: The maximum label possible based off the percent of heavy isotope making up the atoms of that element in the labeled treatment
 #'
@@ -115,6 +125,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                         iso_trt = c(), isotope = c(),
                         bootstrap = FALSE, iters = 999L, grouping_cols = c(), min_freq = 3,
                         correction = TRUE, rm_outliers = TRUE, non_grower_prop = 0.1,
+                        total_enrich = 1,
                         wad_to_gc_slope = 0.083506, wad_to_gc_intercept = 1.646057,
                         nat_abund_13C = 0.01111233, nat_abund_15N = 0.003663004, nat_abund_18O = 0.002011429) {
   vars <- list(tax_id, sample_id, iso_trt, isotope)
@@ -131,6 +142,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     missing_vars <- paste(vars[missing_vars], sep = ',')
     stop("Missing the following column(s) in supplied data: ", missing_vars)
   }
+  if(length(total_prop) > 1 | total_prop > 1 | total_prop < 0) stop("total_enrich either a column name or a single numeric value between 0 and 1")
   if(bootstrap == FALSE) {
     eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
     # calculate molecular weights
@@ -163,9 +175,12 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
         neg_out <- -Inf
       }
     }
+    # adjust enrichment for total labeling environment - default value of 1 results in no change
+    if(is.character(total_enrich)) setnames(eafd, old = total_enrich, new = 'te')
+    eafd[, eaf := eaf / te]
     # clean final data output
     # remove NA EAF values - this will also remove all the unlabeled samples
-    eafd <- eafd[!is.na(eaf), !c('label', 'light', 'gc_prop',
+    eafd <- eafd[!is.na(eaf), !c('label', 'light', 'gc_prop', 'te',
                                  'mw_light', 'mw_label', 'mw_max', 'nat_abund')]
     setnames(eafd, 'wvd_label', 'wvd', skip_absent = TRUE)
   ####################
@@ -174,6 +189,8 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   } else if(bootstrap == TRUE) {
     bd <- copy(data)
     setnames(bd, old = c(sample_id, iso_trt, wads), new = c('sid', 'iso_trt', 'wad'))
+    # account for total enrichment
+    if(is.character(total_enrich)) setnames(bd, old = total_enrich, new = 'te') else bd[, te := total_enrich]
     # make sure iso_trt column is a factor
     if(is.factor(bd[[iso_trt]]) == FALSE || nlevels(bd[[iso_trt]]) > 2) {
       test_trt <- factor(bd[[iso_trt]])
@@ -219,7 +236,9 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                         by = c('sid', grouping_cols),
                         all.x = TRUE)
       setnames(dat_boot, paste0('V', i), 'resample_rep')
-      dat_boot <- dat_boot[, wad := wad[resample_rep], by = c(tax_id, grouping_cols, 'iso_trt')]
+      dat_boot <- dat_boot[, `:=` (wad = wad[resample_rep],
+                                   te = te[resample_rep]), 
+                           by = c(tax_id, grouping_cols, 'iso_trt')]
       # convert to wide format
       dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = 'sid', wads = wads, iso_trt = iso_trt, isotope = isotope)
       dat_boot <- dat_boot[get(isotope) %in% c('18O', '13C', '15N')]
@@ -232,7 +251,9 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                ][get(isotope) == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
                  ][get(isotope) == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
                    ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
-      # calculate mean enrichment for
+      # adjust enrichment for total labeling environment - default value of 1 results in no change
+      eafd[, eaf := eaf / te]
+      # calculate mean enrichment for bootstrap iteration
       dat_boot <- dat_boot[, .(eaf = mean(eaf)), by = c(tax_id, grouping_cols)]
       # add iteration count to EAF columns
       setnames(dat_boot, 'eaf', paste0('eaf_', i))
