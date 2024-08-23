@@ -21,28 +21,28 @@
 #'  WAD values used to generate a distribution of enrichment values for each taxon.
 #' @param iters Integer specifying the number of bootstrap iterations to perform.
 #' @param grouping_cols Column(s) used to indicate bootstrap resampling groups.
-#' Within each group, replicates will be resampled with replacement.
-#' Resampling will not occur across groups.
+#'  Within each group, replicates will be resampled with replacement.
+#'  Resampling will not occur across groups.
 #' @param min_freq Minimum number of replicates a taxonomic feature must occur in to be kept.
 #'  If treatment grouping columns are specified, frequencies will be assessed at this level.
 #'  For unlabeled "light" samples, treatment groupings will be ignored when assessing adequate frequency of occurrence.
 #' @param correction Whether to apply a correction to fractional enrichment values to ensure a certain proportion are positive.
 #' @param rm_outlers Whether or not to remove low fractional enrichment values that are 1.5X lesser than the distance between the 25th quantile
-#'   and interquartile range.
-#'   If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampling and enrichment calculation.
+#'  and interquartile range.
+#'  If \code{bootstrap = TRUE}, outlier WAD values will be removed prior to resampling and enrichment calculation.
 #' @param non_grower_prop Fractional value applied if \code{correction == TRUE} specifying the proportion of the community in each samples assumed to be
 #'  non-growers and whose median enrichment values will be assumed to be zero. The adjustment necessary to place this median value at zero will be applied
 #'  as a correction to all enrichment values in the sample.
 #' @param total_enrich Argument of length one describing the total enrichment value of the target isotope(s) achieved. The final fractional isotope enrichment
-#'   calculations will be divided by this amount. A numeric value should be a positive number less than one and will be applied to every sample. A character value
-#'   indicates a column with one or more total enrichment values, so that sample- or group-specific total enrichment values may be applied.
-#'  @param wad_to_gc_slope Single numeric value indicating the slope of the relationship between WAD values and estimated genomic GC content.
-#'   The default value represents that calculated by Hungate \emph{et al.} 2015.
-#'  @param wad_to_gc_intercept Single numeric value indicating the intercept of the relationship between WAD values and estimated genomic GC content.
-#'   The default value represents that calculated by Hungate \emph{et al.} 2015.
-#'  @param nat_abund_13C Single numeric value indicating the default assumption for background 13C. See \code{details}.
-#'  @param nat_abund_15N Single numeric value indicating the default assumption for background 15N See \code{details}.
-#'  @param nat_abund_18O Single numeric value indicating the default assumption for background 18O. See \code{details}.
+#'  calculations will be divided by this amount. A numeric value should be a positive number less than one and will be applied to every sample. A character value
+#'  indicates a column with one or more total enrichment values, so that sample- or group-specific total enrichment values may be applied.
+#' @param wad_to_gc_slope Single numeric value indicating the slope of the relationship between WAD values and estimated genomic GC content.
+#'  The default value represents that calculated by Hungate \emph{et al.} 2015.
+#' @param wad_to_gc_intercept Single numeric value indicating the intercept of the relationship between WAD values and estimated genomic GC content.
+#'  The default value represents that calculated by Hungate \emph{et al.} 2015.
+#' @param nat_abund_13C Single numeric value indicating the default assumption for background 13C. See \code{details}.
+#' @param nat_abund_15N Single numeric value indicating the default assumption for background 15N See \code{details}.
+#' @param nat_abund_18O Single numeric value indicating the default assumption for background 18O. See \code{details}.
 #'
 #' @details \code{calc_excess} automatically averages the isotopically unamended WAD values for each taxonomic feature on the assumption that density values
 #'   will be identical (or nearly identical) for those samples.
@@ -142,7 +142,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     missing_vars <- paste(vars[missing_vars], sep = ',')
     stop("Missing the following column(s) in supplied data: ", missing_vars)
   }
-  if(length(total_prop) > 1 | total_prop > 1 | total_prop < 0) stop("total_enrich either a column name or a single numeric value between 0 and 1")
+  if(length(total_enrich) > 1 | total_enrich > 1 | total_enrich < 0) stop("total_enrich either a column name or a single numeric value between 0 and 1")
   if(bootstrap == FALSE) {
     eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
     # calculate molecular weights
