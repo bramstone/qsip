@@ -38,6 +38,13 @@ first value in alphabetical order will be assumed to be the lowest factor level 
 \code{wad_wide} returns a wide-transformed data.table where each row represents a taxonomic feature within a single replicate.
  If averaging unamended ("light") values is not performed, each taxon will have one numeric value and one \code{NA}
  value based on whether it was present in an unamended "light" sample or an amended "heavy" sample.
+
+ If \code{iso_trt} is not a factor, then it will be coerced to one and it will
+ return a message telling the user which value was assigned to which isotope labeling level.
+ Most users adopt a scheme of using the terms "light" and "label" to define their
+ treatments but please note that the word "label" comes first in the alphabet and
+ will be assigned by the function to be the unlabeled or light treatment.
+ If you wish to avoid this (you almost certainly do), you must specify your factor levels beforehand.
 }
 \description{
 Transforms weighted average density values into wide-format
@@ -48,6 +55,9 @@ Transforms weighted average density values into wide-format
 
  # relativize sequence abundances (should be done after taxonomic filtering)
  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
+
+ # ensure that the "light" treatment is the first factor level in the isotope treatment column
+ levels(example_qsip$iso_trt)
 
  # calculate weighted average densities
  wads <- calc_wad(example_qsip,

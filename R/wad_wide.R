@@ -20,6 +20,13 @@
 #'  If averaging unamended ("light") values is not performed, each taxon will have one numeric value and one \code{NA}
 #'  value based on whether it was present in an unamended "light" sample or an amended "heavy" sample.
 #'
+#'  If \code{iso_trt} is not a factor, then it will be coerced to one and it will
+#'  return a message telling the user which value was assigned to which isotope labeling level.
+#'  Most users adopt a scheme of using the terms "light" and "label" to define their
+#'  treatments but please note that the word "label" comes first in the alphabet and
+#'  will be assigned by the function to be the unlabeled or light treatment.
+#'  If you wish to avoid this (you almost certainly do), you must specify your factor levels beforehand.
+#'
 #'
 #' @seealso \code{\link{calc_wad}}, \code{\link{calc_excess}}
 #'
@@ -29,6 +36,9 @@
 #'
 #'  # relativize sequence abundances (should be done after taxonomic filtering)
 #'  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
+#'
+#'  # ensure that the "light" treatment is the first factor level in the isotope treatment column
+#'  levels(example_qsip$iso_trt)
 #'
 #'  # calculate weighted average densities
 #'  wads <- calc_wad(example_qsip,
@@ -64,9 +74,9 @@ wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   if(is.factor(ww[[iso_trt]]) == FALSE || nlevels(ww[[iso_trt]]) > 2) {
     test_trt <- factor(ww[[iso_trt]])
     light_trt <- levels(test_trt)[1]
-    message('Assigned ', light_trt, ' as the unamended or "light" treatment and ',
+    message('Assigned user value "', light_trt, '" as the unamended or light treatment and user value "',
             levels(test_trt)[!levels(test_trt) %in% light_trt],
-            ' as the "heavy" treatment(s).')
+            '" as the heavy treatment(s).')
     ww[[iso_trt]] <- factor(ww[[iso_trt]])
   }
   # rename factor levels
