@@ -91,6 +91,13 @@
 #'  In addition, probability that a taxon's enrichment was less than zero is represented
 #'  in the \code{p_val} column which is based on the proportion sub-zero bootstrapped observations.
 #'
+#'  If \code{iso_trt} is not a factor, then it will be coerced to one and it will
+#'  return a message telling the user which value was assigned to which isotope labeling level.
+#'  Most users adopt a scheme of using the terms "light" and "label" to define their
+#'  treatments but please note that the word "label" comes first in the alphabet and
+#'  will be assigned by the function to be the unlabeled or light treatment.
+#'  If you wish to avoid this (you almost certainly do), you must specify your factor levels beforehand.
+#'
 #'
 #' @seealso \code{\link{calc_wad}, \link{wad_wide}}
 #'
@@ -100,6 +107,9 @@
 #'
 #'  # relativize sequence abundances (should be done after taxonomic filtering)
 #'  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
+#'
+#'  # ensure that the "light" treatment is the first factor level in the isotope treatment column
+#'  levels(example_qsip$iso_trt)
 #'
 #'  # calculate weighted average densities
 #'  wads <- calc_wad(example_qsip,
@@ -145,14 +155,15 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   if(length(total_enrich) > 1 | total_enrich > 1 | total_enrich < 0) stop("total_enrich either a column name or a single numeric value between 0 and 1")
   if(bootstrap == FALSE) {
     eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
+    setnames(eafd, old = isotope, new = 'iso')
     # calculate molecular weights
     eafd[, gc_prop := (1 / wad_to_gc_slope) * (light - wad_to_gc_intercept)
          ][, mw_light := (0.496 * gc_prop) + 307.691
            ][, mw_label := (((label - light) / light) + 1) * mw_light]
     # calculate enrichment
-    eafd[get(isotope) == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
-         ][get(isotope) == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
-           ][get(isotope) == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
+    eafd[iso == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
+         ][iso == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
+           ][iso == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
              ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
     # correct enrichment values
     if(rm_outliers == TRUE) {
@@ -182,22 +193,22 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     # remove NA EAF values - this will also remove all the unlabeled samples
     eafd <- eafd[!is.na(eaf), !c('label', 'light', 'gc_prop', 'te',
                                  'mw_light', 'mw_label', 'mw_max', 'nat_abund')]
-    setnames(eafd, 'wvd_label', 'wvd', skip_absent = TRUE)
+    setnames(eafd, old = c('wvd_label', 'iso'), new = c('wvd', isotope), skip_absent = TRUE)
   ####################
   # BOOTSTRAPPING CODE
   ####################
   } else if(bootstrap == TRUE) {
     bd <- copy(data)
-    setnames(bd, old = c(sample_id, iso_trt, wads), new = c('sid', 'iso_trt', 'wad'))
+    setnames(bd, old = c(sample_id, iso_trt, wads, isotope), new = c('sid', 'iso_trt', 'wad', 'iso'))
     # account for total enrichment
     if(is.character(total_enrich)) setnames(bd, old = total_enrich, new = 'te') else bd[, te := total_enrich]
     # make sure iso_trt column is a factor
     if(is.factor(bd[[iso_trt]]) == FALSE || nlevels(bd[[iso_trt]]) > 2) {
       test_trt <- factor(bd[[iso_trt]])
       light_trt <- levels(test_trt)[1]
-      message('Assigned ', light_trt, ' as the unamended or "light" treatment and ',
+      message('Assigned user value "', light_trt, '" as the unamended or light treatment and user value "',
               levels(test_trt)[!levels(test_trt) %in% light_trt],
-              ' as the "heavy" treatment(s).')
+              '" as the heavy treatment(s).')
       bd[[iso_trt]] <- factor(bd[[iso_trt]])
     }
     # rename factor levels
@@ -240,16 +251,16 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                                    te = te[resample_rep]),
                            by = c(tax_id, grouping_cols, 'iso_trt')]
       # convert to wide format
-      dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = 'sid', wads = wads, iso_trt = iso_trt, isotope = isotope)
-      dat_boot <- dat_boot[get(isotope) %in% c('18O', '13C', '15N')]
+      dat_boot <- wad_wide(dat_boot, tax_id = tax_id, sample_id = 'sid', wads = wads, iso_trt = iso_trt, isotope = 'iso')
+      dat_boot <- dat_boot[iso %in% c('18O', '13C', '15N')]
       # calculate molecular weights
       dat_boot[, gc_prop := (1 / wad_to_gc_slope) * (light - wad_to_gc_intercept)
                ][, mw_light := (0.496 * gc_prop) + 307.691
                  ][, mw_label := (((label - light) / light) + 1) * mw_light]
       # calculate enrichment
-      dat_boot[get(isotope) == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
-               ][get(isotope) == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
-                 ][get(isotope) == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
+      dat_boot[iso == '18O', `:=` (mw_max = mw_light + 12.07747, nat_abund = nat_abund_18O)
+               ][iso == '13C', `:=` (mw_max = mw_light + 9.974564 + (-0.4987282 * gc_prop), nat_abund = nat_abund_13C)
+                 ][iso == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
                    ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
       # adjust enrichment for total labeling environment - default value of 1 results in no change
       eafd[, eaf := eaf / te]
@@ -292,7 +303,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     # combine and remove NA values -- this will also remove all the unlabeled samples
     eafd <- merge(eaf_med_ci, eaf_pval)
     eafd <- eafd[!is.na(`50%`)]
-    # setnames(eafd, old = '50%', new = 'eaf_boot')
+    setnames(eafd, old = 'iso', new = isotope)
   }
   return(eafd)
 }
