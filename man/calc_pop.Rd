@@ -84,6 +84,13 @@ as a correction to all enrichment values in the sample.}
  In addition, probability that a taxon's enrichment was less than zero is represented
  in the \code{p_val} column which is based on the proportion sub-zero bootstrapped observations.
  Growth and mortality rates are differentiated by the \code{rate} column.
+
+ If \code{iso_trt} is not a factor, then it will be coerced to one and it will
+ return a message telling the user which value was assigned to which isotope labeling level.
+ Most users adopt a scheme of using the terms "light" and "label" to define their
+ treatments but please note that the word "label" comes first in the alphabet and
+ will be assigned by the function to be the unlabeled or light treatment.
+ If you wish to avoid this (you almost certainly do), you must specify your factor levels beforehand.
 }
 \description{
 Calculates population growth and death rates
@@ -105,6 +112,9 @@ Calculates population growth and death rates
 
  # relativize sequence abundances (should be done after taxonomic filtering)
  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
+
+ # ensure that the "light" treatment is the first factor level in the isotope treatment column
+ levels(example_qsip$iso_trt)
 
  # calculate weighted average densities
  wads <- calc_wad(example_qsip,
