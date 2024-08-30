@@ -167,8 +167,8 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
              ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
     # correct enrichment values
     if(rm_outliers == TRUE) {
-      neg_out <- neg_outlier(eafd$eaf)
-      pos_out <- pos_outlier(eafd$eaf)
+      pos_out <- suppressWarnings(pos_outlier(eafd$eaf))
+      neg_out <- suppressWarnings(neg_outlier(eafd$eaf))
     } else {
       neg_out <- -Inf
       pos_out <- Inf
@@ -187,7 +187,11 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       }
     }
     # adjust enrichment for total labeling environment - default value of 1 results in no change
-    if(is.character(total_enrich)) setnames(eafd, old = total_enrich, new = 'te')
+    if(is.character(total_enrich)) {
+      setnames(eafd, old = total_enrich, new = 'te')
+      } else {
+        eafd[, te := total_enrich]
+      }
     eafd[, eaf := eaf / te]
     # clean final data output
     # remove NA EAF values - this will also remove all the unlabeled samples
@@ -220,8 +224,8 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                  ][, rep_freq := NULL]
     # remove outlier WAD values
       if(rm_outliers) {
-        pos_out <- pos_outlier(bd$wad)
-        neg_out <- neg_outlier(bd$wad)
+        pos_out <- suppressWarnings(pos_outlier(bd$wad))
+        neg_out <- suppressWarnings(neg_outlier(bd$wad))
       } else {
         pos_out <- Inf
         neg_out <- -Inf
