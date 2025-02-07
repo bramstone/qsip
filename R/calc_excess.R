@@ -267,7 +267,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                  ][iso == '15N', `:=` (mw_max = mw_light + 3.517396 + (0.5024851 * gc_prop), nat_abund = nat_abund_15N)
                    ][, eaf := ((mw_label - mw_light) / (mw_max - mw_light)) * (1 - nat_abund)]
       # adjust enrichment for total labeling environment - default value of 1 results in no change
-      eafd[, eaf := eaf / te]
+      dat_boot[, eaf := eaf / te]
       # calculate mean enrichment for bootstrap iteration
       dat_boot <- dat_boot[, .(eaf = mean(eaf)), by = c(tax_id, grouping_cols)]
       # add iteration count to EAF columns
