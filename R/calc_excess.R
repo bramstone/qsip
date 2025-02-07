@@ -232,15 +232,15 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       }
     bd <- bd[wad > neg_out]
     # set keys and sort for faster merging in for-loop
-    bd <- setkeyv(bd, c(tax_id, grouping_cols))
+    bd <- setkeyv(bd, c(tax_id, grouping_cols, 'iso'))
     # store permutation output in a data.table
-    eaf_output <- subset(bd, iso_trt == 'label', select = c(tax_id, grouping_cols))
+    eaf_output <- subset(bd, iso_trt == 'label', select = c(tax_id, grouping_cols, 'iso'))
     eaf_output <- unique(eaf_output)
     # quickly generate a list of replicate resampling permutations within your grouping variables
-    reps <- subset(bd, select = c('sid', 'iso_trt', grouping_cols))
+    reps <- subset(bd, select = c('sid', 'iso_trt', grouping_cols, 'iso'))
     reps <- unique(reps)
-    reps[, rep_count := uniqueN(sid), by = c('iso_trt', grouping_cols)]
-    resamps <- reps[, as.list(sample.int(rep_count, iters, replace = TRUE)), by = c('sid', grouping_cols)]
+    reps[, rep_count := uniqueN(sid), by = c('iso_trt', grouping_cols, 'iso')]
+    resamps <- reps[, as.list(sample.int(rep_count, iters, replace = TRUE)), by = c('sid', grouping_cols, 'iso')]
     #----------------
     # BEGINNING OF FOR-LOOP
     for(i in 1:iters) {
@@ -269,15 +269,15 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       # adjust enrichment for total labeling environment - default value of 1 results in no change
       dat_boot[, eaf := eaf / te]
       # calculate mean enrichment for bootstrap iteration
-      dat_boot <- dat_boot[, .(eaf = mean(eaf)), by = c(tax_id, grouping_cols)]
+      dat_boot <- dat_boot[, .(eaf = mean(eaf)), by = c(tax_id, grouping_cols, 'iso')]
       # add iteration count to EAF columns
       setnames(dat_boot, 'eaf', paste0('eaf_', i))
       # add EAF values to output data
-      cols_to_add <- c(tax_id, grouping_cols, paste0('eaf_', i))
+      cols_to_add <- c(tax_id, grouping_cols, 'iso', paste0('eaf_', i))
       eaf_output <- merge(eaf_output,
                           dat_boot[, ..cols_to_add],
                           all.x = TRUE,
-                          by = c(tax_id, grouping_cols),
+                          by = c(tax_id, grouping_cols, 'iso'),
                           sort = FALSE)
     }
     # END OF FOR-LOOP
@@ -285,7 +285,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     rm(dat_boot, i, cols_for_subsample, cols_to_add)
     # Calculate distribution of 18O EAF values
     eaf_output <- melt(eaf_output,
-                       id.vars = c(tax_id, grouping_cols),
+                       id.vars = c(tax_id, grouping_cols, 'iso'),
                        variable.name = 'iteration',
                        value.name = 'eaf',
                        na.rm = TRUE)
@@ -294,16 +294,15 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       shift <- eaf_output[!is.na(eaf)
                           ][order(eaf)
                             ][, .(shift = median(eaf[1:floor(non_grower_prop * .N)])),
-                              by = c(grouping_cols, 'iteration')]
-      eaf_output <- merge(eaf_output, shift, by = c(grouping_cols, 'iteration'), all.x = TRUE)
+                              by = c(grouping_cols, 'iso', 'iteration')]
+      eaf_output <- merge(eaf_output, shift, by = c(grouping_cols, 'iso', 'iteration'), all.x = TRUE)
       eaf_output[, eaf := eaf - shift][, shift := NULL]
     }
     # note: your EAF confidence interval columns are called `2.5%`, `50%`, and `97.5%`
     eaf_med_ci <- eaf_output[, as.list(quantile(eaf, probs = c(0.025, .5, .975), na.rm = TRUE)),
-                             by = c(tax_id, grouping_cols)]
+                             by = c(tax_id, grouping_cols, 'iso')]
     # calculate p-value for EAF being greater than 0
-    eaf_pval <- eaf_output[, 1 - (sum(eaf > 0) / .N), by = c(tax_id, grouping_cols)]
-    setnames(eaf_pval, 'V1', 'p_val')
+    eaf_pval <- eaf_output[, .(p_val = 1 - (sum(eaf > 0) / .N)), by = c(tax_id, grouping_cols, 'iso')]
     # combine and remove NA values -- this will also remove all the unlabeled samples
     eafd <- merge(eaf_med_ci, eaf_pval)
     eafd <- eafd[!is.na(`50%`)]
