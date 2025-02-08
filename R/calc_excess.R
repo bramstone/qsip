@@ -155,9 +155,9 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   bad_tot_enrich_msg <- 'Total_enrich must be either a single olumn name or a single numeric value between 0 and 1'
   if(length(total_enrich) > 1) {
     stop(bad_tot_enrich_msg)
-  } else if(is.character(tot_enrich)) {
+  } else if(is.character(total_enrich)) {
     if(!exists(total_enrich, data)) stop(bad_tot_enrich_msg)
-  } else if(is.numeric(tot_enrich))
+  } else if(is.numeric(total_enrich))
     if(total_enrich > 1 | total_enrich <= 0) stop(bad_tot_enrich_msg)
   #
   if(bootstrap == FALSE) {
