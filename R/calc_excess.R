@@ -152,9 +152,14 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     missing_vars <- paste(vars[missing_vars], sep = ',')
     stop("Missing the following column(s) in supplied data: ", missing_vars)
   }
-  if(!exists(total_enrich, data)) {
-    if(length(total_enrich) > 1 | total_enrich > 1 | total_enrich < 0) stop("total_enrich must be either a single olumn name or a single numeric value between 0 and 1")
-  }
+  bad_tot_enrich_msg <- 'Total_enrich must be either a single olumn name or a single numeric value between 0 and 1'
+  if(length(total_enrich) > 1) {
+    stop(bad_tot_enrich_msg)
+  } else if(is.character(tot_enrich)) {
+    if(!exists(total_enrich, data)) stop(bad_tot_enrich_msg)
+  } else if(is.numeric(tot_enrich))
+    if(total_enrich > 1 | total_enrich <= 0) stop(bad_tot_enrich_msg)
+  #
   if(bootstrap == FALSE) {
     eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
     setnames(eafd, old = isotope, new = 'iso')
@@ -246,7 +251,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     #----------------
     # BEGINNING OF FOR-LOOP
     for(i in 1:iters) {
-      cat('bootstrap iteration', i, 'of', iters, '\r')
+      cat('Bootstrap iteration', i, 'of', iters, '\r')
       cols_for_subsample <- c('sid', grouping_cols, paste0('V', i))
       # subsample replicates
       dat_boot <- merge(bd, resamps[, ..cols_for_subsample],
