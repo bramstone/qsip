@@ -152,7 +152,9 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     missing_vars <- paste(vars[missing_vars], sep = ',')
     stop("Missing the following column(s) in supplied data: ", missing_vars)
   }
-  if(length(total_enrich) > 1 | total_enrich > 1 | total_enrich < 0) stop("total_enrich either a column name or a single numeric value between 0 and 1")
+  if(!exists(total_enrich, data)) {
+    if(length(total_enrich) > 1 | total_enrich > 1 | total_enrich < 0) stop("total_enrich must be either a single olumn name or a single numeric value between 0 and 1")
+  }
   if(bootstrap == FALSE) {
     eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
     setnames(eafd, old = isotope, new = 'iso')
