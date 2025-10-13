@@ -1,0 +1,13 @@
+#test of freq_filter function using testthat 
+
+test_that("freq_filter produces expected output", {
+  data(example_qsip)
+  example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]
+  filtered_qsip <- freq_filter(example_qsip, 
+                            min_freq = 3, 
+                            filter_target = 'sampleID',
+                            tax_id = 'asv_id')
+  expect_s3_class(filtered_qsip, "data.table")
+  expect_true(nrow(filtered_qsip) > 0)
+  expect_true(nrow(filtered_qsip) < nrow(example_qsip))
+})
