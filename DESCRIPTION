@@ -19,6 +19,6 @@ LazyData: true
 Depends: R (>= 4.0.0)
 Imports:
     data.table (>= 1.14.6)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.3
 Suggests:
     testthat (>= 3.2.3)
