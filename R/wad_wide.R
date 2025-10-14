@@ -55,7 +55,7 @@
 
 wad_wide <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
                      iso_trt = c(), isotope = c(), average_light = TRUE) {
-  vars <- list(tax_id, sample_id, iso_trt, isotope)
+  vars <- list(tax_id, sample_id, isotope, iso_trt)
   if(any(sapply(vars, is.null))) {
     null_vars <- which(sapply(vars, is.null))
     null_vars <- paste(c('taxon IDs', 'sample IDs', 'isotope addition (for each row "13C" or "15N" or "18O")',

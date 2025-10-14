@@ -70,6 +70,11 @@ The weighted average buoyant density (WAD) for taxon's DNA \emph{i} in replicate
   \eqn{x_{jk}}: Density of fraction \emph{k} of replicate \emph{j} in (g cm\eqn{^-3})
 }
 \examples{
+\dontrun{
+ # Load required packages
+ library(data.table)
+ library(qsip)
+
  # Load in example data
  data(example_qsip)
 
@@ -82,6 +87,7 @@ The weighted average buoyant density (WAD) for taxon's DNA \emph{i} in replicate
                   frac_dens = 'Density.g.ml', frac_abund = 'avg_16S_g_soil',
                   rel_abund = 'rel_abund',
                   grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
+}
 
 }
 \references{

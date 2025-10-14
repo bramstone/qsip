@@ -1,5 +1,7 @@
 #test of calc_wad function using testthat 
 
+library(data.table)
+
 test_that("calc_wad produces expected output", {
   data(example_qsip)
   example_qsip[, rel_abund := seq_abund / sum(seq_abund), by = sampleID]

@@ -102,6 +102,11 @@
 #' @seealso \code{\link{calc_wad}, \link{wad_wide}}
 #'
 #' @examples
+#' \dontrun{
+#'  # Load required packages
+#'  library(data.table)
+#'  library(qsip)
+#'
 #'  # Load in example data
 #'  data(example_qsip)
 #'
@@ -121,6 +126,7 @@
 #'  # calculate fractional enrichment in excess of background
 #'  eaf <- calc_excess(wads, tax_id = 'asv_id', sample_id = 'sampleID',
 #'                     iso_trt = 'iso_trt', isotope = 'isotope')
+#' }
 #'
 #' @references
 #'  Hungate, Bruce, \emph{et al.} 2015. Quantitative microbial ecology through stable isotope probing.
@@ -141,8 +147,8 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   vars <- list(tax_id, sample_id, iso_trt, isotope)
   if(any(sapply(vars, is.null))) {
     null_vars <- which(sapply(vars, is.null))
-    null_vars <- paste(c('taxon IDs', 'sample IDs', 'isotope addition (for each row "13C" or "15N" or "18O")',
-                         'isotope treatment (amended or unamended)')[null_vars],
+    null_vars <- paste(c('taxon IDs', 'sample IDs', 'isotope treatment (amended or unamended)',
+                         'isotope addition (for each row "13C" or "15N" or "18O")',)[null_vars],
                        sep = ',')
     stop("Must supply the following columns: ", null_vars)
   }
@@ -162,7 +168,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
   #
   if(bootstrap == FALSE) {
     eafd <- wad_wide(data, tax_id = tax_id, sample_id = sample_id, wads = wads, iso_trt = iso_trt, isotope = isotope)
-    setnames(eafd, old = isotope, new = 'iso')
+    data.table::setnames(eafd, old = isotope, new = 'iso')
     # calculate molecular weights
     eafd[, gc_prop := (1 / wad_to_gc_slope) * (light - wad_to_gc_intercept)
          ][, mw_light := (0.496 * gc_prop) + 307.691
@@ -195,7 +201,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     }
     # adjust enrichment for total labeling environment - default value of 1 results in no change
     if(is.character(total_enrich)) {
-      setnames(eafd, old = total_enrich, new = 'te')
+      data.table::setnames(eafd, old = total_enrich, new = 'te')
       } else {
         eafd[, te := total_enrich]
       }
@@ -204,15 +210,18 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     # remove NA EAF values - this will also remove all the unlabeled samples
     eafd <- eafd[!is.na(eaf), !c('label', 'light', 'gc_prop', 'te',
                                  'mw_light', 'mw_label', 'mw_max', 'nat_abund')]
-    setnames(eafd, old = c('wvd_label', 'iso'), new = c('wvd', isotope), skip_absent = TRUE)
+    data.table::setnames(eafd, old = c('wvd_label', 'iso'), new = c('wvd', isotope), skip_absent = TRUE)
   ####################
   # BOOTSTRAPPING CODE
   ####################
   } else if(bootstrap == TRUE) {
+        if(any(grouping_cols %in% c(iso_trt, isotope))) {
+      stop('Grouping columns should not include the iso_trt or isotope columns.')
+    }
     bd <- copy(data)
-    setnames(bd, old = c(sample_id, iso_trt, wads, isotope), new = c('sid', 'iso_trt', 'wad', 'iso'))
+    data.table::setnames(bd, old = c(sample_id, iso_trt, wads, isotope), new = c('sid', 'iso_trt', 'wad', 'iso'))
     # account for total enrichment
-    if(is.character(total_enrich)) setnames(bd, old = total_enrich, new = 'te') else bd[, te := total_enrich]
+    if(is.character(total_enrich)) data.table::setnames(bd, old = total_enrich, new = 'te') else bd[, te := total_enrich]
     # make sure iso_trt column is a factor
     if(is.factor(bd[[iso_trt]]) == FALSE || nlevels(bd[[iso_trt]]) > 2) {
       test_trt <- factor(bd[[iso_trt]])
@@ -257,7 +266,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       dat_boot <- merge(bd, resamps[, ..cols_for_subsample],
                         by = c('sid', grouping_cols),
                         all.x = TRUE)
-      setnames(dat_boot, paste0('V', i), 'resample_rep')
+      data.table::setnames(dat_boot, paste0('V', i), 'resample_rep')
       dat_boot <- dat_boot[, `:=` (wad = wad[resample_rep],
                                    te = te[resample_rep]),
                            by = c(tax_id, grouping_cols, 'iso_trt')]
@@ -278,7 +287,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
       # calculate mean enrichment for bootstrap iteration
       dat_boot <- dat_boot[, .(eaf = mean(eaf)), by = c(tax_id, grouping_cols, 'iso')]
       # add iteration count to EAF columns
-      setnames(dat_boot, 'eaf', paste0('eaf_', i))
+      data.table::setnames(dat_boot, 'eaf', paste0('eaf_', i))
       # add EAF values to output data
       cols_to_add <- c(tax_id, grouping_cols, 'iso', paste0('eaf_', i))
       eaf_output <- merge(eaf_output,
@@ -313,7 +322,7 @@ calc_excess <- function(data, tax_id = c(), sample_id = c(), wads = 'wad',
     # combine and remove NA values -- this will also remove all the unlabeled samples
     eafd <- merge(eaf_med_ci, eaf_pval)
     eafd <- eafd[!is.na(`50%`)]
-    setnames(eafd, old = 'iso', new = isotope)
+    data.table::setnames(eafd, old = 'iso', new = isotope)
   }
   return(eafd)
 }

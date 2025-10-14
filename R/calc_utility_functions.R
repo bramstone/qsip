@@ -14,13 +14,17 @@ seq_summary <- function(x, reads = c(), tax_id = c()) {
 # exclude outliers following the standard definition of above or below
 # the 25th/75th quantile by a distance of 1.5X the interquartile range
 neg_outlier <- function(x) {
-  neg_out <- quantile(x, .25, na.rm = TRUE) - (1.5 * IQR(x, na.rm = TRUE))
-  max(x[x < neg_out & !is.na(x)])
+  y <- x[!is.na(x)]
+  if(length(y) == 0) warning("Outliers cannot be calculated on all-NA vector")
+  neg_out <- quantile(y, .25) - (1.5 * IQR(y))
+  suppressWarnings(max(y[y < neg_out]))
 }
 
 pos_outlier <- function(x) {
-  pos_out <- quantile(x, .75, na.rm = TRUE) + (1.5 * IQR(x, na.rm = TRUE))
-  min(x[x > pos_out & !is.na(x)])
+  y <- x[!is.na(x)]
+  if(length(y) == 0) warning("Outliers cannot be calculated on all-NA vector")
+  pos_out <- quantile(y, .75) + (1.5 * IQR(y))
+  suppressWarnings(min(y[y > pos_out]))
 }
 
 # Calculation of 16S copies per taxon from relative abundances and 16S copy numbers

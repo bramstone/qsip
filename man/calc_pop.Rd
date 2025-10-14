@@ -6,10 +6,12 @@
 \usage{
 calc_pop(
   data,
+  t0_data,
   tax_id = c(),
   sample_id = c(),
   wads = "wad",
   iso_trt = c(),
+  isotope = c(),
   time = c(),
   abund = "abund",
   t0_grouping = c(),
@@ -27,6 +29,10 @@ calc_pop(
 \item{data}{Data as a long-format data.table where each row represents a taxonomic feature within a single fraction.
 Typically, this is the output from the \code{calc_wad} function.}
 
+\item{t0_data}{Optional data.table containing only initial timepoint samples.
+If not supplied, initial timepoints will be inferred as the minimum value in the
+time column of \code{data}.}
+
 \item{tax_id}{Column name specifying unique identifier for each taxonomic feature.}
 
 \item{sample_id}{Column name specifying unique identifier for each replicate.}
@@ -42,12 +48,18 @@ level as the "heavy" treatment.
 Alternatively, if supplied as a character, \code{calc_pop} will coerce the column to a factor and with the default behavior wherein the
 first value in alphabetical order will be assumed to be the lowest factor level (i.e. the "light" treatment).}
 
+\item{isotope}{Column name specifying the isotope applied to each replicate.
+For population growth and mortality rates, only "18O" heavy samples will be utilized.
+Other heavy-isotope samples (e.g., 13C, 15N) will be removed.}
+
 \item{time}{Column name specifying the timepoint at which each sample was collected.
 For population rates, the lowest timepoint will be assumed to be the initial timepoints with which to base
 changes in abundances on.}
 
 \item{abund}{Column name specifying abundance measurement for each taxon in each sample.
 The default option is "abund" which is created by \code{calc_wad}.}
+
+\item{t0_grouping}{Column name specifying optional grouping variables to be applied to t0 samples.}
 
 \item{mu}{Assumption of the fraction of oxygen atoms incorporated into new DNA that come from water (instead of from carbon sources)}
 
@@ -105,8 +117,17 @@ Calculates population growth and death rates
  By default, \code{calc_pop} averages the abundances of taxa from the initial time point.
  If \code{boostrap = TRUE}, replicates will be resampled (with replacement) then averaged so that
  population rates are a product of bootstrapped abundances as well as densities.
+
+ Depending on the experimental design, data from the initial timepoint may not be present following
+ the calculation of WADs. In this case, the user must supply a separate data.table (\code{t0_data}).
+ This is likely to be the case if time=0 samples were not fractionated.
 }
 \examples{
+\dontrun{
+ # Load required packages
+ library(data.table)
+ library(qsip)
+
  # Load in example data
  data(example_qsip)
 
@@ -123,9 +144,14 @@ Calculates population growth and death rates
                   rel_abund = 'rel_abund',
                   grouping_cols = c('treatment', 'isotope', 'iso_trt', 'Phylum'))
 
+ # create time-0 data
+ t0_samples <- example_qsip[timepoint == 0]
+ t0_samples[, abund := avg_16S_g_soil * (seq_abund / sum(seq_abund)), by = sampleID]
+
  # calculate population fluxes
- rates <- calc_pop(wads, tax_id = 'asv_id', sample_id = 'sampleID',
+ rates <- calc_pop(wads, t0_samples, tax_id = 'asv_id', sample_id = 'sampleID',
                    iso_trt = 'iso_trt', time = 'timepoint')
+}
 
 }
 \references{

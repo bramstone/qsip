@@ -147,6 +147,11 @@ Calculates fractional isotope incorporation in excess of natural abundances
   \emph{L}: The maximum label possible based off the percent of heavy isotope making up the atoms of that element in the labeled treatment
 }
 \examples{
+\dontrun{
+ # Load required packages
+ library(data.table)
+ library(qsip)
+
  # Load in example data
  data(example_qsip)
 
@@ -166,6 +171,7 @@ Calculates fractional isotope incorporation in excess of natural abundances
  # calculate fractional enrichment in excess of background
  eaf <- calc_excess(wads, tax_id = 'asv_id', sample_id = 'sampleID',
                     iso_trt = 'iso_trt', isotope = 'isotope')
+}
 
 }
 \references{
